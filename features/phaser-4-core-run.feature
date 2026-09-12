@@ -4,8 +4,14 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
   So that I can play the game in a modern browser
 
   Heights are in px above the floor surface at y 426, measured at the panda's feet, within 3 px.
-  Times are game time since the run started, driven by the suite's injected clock.
-  "The random source picks" means the suite's injected random source decides that outcome.
+  Times are game time in ms since the run started, or since the latest restart once the panda has died.
+  The suite drives the game only through an injected random source and an injected clock.
+  "The random source picks" means the injected random source decides that outcome.
+  The suite never sets the score; every score is reached by playing.
+  Column n (n = 1, 2, 3, ...) spawns at 1500 × n ms. With no jump, a column touches the panda 1375 ms after it spawns.
+  "The standard schedule" means: the random source picks 1 box and no second column for every column,
+  and I press Space 1200 ms after each column spawns. Column n is then cleared at 1500 × n + 1820 ms,
+  so the score reads "10" when column 12 spawns at 18000 ms and "11" when column 13 spawns at 19500 ms.
 
   Background:
     Given I open the Panda Jump page
@@ -37,6 +43,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       Then the canvas background is "#71c5cf"
       And the panda stands on the floor with its left edge at x 100
       And the panda is drawn 25 px wide, 1.25 times the 20 px frame
+      And the panda's hitbox matches the drawn frame: 25 px wide from x 100 to x 125, with its bottom at y 426
       And the score reads "0" in white 30 px text at (20, 20)
       And no box is on screen
 
@@ -55,46 +62,50 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
   Rule: The panda jumps once from the floor and once more in the air
 
     Scenario Outline: Each control makes the panda jump
-      When I <action>
+      When I <action> at 0 ms
       Then the panda leaves the floor
-      And the panda peaks 168 px above the floor about 580 ms later
-      And the panda lands back on the floor about 1160 ms after the jump
+      And the panda peaks 168 px above the floor at about 580 ms
+      And the panda lands back on the floor at about 1160 ms
 
       Examples:
-        | action                 |
-        | click the canvas       |
-        | tap the canvas         |
-        | press Space            |
+        | action           |
+        | click the canvas |
+        | tap the canvas   |
+        | press Space      |
 
     Scenario: Pressing Space does not scroll the page
-      Given the page is scrolled to the top
+      Given the browser viewport is 800 by 500 px
+      And the page is taller than the viewport, so it can scroll
+      And the page is scrolled to the top
       When I press Space
-      Then the page is still scrolled to the top
+      Then the panda leaves the floor
+      And the page is still scrolled to the top
 
     Scenario: A double jump adds a smaller boost
-      When I press Space
-      And 580 ms later I press Space again
+      When I press Space at 0 ms
+      And I press Space again at 580 ms
       Then the panda peaks 199 px above the floor
 
     Scenario: A third jump in the air is ignored
-      When I press Space
-      And 580 ms later I press Space again
-      And 100 ms later I press Space a third time
+      When I press Space at 0 ms
+      And I press Space again at 580 ms
+      And I press Space a third time at 680 ms
       Then the panda still peaks 199 px above the floor
+      And the panda lands back on the floor at about 1460 ms
 
     Scenario: Landing gives both jumps back
-      Given I jumped and double jumped and the panda has landed
-      When I press Space
-      And 580 ms later I press Space again
-      Then the panda peaks 199 px above the floor
+      Given I pressed Space at 0 ms and 580 ms and the panda landed at about 1460 ms
+      When I press Space at 1600 ms
+      And I press Space again at 2180 ms
+      Then the panda peaks 199 px above the floor at about 2430 ms
 
   Rule: Box columns come from the right
 
     Scenario Outline: A column of one or two boxes spawns every 1500 ms
-      Given the random source picks <boxes> boxes for the next column
-      When 1500 ms pass
-      Then a column of <boxes> "dirt_06.png" boxes appears with its left edge at x 400
-      And its bottom box sits on the floor with its top at y <top>
+      Given the random source picks <boxes> boxes for the first column
+      When 1600 ms pass
+      Then a column of <boxes> "dirt_06.png" boxes is on screen with its left edge at x 380
+      And its bottom box sits on the floor and its top box has its top at y <top>
       And the column moves left at 200 px per second
 
       Examples:
@@ -103,24 +114,26 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
         | 2     | 298 |
 
     Scenario: Columns keep coming at a steady rate
-      Given the panda clears every column
-      When 6000 ms pass
-      Then exactly 4 columns have spawned, at 1500, 3000, 4500 and 6000 ms
+      Given the random source picks 1 box and no second column for every column
+      When I press Space at 2700, 4200 and 5700 ms
+      Then at 6100 ms exactly 4 columns have spawned, at 1500, 3000, 4500 and 6000 ms
+      And the run has not restarted
+      And the score reads "2"
 
     Scenario: No second column while the score is 10 or less
-      Given the score is 10 when a column spawns
-      And the random source picks a second column
-      Then only one column appears
+      Given I play the standard schedule, except that the random source picks a second column for column 12
+      Then the score reads "10" at 18000 ms
+      And at 18100 ms column 12 has its left edge at x 380 and no column has spawned behind it at x 444
 
     Scenario: A second column can follow once the score is above 10
-      Given the score is 11 when a column spawns
-      And the random source picks 2 boxes and a second column
-      Then two columns of 2 boxes appear, the second with its left edge at x 464
+      Given I play the standard schedule, except that the random source picks 2 boxes and a second column for column 13
+      Then the score reads "11" at 19500 ms
+      And at 20000 ms two columns of 2 boxes spawned at 19500 ms are on screen, with left edges at x 300 and x 364
 
     Scenario: A second column is not always added above 10
-      Given the score is 11 when a column spawns
-      And the random source picks no second column
-      Then only one column appears
+      Given I play the standard schedule
+      Then the score reads "11" at 19500 ms
+      And at 20000 ms one column spawned at 19500 ms is on screen, with its left edge at x 300, and nothing at x 364
 
   Rule: The score counts cleared columns
 
@@ -128,28 +141,37 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       Given the random source picks 1 box for the first column
       When I press Space at 2700 ms
       Then the score reads "0" at 3300 ms
-      And the score reads "1" at 3340 ms, when the column's right edge passes x 100
+      And the score reads "1" at 3340 ms, after the column's right edge passes x 100 at 3320 ms
 
     Scenario: Clearing a two-box column with a double jump scores 1
       Given the random source picks 2 boxes for the first column
       When I press Space at 2530 ms
       And I press Space again at 2930 ms
-      Then the score reads "1" at 3340 ms
+      Then the score reads "0" at 3300 ms
+      And the score reads "1" at 3340 ms
 
     Scenario: A spawning column does not score
-      Given the panda has cleared no column
-      When the first and second columns spawn at 1500 ms and 3000 ms
-      Then the score still reads "0" at 3000 ms
+      Given the random source picks 1 box for the first two columns
+      When I press Space at 2700 ms
+      Then at 3000 ms the panda is above the first column, which it has not cleared
+      And the second column spawns at 3000 ms
+      And the score reads "0" at 3010 ms
+      And the score reads "1" at 3340 ms
 
     Scenario: A column scores only once
-      Given the panda has cleared the first column and the score reads "1"
-      When 1000 ms pass with no other column cleared
-      Then the score still reads "1"
+      Given the random source picks 1 box for the first two columns
+      When I press Space at 2700 ms
+      Then the score reads "1" at 3340 ms
+      And the score still reads "1" at 4300 ms
 
     Scenario: A double column counts as one clear
-      Given the score is 11 and a double column of 1 box spawns
-      When the panda clears both columns
-      Then the score reads "12"
+      Given I play the standard schedule, except that the random source picks 1 box and a second column for column 13
+      Then the score reads "11" at 19500 ms
+      And the score reads "12" at 19840 ms, when column 12 is cleared
+      And the score still reads "12" at 21400 ms, after the front column of the pair passes x 100 at 21320 ms
+      And the score still reads "12" at 21600 ms
+      And the score reads "13" at 21680 ms, after the rear column of the pair passes x 100 at 21640 ms
+      And the run has not restarted
 
   Rule: Touching a box restarts the run cleanly
 
@@ -158,26 +180,34 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       When I do not jump
       Then the panda touches the column at about 2875 ms
       And the run restarts
-      And the score reads "0"
+      And 100 ms after the restart the score reads "0"
       And the panda stands on the floor with its left edge at x 100
       And no box is on screen
 
     Scenario: Landing on top of a box restarts the run
       Given the random source picks 2 boxes for the first column
-      When I press Space at 2530 ms and do not jump again
-      Then the panda touches the column
-      And the run restarts with the score reading "0"
+      When I press Space at 2300 ms and do not jump again
+      Then the panda is 168 px above the floor at 2875 ms, higher than the column's top at 128 px
+      And the panda comes down onto the column's top and touches it at about 3165 ms
+      And the run restarts
+      And 100 ms after the restart the score reads "0" and no box is on screen
 
     Scenario: Dying after scoring resets the score
-      Given the score reads "3"
-      When the panda touches a box
-      Then the score reads "0"
+      Given the random source picks 1 box and no second column for every column
+      When I press Space at 2700, 4200 and 5700 ms and then stop jumping
+      Then the score reads "3" at 7300 ms
+      And the panda touches column 4 at about 7375 ms
+      And the run restarts
+      And 100 ms after the restart the score reads "0"
 
     Scenario: Nothing from the old run survives a restart
-      Given the panda has died 3 times
+      Given the random source picks 1 box and no second column for every column
+      And I do not jump until the panda has died 3 times, each about 2875 ms after the run began
       When 1400 ms pass after the latest restart
       Then no box is on screen
-      When 100 ms more pass
-      Then exactly one column is on screen, with its left edge at x 400
-      When 1500 ms more pass
-      Then exactly two columns have spawned since the latest restart
+      When I wait until 1600 ms after the latest restart
+      Then exactly one column is on screen, with its left edge at x 380
+      When I press Space at 2700 ms after the latest restart
+      And I wait until 3100 ms after the latest restart
+      Then exactly two columns are on screen, with left edges at x 80 and x 380
+      And the score reads "0"
