@@ -1,0 +1,29 @@
+[git]
+base = "origin/master"
+
+[ts]
+root = "."
+source = "src"
+crap_max = 4
+runner = "vitest"
+
+[sonar]
+project_key = "panda-jump"
+project_name = "Panda Jump"
+
+[deadcode]
+min_confidence = 60
+ts_kinds = ["files", "exports", "types"]
+
+[docs]
+files = ["README.md"]
+sources = ["src"]
+path_prefixes = ["src/", "assets/", "tasks/"]
+ignore_env = []
+
+[comments]
+paths = ["src", "index.html"]
+
+[qa]
+cmd = "npx playwright test"
+cwd = "."

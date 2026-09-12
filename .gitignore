@@ -1,0 +1,17 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+
+# marestail
+.marestail/
+mutants/
+.scannerwork/
+.venv/
+.coverage
+reports/mutation/
+.stryker-tmp/
+StrykerOutput/
+.sonarqube/
+.idea/
+.vscode/
