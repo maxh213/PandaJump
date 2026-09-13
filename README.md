@@ -17,4 +17,3 @@ The rules (jumping, box columns, scoring) are plain TypeScript in `src/rules/`. 
 
 Adding `?clock=manual` to the page URL stops game time so a test can step it through `window.pandaJump.run.advance(ms)`. Adding `?random=0.25,0.5` replaces `Math.random` with those values, repeated in order; each column draws two values, the first for its height and the second for a following column.
 
-Feel free to send me feedback or let me know if there's an error/bug at mh568@kent.ac.uk
