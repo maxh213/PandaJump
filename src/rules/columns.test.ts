@@ -3,7 +3,7 @@ import { boxesOf, countCleared, hitsPanda, moveColumns, spawnColumns } from "./c
 
 const sequence = (...values: number[]) => () => values.shift() ?? 0.5;
 
-const oneBox = { spawnedAt: 1500, offset: 0, boxes: 1, scores: true };
+const oneBox = { spawnedAt: 1500, offset: 0, boxes: 1, scoresWhenCleared: true };
 const twoBoxes = { ...oneBox, boxes: 2 };
 
 test("a low height draw spawns one box at the spawn time", () => {
@@ -20,7 +20,7 @@ test("a second column draw is ignored while the score is 10", () => {
 
 test("a second column follows 64 px behind above a score of 10 and only it scores", () => {
   expect(spawnColumns(1500, 11, sequence(0.75, 0))).toEqual([
-    { ...twoBoxes, scores: false },
+    { ...twoBoxes, scoresWhenCleared: false },
     { ...twoBoxes, offset: 64 },
   ]);
 });
@@ -32,12 +32,12 @@ test("no second column above 10 without the draw", () => {
 test("a column is cleared once its right edge reaches x 100", () => {
   expect(countCleared([oneBox], 3319)).toBe(0);
   expect(countCleared([oneBox], 3320)).toBe(1);
-  expect(countCleared([{ ...oneBox, scores: false }], 3320)).toBe(0);
+  expect(countCleared([{ ...oneBox, scoresWhenCleared: false }], 3320)).toBe(0);
 });
 
 test("moving marks cleared columns as scored and drops columns off screen", () => {
   expect(moveColumns([oneBox], 3000)).toEqual([oneBox]);
-  expect(moveColumns([oneBox], 3320)).toEqual([{ ...oneBox, scores: false }]);
+  expect(moveColumns([oneBox], 3320)).toEqual([{ ...oneBox, scoresWhenCleared: false }]);
   expect(moveColumns([oneBox], 3820)).toEqual([]);
 });
 

@@ -53,13 +53,12 @@ const installProbe = () => {
   };
   const untilRestart = (limit: number) => {
     const restarts = handle.run.view().restarts;
-    const before = [];
+    let before = sample();
     for (let done = 0; done < limit; done += 16) {
-      const last = sample();
       handle.run.advance(16);
-      const next = sample();
-      if (next.restarts !== restarts) return { before: last, after: next, samples: before };
-      before.push(next);
+      const after = sample();
+      if (after.restarts !== restarts) return { before, after };
+      before = after;
     }
     throw new Error("the run did not restart");
   };
@@ -82,7 +81,7 @@ export const advanceTo = async (page: Page, time: number): Promise<Sample[]> => 
   return advance(page, time - now.time);
 };
 
-export const untilRestart = (page: Page, limit = 30_000): Promise<{ before: Sample; after: Sample; samples: Sample[] }> =>
+export const untilRestart = (page: Page, limit = 30_000): Promise<{ before: Sample; after: Sample }> =>
   page.evaluate((duration) => (window as any).probe.untilRestart(duration), limit);
 
 export const settle = (page: Page) =>
@@ -124,7 +123,12 @@ export const pixelRows = async (page: Page, rows: number[]): Promise<number[][][
 
 export const heightOf = (entry: Sample) => 426 - entry.panda.bottom;
 
-export const columnsAt = (entry: Sample) => {
+export interface Column {
+  x: number;
+  boxes: Sample["boxes"];
+}
+
+export const columnsAt = (entry: Sample): Column[] => {
   const lefts = [...new Set(entry.boxes.map((box) => box.x))].sort((a, b) => a - b);
   return lefts.map((x) => ({ x, boxes: entry.boxes.filter((box) => box.x === x) }));
 };

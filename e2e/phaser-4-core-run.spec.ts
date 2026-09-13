@@ -24,7 +24,7 @@ import {
   twoBoxesAndSecond,
   untilRestart,
 } from "./probe.ts";
-import type { Sample } from "./probe.ts";
+import type { Column, Sample } from "./probe.ts";
 
 const BACKGROUND = [0x71, 0xc5, 0xcf];
 const ART_ROWS: Record<number, [number, number]> = {
@@ -45,9 +45,11 @@ const peakOf = (samples: Sample[]) => samples.reduce((best, entry) => (heightOf(
 const landingAfter = (samples: Sample[], time: number) =>
   samples.find((entry) => entry.time > time && heightOf(entry) === 0) as Sample;
 
+const scoreNow = async (page: Page) => (await sample(page)).score.text;
+
 const scoreAt = async (page: Page, time: number) => {
   await advanceTo(page, time);
-  return (await sample(page)).score.text;
+  return scoreNow(page);
 };
 
 const spawnTimes = (samples: Sample[]) =>
@@ -289,7 +291,7 @@ test.describe("Rule: Box columns come from the right", () => {
         await advanceTo(page, 1600);
         const columns = columnsAt(await sample(page));
         expect(columns).toHaveLength(1);
-        const column = columns[0] as ReturnType<typeof columnsAt>[number];
+        const column = columns[0] as Column;
         expect(column.x).toBe(380);
         expect(column.boxes).toHaveLength(boxes);
         expect(column.boxes.every((box) => box.key === "dirt_06.png" && box.width === 64)).toBe(true);
@@ -313,7 +315,7 @@ test.describe("Rule: Box columns come from the right", () => {
     test.setTimeout(120_000);
     await openGame(page, standardRandom({ 12: oneBoxAndSecond }));
     await play(page, standardJumps(18000), 18000);
-    expect((await sample(page)).score.text).toBe("10");
+    expect(await scoreNow(page)).toBe("10");
     await advanceTo(page, 18100);
     const columns = columnsAt(await sample(page));
     expect(columns.map((column) => column.x)).toContain(380);
@@ -325,7 +327,7 @@ test.describe("Rule: Box columns come from the right", () => {
     test.setTimeout(120_000);
     await openGame(page, standardRandom({ 13: twoBoxesAndSecond }));
     await play(page, standardJumps(19500), 19500);
-    expect((await sample(page)).score.text).toBe("11");
+    expect(await scoreNow(page)).toBe("11");
     await advanceTo(page, 20000);
     const columns = columnsAt(await sample(page)).filter((column) => column.x >= 100);
     expect(columns.map((column) => [column.x, column.boxes.length])).toEqual([
@@ -338,7 +340,7 @@ test.describe("Rule: Box columns come from the right", () => {
     test.setTimeout(120_000);
     await openGame(page, standardRandom());
     await play(page, standardJumps(19500), 19500);
-    expect((await sample(page)).score.text).toBe("11");
+    expect(await scoreNow(page)).toBe("11");
     await advanceTo(page, 20000);
     const columns = columnsAt(await sample(page)).filter((column) => column.x >= 100);
     expect(columns.map((column) => [column.x, column.boxes.length])).toEqual([[300, 1]]);
@@ -367,7 +369,7 @@ test.describe("Rule: The score counts cleared columns", () => {
     await play(page, [2700], 3000);
     const atSpawn = await sample(page);
     expect(atSpawn.time).toBe(3000);
-    const first = columnsAt(atSpawn)[0] as ReturnType<typeof columnsAt>[number];
+    const first = columnsAt(atSpawn)[0] as Column;
     expect(first.x).toBeLessThan(125);
     expect(first.x + 64).toBeGreaterThan(100);
     expect(heightOf(atSpawn)).toBeGreaterThan(64);
@@ -388,10 +390,10 @@ test.describe("Rule: The score counts cleared columns", () => {
     test.setTimeout(120_000);
     await openGame(page, standardRandom({ 13: oneBoxAndSecond }));
     await play(page, standardJumps(19500), 19500);
-    expect((await sample(page)).score.text).toBe("11");
+    expect(await scoreNow(page)).toBe("11");
     expect(await scoreAt(page, 19840)).toBe("12");
     await play(page, standardJumps(21680).filter((time) => time > 19840), 21400);
-    expect((await sample(page)).score.text).toBe("12");
+    expect(await scoreNow(page)).toBe("12");
     expect(await scoreAt(page, 21600)).toBe("12");
     expect(await scoreAt(page, 21680)).toBe("13");
     expect((await sample(page)).restarts).toBe(0);
@@ -419,7 +421,7 @@ test.describe("Rule: Touching a box restarts the run cleanly", () => {
   test("Dying after scoring resets the score", async ({ page }) => {
     await openGame(page, oneBox);
     await play(page, [2700, 4200, 5700], 7300);
-    expect((await sample(page)).score.text).toBe("3");
+    expect(await scoreNow(page)).toBe("3");
     const restart = await untilRestart(page);
     expect(Math.abs(deathTime(restart) - 7375)).toBeLessThanOrEqual(16);
     await expectCleanRestart(page);

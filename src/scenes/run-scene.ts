@@ -3,9 +3,11 @@ import pandaUrl from "../../assets/Panda.png?no-inline";
 import dirtUrl from "../../assets/dirt_06.png?no-inline";
 import rockUrl from "../../assets/rock_06.png?no-inline";
 import grassUrl from "../../assets/top_grass_01.png?no-inline";
-import type { Run, View } from "../rules/index.ts";
+import { CANVAS_WIDTH, FIRST_RUN_FRAME, FLOOR_Y, PANDA_X, TILE_SIZE } from "../rules/index.ts";
+import type { Box, Run } from "../rules/index.ts";
 
-type Box = View["boxes"][number];
+const GRASS_Y = 392;
+const PANDA_SCALE = 1.25;
 
 export class RunScene extends Phaser.Scene {
   private readonly run: Run;
@@ -30,16 +32,18 @@ export class RunScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.panda = this.add.sprite(100, 426, "Panda.png", 17).setOrigin(0, 1).setScale(1.25).setName("panda");
+    this.panda = this.add
+      .sprite(PANDA_X, FLOOR_Y, "Panda.png", FIRST_RUN_FRAME)
+      .setOrigin(0, 1)
+      .setScale(PANDA_SCALE)
+      .setName("panda");
     this.boxes = this.add.group({ classType: Phaser.GameObjects.Image, defaultKey: "dirt_06.png", name: "boxes" });
-    this.rock = this.add.tileSprite(0, 426, 400, 64, "rock_06.png").setOrigin(0, 0).setName("rock");
-    this.grass = this.add.tileSprite(0, 392, 400, 64, "top_grass_01.png").setOrigin(0, 0).setName("grass");
+    this.rock = this.addFloorStrip(FLOOR_Y, "rock_06.png").setName("rock");
+    this.grass = this.addFloorStrip(GRASS_Y, "top_grass_01.png").setName("grass");
     this.score = this.add
       .text(20, 20, "0", { fontFamily: "Arial", fontSize: "30px", color: "#ffffff" })
       .setName("score");
-    this.input.on("pointerdown", () => {
-      this.run.jump();
-    });
+    this.input.on("pointerdown", this.jump);
     [this.input.keyboard]
       .filter((keyboard) => keyboard !== null)
       .forEach((keyboard) => {
@@ -48,16 +52,22 @@ export class RunScene extends Phaser.Scene {
     this.draw();
   }
 
-  private listenForSpace(keyboard: Phaser.Input.Keyboard.KeyboardPlugin): void {
-    keyboard.addCapture("SPACE");
-    keyboard.on("keydown-SPACE", () => {
-      this.run.jump();
-    });
-  }
-
   override update(_time: number, delta: number): void {
     this.run.advance(delta * this.timeScale);
     this.draw();
+  }
+
+  private readonly jump = (): void => {
+    this.run.jump();
+  };
+
+  private addFloorStrip(y: number, texture: string): Phaser.GameObjects.TileSprite {
+    return this.add.tileSprite(0, y, CANVAS_WIDTH, TILE_SIZE, texture).setOrigin(0, 0);
+  }
+
+  private listenForSpace(keyboard: Phaser.Input.Keyboard.KeyboardPlugin): void {
+    keyboard.addCapture("SPACE");
+    keyboard.on("keydown-SPACE", this.jump);
   }
 
   private draw(): void {
