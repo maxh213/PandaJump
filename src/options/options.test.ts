@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { readOptions } from "./options.ts";
+import { readOptions } from "./index.ts";
 
 const fixed = () => 0.42;
 

@@ -3,7 +3,7 @@ import pandaUrl from "../../assets/Panda.png?no-inline";
 import dirtUrl from "../../assets/dirt_06.png?no-inline";
 import rockUrl from "../../assets/rock_06.png?no-inline";
 import grassUrl from "../../assets/top_grass_01.png?no-inline";
-import { CANVAS_WIDTH, FIRST_RUN_FRAME, FLOOR_Y, PANDA_X, TILE_SIZE } from "../rules/index.ts";
+import { CANVAS_WIDTH, FLOOR_Y, TILE_SIZE } from "../rules/index.ts";
 import type { Box, Run } from "../rules/index.ts";
 
 const GRASS_Y = 392;
@@ -33,7 +33,7 @@ export class RunScene extends Phaser.Scene {
 
   create(): void {
     this.panda = this.add
-      .sprite(PANDA_X, FLOOR_Y, "Panda.png", FIRST_RUN_FRAME)
+      .sprite(0, 0, "Panda.png")
       .setOrigin(0, 1)
       .setScale(PANDA_SCALE)
       .setName("panda");
@@ -72,7 +72,7 @@ export class RunScene extends Phaser.Scene {
 
   private draw(): void {
     const view = this.run.view();
-    this.panda.setY(view.pandaBottom).setFrame(view.pandaFrame);
+    this.panda.setPosition(view.pandaX, view.pandaBottom).setFrame(view.pandaFrame);
     this.rock.tilePositionX = view.floorScroll;
     this.grass.tilePositionX = view.floorScroll;
     this.score.setText(view.score);

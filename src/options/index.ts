@@ -1,4 +1,4 @@
-import type { Random } from "./columns.ts";
+type Random = () => number;
 
 export interface Options {
   readonly random: Random;

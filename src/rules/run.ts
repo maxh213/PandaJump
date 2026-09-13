@@ -2,12 +2,13 @@ import { SPAWN_EVERY, boxesOf, countCleared, hitsPanda, moveColumns, spawnColumn
 import type { Box, Column, Random } from "./columns.ts";
 import { fall, jump, standingPanda } from "./panda.ts";
 import type { Panda } from "./panda.ts";
-import { FLOOR_Y, SCROLL_PX_PER_MS, TILE_SIZE } from "./world.ts";
+import { FLOOR_Y, PANDA_X, SCROLL_PX_PER_MS, TILE_SIZE } from "./world.ts";
 
 interface View {
   readonly time: number;
   readonly restarts: number;
   readonly score: string;
+  readonly pandaX: number;
   readonly pandaBottom: number;
   readonly pandaFrame: number;
   readonly floorScroll: number;
@@ -30,7 +31,7 @@ interface State {
 }
 
 const MAX_STEP = 10;
-export const FIRST_RUN_FRAME = 17;
+const FIRST_RUN_FRAME = 17;
 const RUN_FRAMES = 6;
 const FRAMES_PER_MS = 15 / 1000;
 
@@ -80,6 +81,7 @@ const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
   score: String(state.score),
+  pandaX: PANDA_X,
   pandaBottom: FLOOR_Y - state.panda.height,
   pandaFrame: FIRST_RUN_FRAME + (Math.floor(state.time * FRAMES_PER_MS) % RUN_FRAMES),
   floorScroll: (state.time * SCROLL_PX_PER_MS) % TILE_SIZE,

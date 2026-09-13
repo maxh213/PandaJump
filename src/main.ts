@@ -1,4 +1,5 @@
-import { createRun, readOptions } from "./rules/index.ts";
+import { readOptions } from "./options/index.ts";
+import { createRun } from "./rules/index.ts";
 import { startGame } from "./scenes/index.ts";
 
 const options = readOptions(window.location.search, Math.random);
