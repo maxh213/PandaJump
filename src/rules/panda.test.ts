@@ -28,6 +28,10 @@ test("falling through the floor lands the panda and keeps its air jump flag", ()
   expect(fall({ height: 1, speed: -100, airJump: true }, 100)).toEqual({ height: 0, speed: 0, airJump: true });
 });
 
+test("coming down to exactly the floor lands the panda", () => {
+  expect(fall({ height: 0, speed: 1000, airJump: true }, 2000)).toEqual({ height: 0, speed: 0, airJump: true });
+});
+
 test("a panda standing on the floor stays there", () => {
   expect(fall(standingPanda, 16)).toEqual(standingPanda);
 });

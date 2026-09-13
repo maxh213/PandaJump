@@ -27,13 +27,14 @@ interface State {
   readonly score: number;
   readonly nextSpawn: number;
   readonly panda: Panda;
-  readonly columns: Column[];
+  readonly columns: readonly Column[];
 }
 
 const MAX_STEP = 10;
 const FIRST_RUN_FRAME = 17;
 const RUN_FRAMES = 6;
 const FRAMES_PER_MS = 15 / 1000;
+const NO_COLUMNS: readonly Column[] = [];
 
 const freshState = (restarts: number): State => ({
   time: 0,
@@ -41,7 +42,7 @@ const freshState = (restarts: number): State => ({
   score: 0,
   nextSpawn: SPAWN_EVERY,
   panda: standingPanda,
-  columns: [],
+  columns: NO_COLUMNS,
 });
 
 const moveOn = (state: State, ms: number): State => {
@@ -69,13 +70,11 @@ const step = (state: State, ms: number, random: Random): State => {
   return hitsPanda(next.columns, next.time, next.panda.height) ? freshState(state.restarts + 1) : next;
 };
 
-const advanceState = (state: State, ms: number, random: Random): State => {
-  let current = state;
-  for (let left = ms; left > 0; left -= MAX_STEP) {
-    current = step(current, Math.min(left, MAX_STEP), random);
-  }
-  return current;
-};
+const stepsOf = (ms: number): number[] =>
+  Array.from({ length: Math.ceil(ms / MAX_STEP) }, (_, index) => Math.min(MAX_STEP, ms - index * MAX_STEP));
+
+const advanceState = (state: State, ms: number, random: Random): State =>
+  stepsOf(ms).reduce((current, part) => step(current, part, random), state);
 
 const viewOf = (state: State): View => ({
   time: state.time,

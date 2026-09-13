@@ -24,7 +24,9 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
 
 test("time moves the floor and cycles the run frames at 15 per second", () => {
   const run = createRun(oneBoxEach());
-  run.advance(333);
+  run.advance(100);
+  expect(run.view().floorScroll).toBe(20);
+  run.advance(233);
   expect(run.view().pandaFrame).toBe(21);
   run.advance(1);
   expect(run.view().pandaFrame).toBe(22);
@@ -45,14 +47,37 @@ test("a column spawns every 1500 ms at the right edge", () => {
   const run = createRun(oneBoxEach());
   run.advance(1499);
   expect(run.view().boxes).toEqual([]);
-  run.advance(101);
+  run.advance(1);
+  expect(run.view().boxes).toEqual([{ x: 400, y: 362 }]);
+  run.advance(100);
   expect(run.view().boxes).toEqual([{ x: 380, y: 362 }]);
 });
 
-test("running into a column restarts the run", () => {
+test("running into a column restarts the run with no boxes", () => {
   const run = createRun(oneBoxEach());
   run.advance(2880);
   expect(run.view()).toMatchObject({ restarts: 1, time: 0, boxes: [], score: "0" });
+  run.advance(10);
+  expect(run.view()).toMatchObject({ restarts: 1, time: 10, boxes: [], score: "0" });
+});
+
+test("a fresh run still has no boxes and score 0 after one step", () => {
+  const run = createRun(oneBoxEach());
+  run.advance(10);
+  expect(run.view()).toMatchObject({ time: 10, boxes: [], score: "0" });
+});
+
+test("the result does not depend on how time is sliced", () => {
+  const whole = createRun(oneBoxEach());
+  const sliced = createRun(oneBoxEach());
+  whole.jump();
+  sliced.jump();
+  whole.advance(25);
+  sliced.advance(10);
+  sliced.advance(10);
+  sliced.advance(5);
+  expect(whole.view()).toEqual(sliced.view());
+  expect(whole.view().time).toBe(25);
 });
 
 test("clearing a column scores once when its right edge passes the panda", () => {
