@@ -3,7 +3,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "coverage", "reports", ".stryker-tmp", "node_modules", "playwright-report", "test-results"] },
+  { ignores: ["dist", "coverage", "reports", ".stryker-tmp", "node_modules", "playwright-report", "test-results", ".marestail"] },
   {
     files: ["src/**/*.ts"],
     extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
