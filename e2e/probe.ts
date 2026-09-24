@@ -8,6 +8,8 @@ export interface Sample {
   rock: { y: number; scroll: number; key: string };
   grass: { y: number; scroll: number; key: string };
   boxes: { x: number; y: number; width: number; key: string }[];
+  clouds: { x: number; y: number; depth: number; key: string }[];
+  viewClouds: { x: number; y: number; texture: string }[];
 }
 
 const installProbe = () => {
@@ -39,8 +41,12 @@ const installProbe = () => {
       rock: { y: rock.y, scroll: rock.tilePositionX, key: rock.texture.key },
       grass: { y: grass.y, scroll: grass.tilePositionX, key: grass.texture.key },
       boxes: scene.children.list
-        .filter((child: any) => child.visible && child.type === "Image")
+        .filter((child: any) => child.visible && child.type === "Image" && child.name === "box")
         .map((child: any) => ({ x: child.x, y: child.y, width: child.displayWidth, key: child.texture.key })),
+      clouds: scene.children.list
+        .filter((child: any) => child.visible && child.type === "Image" && child.name === "cloud")
+        .map((child: any) => ({ x: child.x, y: child.y, depth: child.depth, key: child.texture.key })),
+      viewClouds: view.clouds,
     };
   };
   const advance = (ms: number) => {
