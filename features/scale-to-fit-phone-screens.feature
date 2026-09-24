@@ -28,6 +28,11 @@ Feature: Panda Jump scales to fit phone screens
       Then the canvas is 400 by 490 px
       And the canvas is centred horizontally in the viewport
 
+    Scenario: The canvas recovers its full size after a resize away from a cramped viewport
+      Given the browser viewport is 667 by 375 px
+      When the browser viewport is resized to 1024 by 768 px
+      Then the canvas is 400 by 490 px
+
   Rule: Touch input on the game does not move the page
 
     Scenario: The canvas opts out of the browser's default touch scrolling and zooming

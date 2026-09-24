@@ -56,6 +56,19 @@ test.describe("Rule: The canvas scales to fit the viewport", () => {
       expect(Math.abs(centre - 1024 / 2)).toBeLessThanOrEqual(1);
     });
   });
+
+  test.describe("The canvas recovers its full size after a resize away from a cramped viewport", () => {
+    test.use({ viewport: { width: 667, height: 375 } });
+
+    test("The canvas recovers its full size after a resize away from a cramped viewport", async ({ page }) => {
+      await page.goto("./");
+      const cramped = await canvasBox(page);
+      expect(cramped.width).toBeLessThan(400);
+      await page.setViewportSize({ width: 1024, height: 768 });
+      const recovered = await canvasBox(page);
+      expect(recovered).toMatchObject({ width: 400, height: 490 });
+    });
+  });
 });
 
 test.describe("Rule: Touch input on the game does not move the page", () => {

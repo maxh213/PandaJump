@@ -5,6 +5,7 @@ import { startGame } from "./scenes/index.ts";
 const fitGameContainer = (): void => {
   const gameDiv = document.getElementById("game_div");
   if (!gameDiv) return;
+  gameDiv.style.width = "";
   const chromeHeight = document.documentElement.scrollHeight - gameDiv.getBoundingClientRect().height;
   const availableHeight = window.innerHeight - chromeHeight;
   const widthFromHeight = (availableHeight * CANVAS_WIDTH) / CANVAS_HEIGHT;
