@@ -14,6 +14,7 @@ test.describe("Rule: The canvas scales to fit the viewport", () => {
     test("A phone-width viewport shows the whole game with no scrollbar", async ({ page }) => {
       await page.goto("./");
       const box = await canvasBox(page);
+      expect(box.width).toBeGreaterThan(300);
       expect(box.width).toBeLessThanOrEqual(375);
       expect(box.height).toBeLessThanOrEqual(667);
       expect(box.y).toBeGreaterThanOrEqual(0);
@@ -24,6 +25,23 @@ test.describe("Rule: The canvas scales to fit the viewport", () => {
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
       expect(overflow).toBe(0);
+    });
+  });
+
+  test.describe("A short landscape viewport shows the whole game with no cropping", () => {
+    test.use({ viewport: { width: 667, height: 375 } });
+
+    test("A short landscape viewport shows the whole game with no cropping", async ({ page }) => {
+      await page.goto("./");
+      const box = await canvasBox(page);
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      expect(box.y + box.height).toBeLessThanOrEqual(375);
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(667);
+      const hOverflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(hOverflow).toBe(0);
     });
   });
 

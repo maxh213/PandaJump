@@ -14,7 +14,13 @@ Feature: Panda Jump scales to fit phone screens
     Scenario: A phone-width viewport shows the whole game with no scrollbar
       Given the browser viewport is 375 by 667 px
       Then the canvas is no wider than 375 px and no taller than 667 px
+      And the canvas is wider than 300 px
       And the canvas is centred horizontally in the viewport
+      And the page has no horizontal scrollbar
+
+    Scenario: A short landscape viewport shows the whole game with no cropping
+      Given the browser viewport is 667 by 375 px
+      Then the canvas fits entirely inside the viewport
       And the page has no horizontal scrollbar
 
     Scenario: A desktop viewport keeps the original canvas size and position
