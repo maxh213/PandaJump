@@ -65,8 +65,32 @@ test.describe("Rule: The canvas scales to fit the viewport", () => {
       const cramped = await canvasBox(page);
       expect(cramped.width).toBeLessThan(400);
       await page.setViewportSize({ width: 1024, height: 768 });
+      await expect.poll(async () => (await canvasBox(page)).width).toBe(400);
       const recovered = await canvasBox(page);
       expect(recovered).toMatchObject({ width: 400, height: 490 });
+    });
+  });
+
+  test.describe("The canvas tracks repeated rotation and resize without getting stuck", () => {
+    test.use({ viewport: { width: 375, height: 667 } });
+
+    test("The canvas tracks repeated rotation and resize without getting stuck", async ({ page }) => {
+      await page.goto("./");
+      const portrait = await canvasBox(page);
+      expect(portrait.width).toBeGreaterThan(300);
+
+      await page.setViewportSize({ width: 667, height: 375 });
+      await expect.poll(async () => (await canvasBox(page)).width).toBeLessThan(300);
+
+      await page.setViewportSize({ width: 375, height: 667 });
+      await expect
+        .poll(async () => (await canvasBox(page)).width)
+        .toBeCloseTo(portrait.width, 0);
+
+      await page.setViewportSize({ width: 1024, height: 768 });
+      await expect.poll(async () => (await canvasBox(page)).width).toBe(400);
+      const desktop = await canvasBox(page);
+      expect(desktop).toMatchObject({ width: 400, height: 490 });
     });
   });
 });

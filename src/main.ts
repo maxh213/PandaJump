@@ -16,7 +16,6 @@ const fitGameContainer = (): void => {
 
 fitGameContainer();
 window.addEventListener("resize", fitGameContainer);
-new ResizeObserver(fitGameContainer).observe(document.body);
 
 const options = readOptions(window.location.search, Math.random);
 const run = createRun(options.random);
