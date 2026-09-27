@@ -20,6 +20,5 @@ Panda Jump moves from Phaser 1.1.5 (2014, `main.js` and a copied-in `phaser.min.
 |---|---|
 | 001 | the panda runs, jumps and double jumps over box columns, dies and restarts, with a live score |
 | 002 | the high score, kept across visits and shown bottom-left |
-| 003 | clouds drifting and bobbing, jump and death sounds, and the build published to GitHub Pages |
 
-Only 001 is written. 002 and 003 take the design decisions 001 fixes.
+All of the above have shipped, along with slices that had no task file written: clouds drifting and bobbing, the game scaling to fit phone screens, a game over screen replacing the instant restart, and the build published to GitHub Pages. Sound is not planned: CLAUDE.md's rules say the repository has no audio assets.
