@@ -29,7 +29,13 @@ a {
 }
 
 #game_div {
-	width: 400px;
+	width: 100%;
+	max-width: 400px;
+	aspect-ratio: 400 / 490;
     margin: auto;
     margin-top: 10px;
+}
+
+#game_div canvas {
+	touch-action: none;
 }
