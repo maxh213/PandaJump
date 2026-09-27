@@ -30,7 +30,7 @@ Feature: Panda Jump on Phaser 4, slice 2: the high score
       Given the stored best is 0
       When I press Space at 2700 ms and then stop jumping
       Then the page reads "Best: 1" at 3340 ms
-      When the panda touches the next column and the run restarts
+      When the panda touches the next column, the game freezes, and tapping to play again restarts it
       Then the score reads "0"
       And the page still reads "Best: 1"
 
@@ -38,7 +38,7 @@ Feature: Panda Jump on Phaser 4, slice 2: the high score
       Given the stored best is 5
       Then the page reads "Best: 5"
       When I press Space at 2700 ms and then stop jumping
-      And the panda touches the next column and the run restarts
+      And the panda touches the next column, the game freezes, and tapping to play again restarts it
       Then the score reads "0"
       And the page still reads "Best: 5"
 
@@ -59,7 +59,7 @@ Feature: Panda Jump on Phaser 4, slice 2: the high score
     Scenario: The stored best is not overwritten by a lower score
       Given the stored best is 5
       When I press Space at 2700 ms and then stop jumping
-      And the panda touches the next column and the run restarts
+      And the panda touches the next column, the game freezes, and tapping to play again restarts it
       And I reload the Panda Jump page
       Then the page reads "Best: 5"
 

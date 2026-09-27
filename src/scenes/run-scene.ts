@@ -11,6 +11,11 @@ import type { Box, Cloud, Run } from "../rules/index.ts";
 const GRASS_Y = 392;
 const PANDA_SCALE = 1.25;
 const CLOUD_DEPTH = -1;
+const CENTER_X = CANVAS_WIDTH / 2;
+const GAME_OVER_Y = 190;
+const GAME_OVER_SCORE_Y = 250;
+const GAME_OVER_BEST_Y = 280;
+const GAME_OVER_PROMPT_Y = 320;
 
 export class RunScene extends Phaser.Scene {
   private readonly run: Run;
@@ -22,6 +27,10 @@ export class RunScene extends Phaser.Scene {
   private grass!: Phaser.GameObjects.TileSprite;
   private score!: Phaser.GameObjects.Text;
   private best!: Phaser.GameObjects.Text;
+  private gameOverTitle!: Phaser.GameObjects.Text;
+  private gameOverScore!: Phaser.GameObjects.Text;
+  private gameOverBest!: Phaser.GameObjects.Text;
+  private gameOverPrompt!: Phaser.GameObjects.Text;
 
   constructor(run: Run, timeScale: number) {
     super("run");
@@ -55,6 +64,7 @@ export class RunScene extends Phaser.Scene {
       .text(20, 450, "Best: 0", { fontFamily: "Arial", fontSize: "20px", color: "#ffffff" })
       .setOrigin(0, 1)
       .setName("best");
+    this.createGameOverTexts();
     this.input.on("pointerdown", this.jump);
     [this.input.keyboard]
       .filter((keyboard) => keyboard !== null)
@@ -73,6 +83,17 @@ export class RunScene extends Phaser.Scene {
     this.run.jump();
   };
 
+  private centeredText(y: number, text: string, fontSize: string): Phaser.GameObjects.Text {
+    return this.add.text(CENTER_X, y, text, { fontFamily: "Arial", fontSize, color: "#ffffff" }).setOrigin(0.5);
+  }
+
+  private createGameOverTexts(): void {
+    this.gameOverTitle = this.centeredText(GAME_OVER_Y, "Game over", "40px").setName("gameOverTitle");
+    this.gameOverScore = this.centeredText(GAME_OVER_SCORE_Y, "", "20px").setName("gameOverScore");
+    this.gameOverBest = this.centeredText(GAME_OVER_BEST_Y, "", "20px").setName("gameOverBest");
+    this.gameOverPrompt = this.centeredText(GAME_OVER_PROMPT_Y, "Tap to play again", "20px").setName("gameOverPrompt");
+  }
+
   private addFloorStrip(y: number, texture: string): Phaser.GameObjects.TileSprite {
     return this.add.tileSprite(0, y, CANVAS_WIDTH, TILE_SIZE, texture).setOrigin(0, 0);
   }
@@ -89,6 +110,10 @@ export class RunScene extends Phaser.Scene {
     this.grass.tilePositionX = view.floorScroll;
     this.score.setText(view.score);
     this.best.setText(`Best: ${view.best}`);
+    this.gameOverTitle.setVisible(view.gameOver);
+    this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.score}`);
+    this.gameOverBest.setVisible(view.gameOver).setText(`Best: ${view.best}`);
+    this.gameOverPrompt.setVisible(view.gameOver);
     this.boxes.getChildren().forEach((box) => {
       this.boxes.killAndHide(box);
     });

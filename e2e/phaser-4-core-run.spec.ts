@@ -22,6 +22,7 @@ import {
   standardRandom,
   twoBoxes,
   twoBoxesAndSecond,
+  untilGameOver,
   untilRestart,
 } from "./probe.ts";
 import type { Column, Sample } from "./probe.ts";
@@ -400,39 +401,119 @@ test.describe("Rule: The score counts cleared columns", () => {
   });
 });
 
-test.describe("Rule: Touching a box restarts the run cleanly", () => {
-  test("Running into a column restarts at score 0", async ({ page }) => {
+test.describe("Rule: Touching a box freezes the run and shows a game over screen", () => {
+  const controls: Record<string, (page: Page) => Promise<void>> = {
+    "click the canvas": (page) => page.locator("#game_div canvas").click({ position: { x: 200, y: 200 } }),
+    "tap the canvas": (page) => page.locator("#game_div canvas").tap({ position: { x: 200, y: 200 } }),
+    "press Space": (page) => page.keyboard.press("Space"),
+  };
+
+  test("Running into a column freezes the run and shows a game over screen", async ({ page }) => {
     await openGame(page, oneBox);
+    const { after: diedAt } = await untilGameOver(page);
+    expect(Math.abs(diedAt.time - 2875)).toBeLessThanOrEqual(16);
+    expect(diedAt.restarts).toBe(0);
+    expect(diedAt.gameOverTitle).toMatchObject({ text: "Game over", x: 200, y: 190, color: "#ffffff", fontSize: "40px", visible: true });
+    expect(diedAt.gameOverTitle.originX).toBeCloseTo(0.5);
+    expect(diedAt.gameOverTitle.originY).toBeCloseTo(0.5);
+    expect(diedAt.gameOverScore).toMatchObject({ text: "Score: 0", visible: true });
+    expect(diedAt.gameOverBest).toMatchObject({ text: "Best: 0", visible: true });
+    expect(diedAt.gameOverPrompt).toMatchObject({ text: "Tap to play again", visible: true });
+    expect(diedAt.gameOverTitle.y).toBeLessThan(diedAt.gameOverScore.y);
+    expect(diedAt.gameOverScore.y).toBeLessThan(diedAt.gameOverBest.y);
+    expect(diedAt.gameOverBest.y).toBeLessThan(diedAt.gameOverPrompt.y);
+
+    const frozen = (await advance(page, 300)).at(-1) as Sample;
+    expect(frozen.panda).toEqual(diedAt.panda);
+    expect(frozen.boxes).toEqual(diedAt.boxes);
+    expect(frozen.rock.scroll).toBe(diedAt.rock.scroll);
+    expect(frozen.grass.scroll).toBe(diedAt.grass.scroll);
+    expect(frozen.restarts).toBe(0);
+
     const restart = await untilRestart(page);
-    expect(Math.abs(deathTime(restart) - 2875)).toBeLessThanOrEqual(16);
     expect(restart.after.restarts).toBe(1);
     await expectCleanRestart(page);
   });
 
-  test("Landing on top of a box restarts the run", async ({ page }) => {
+  test("Landing on top of a box also freezes the run", async ({ page }) => {
     await openGame(page, twoBoxes);
     await play(page, [2300], 2875);
     expect(Math.abs(heightOf(await sample(page)) - 168)).toBeLessThanOrEqual(3);
+    const { after: diedAt } = await untilGameOver(page);
+    expect(Math.abs(diedAt.time - 3165)).toBeLessThanOrEqual(16);
+    expect(diedAt.gameOverTitle.text).toBe("Game over");
+    expect(diedAt.gameOverTitle.visible).toBe(true);
     const restart = await untilRestart(page);
-    expect(Math.abs(deathTime(restart) - 3165)).toBeLessThanOrEqual(16);
+    expect(restart.after.restarts).toBe(1);
     await expectCleanRestart(page);
   });
 
-  test("Dying after scoring resets the score", async ({ page }) => {
+  test("Dying after scoring freezes the run with the score it reached", async ({ page }) => {
     await openGame(page, oneBox);
     await play(page, [2700, 4200, 5700], 7300);
     expect(await scoreNow(page)).toBe("3");
+    const { after: diedAt } = await untilGameOver(page);
+    expect(Math.abs(diedAt.time - 7375)).toBeLessThanOrEqual(16);
+    expect(diedAt.score.text).toBe("3");
+    expect(diedAt.gameOverScore.text).toBe("Score: 3");
+    expect(diedAt.gameOverBest.text).toBe("Best: 3");
     const restart = await untilRestart(page);
-    expect(Math.abs(deathTime(restart) - 7375)).toBeLessThanOrEqual(16);
+    expect(restart.after.restarts).toBe(1);
     await expectCleanRestart(page);
+  });
+
+  test.describe("No input restarts the run in the first 500ms after death", () => {
+    for (const [action, act] of Object.entries(controls)) {
+      test.describe(action, () => {
+        test.use({ hasTouch: action === "tap the canvas" });
+
+        test(`No input restarts the run in the first 500ms after death: ${action}`, async ({ page }) => {
+          await openGame(page, oneBox);
+          await untilGameOver(page);
+          await advance(page, 400);
+          await act(page);
+          await settle(page);
+          const after = await sample(page);
+          expect(after.restarts).toBe(0);
+          expect(after.gameOver).toBe(true);
+          expect(after.gameOverTitle.visible).toBe(true);
+        });
+      });
+    }
+  });
+
+  test.describe("Each control restarts the run once 500ms have passed", () => {
+    for (const [action, act] of Object.entries(controls)) {
+      test.describe(action, () => {
+        test.use({ hasTouch: action === "tap the canvas" });
+
+        test(`Each control restarts the run once 500ms have passed: ${action}`, async ({ page }) => {
+          await openGame(page, oneBox);
+          await untilGameOver(page);
+          await advance(page, 500);
+          await act(page);
+          await settle(page);
+          const after = await sample(page);
+          expect(after.restarts).toBe(1);
+          expect(after.score.text).toBe("0");
+          expect(after.panda.x).toBe(100);
+          expect(after.panda.bottom).toBe(426);
+          expect(after.boxes).toEqual([]);
+          expect(after.gameOver).toBe(false);
+          expect(after.gameOverTitle.visible).toBe(false);
+        });
+      });
+    }
   });
 
   test("Nothing from the old run survives a restart", async ({ page }) => {
     await openGame(page, oneBox);
     for (let death = 0; death < 3; death += 1) {
       const restart = await untilRestart(page);
-      expect(Math.abs(deathTime(restart) - 2875)).toBeLessThanOrEqual(16);
+      expect(Math.abs(restart.diedAt.time - 2875)).toBeLessThanOrEqual(16);
     }
+    const afterThird = await sample(page);
+    expect(afterThird.restarts).toBe(3);
     await advanceTo(page, 1400);
     expect((await sample(page)).boxes).toEqual([]);
     await advanceTo(page, 1600);

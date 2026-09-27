@@ -19,6 +19,7 @@ interface View {
   readonly floorScroll: number;
   readonly boxes: Box[];
   readonly clouds: Cloud[];
+  readonly gameOver: boolean;
 }
 
 export interface Run {
@@ -41,6 +42,7 @@ interface State {
   readonly panda: Panda;
   readonly columns: readonly Column[];
   readonly clouds: readonly CloudState[];
+  readonly deathElapsed: number | null;
 }
 
 const MAX_STEP = 10;
@@ -48,6 +50,7 @@ const FIRST_RUN_FRAME = 17;
 const RUN_FRAMES = 6;
 const FRAMES_PER_MS = 15 / 1000;
 const NO_COLUMNS: readonly Column[] = [];
+const RESTART_FREEZE_MS = 500;
 
 const freshState = (restarts: number, best: number, randoms: Randoms): State => ({
   time: 0,
@@ -58,6 +61,7 @@ const freshState = (restarts: number, best: number, randoms: Randoms): State => 
   panda: standingPanda,
   columns: NO_COLUMNS,
   clouds: initialClouds(randoms.clouds),
+  deathElapsed: null,
 });
 
 const moveOn = (state: State, ms: number, randoms: Randoms): State => {
@@ -84,10 +88,11 @@ const spawnIfDue = (state: State, random: Random): State =>
       };
 
 const step = (state: State, ms: number, randoms: Randoms): State => {
+  if (state.deathElapsed !== null) {
+    return { ...state, deathElapsed: state.deathElapsed + ms };
+  }
   const next = spawnIfDue(moveOn(state, ms, randoms), randoms.columns);
-  return hitsPanda(next.columns, next.time, next.panda.height)
-    ? freshState(state.restarts + 1, next.best, randoms)
-    : next;
+  return hitsPanda(next.columns, next.time, next.panda.height) ? { ...next, deathElapsed: 0 } : next;
 };
 
 const stepsOf = (ms: number): number[] =>
@@ -107,14 +112,24 @@ const viewOf = (state: State): View => ({
   floorScroll: (state.time * SCROLL_PX_PER_MS) % TILE_SIZE,
   boxes: boxesOf(state.columns, state.time),
   clouds: cloudsOf(state.clouds, state.time),
+  gameOver: state.deathElapsed !== null,
 });
+
+const canRestart = (state: State): boolean => state.deathElapsed !== null && state.deathElapsed >= RESTART_FREEZE_MS;
+
+const act = (state: State, randoms: Randoms): State => {
+  if (state.deathElapsed === null) {
+    return { ...state, panda: jump(state.panda) };
+  }
+  return canRestart(state) ? freshState(state.restarts + 1, state.best, randoms) : state;
+};
 
 export const createRun = (random: Random, cloudRandom: Random, store: BestStore): Run => {
   const randoms: Randoms = { columns: random, clouds: cloudRandom };
   let state = freshState(0, store.load(), randoms);
   return {
     jump: () => {
-      state = { ...state, panda: jump(state.panda) };
+      state = act(state, randoms);
     },
     advance: (ms) => {
       const next = advanceState(state, ms, randoms);

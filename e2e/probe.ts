@@ -1,10 +1,26 @@
 import type { Page } from "@playwright/test";
 
+interface CenteredText {
+  text: string;
+  x: number;
+  y: number;
+  color: string;
+  fontSize: string;
+  originX: number;
+  originY: number;
+  visible: boolean;
+}
+
 export interface Sample {
   time: number;
   restarts: number;
+  gameOver: boolean;
   score: { text: string; x: number; y: number; color: string; fontSize: string };
   best: { text: string; x: number; y: number; color: string; fontSize: string };
+  gameOverTitle: CenteredText;
+  gameOverScore: CenteredText;
+  gameOverBest: CenteredText;
+  gameOverPrompt: CenteredText;
   panda: { x: number; bottom: number; width: number; height: number; frame: number; cutY: number; cutHeight: number; key: string };
   rock: { y: number; scroll: number; key: string };
   grass: { y: number; scroll: number; key: string };
@@ -17,6 +33,19 @@ const installProbe = () => {
   const handle = (window as any).pandaJump;
   const scene = handle.game.scene.getScene("run");
   const named = (name: string) => scene.children.getByName(name);
+  const centeredText = (name: string) => {
+    const text = named(name);
+    return {
+      text: text.text,
+      x: text.x,
+      y: text.y,
+      color: text.style.color,
+      fontSize: text.style.fontSize,
+      originX: text.originX,
+      originY: text.originY,
+      visible: text.visible,
+    };
+  };
   const sample = () => {
     scene.update(0, 0);
     const view = handle.run.view();
@@ -29,8 +58,13 @@ const installProbe = () => {
     return {
       time: view.time,
       restarts: view.restarts,
+      gameOver: view.gameOver,
       score: { text: score.text, x: score.x, y: score.y, color: score.style.color, fontSize: score.style.fontSize },
       best: { text: best.text, x: best.x, y: best.y, color: best.style.color, fontSize: best.style.fontSize },
+      gameOverTitle: centeredText("gameOverTitle"),
+      gameOverScore: centeredText("gameOverScore"),
+      gameOverBest: centeredText("gameOverBest"),
+      gameOverPrompt: centeredText("gameOverPrompt"),
       panda: {
         x: bounds.x,
         bottom: bounds.bottom,
@@ -60,18 +94,23 @@ const installProbe = () => {
     }
     return samples;
   };
-  const untilRestart = (limit: number) => {
-    const restarts = handle.run.view().restarts;
+  const untilGameOver = (limit: number) => {
     let before = sample();
     for (let done = 0; done < limit; done += 16) {
       handle.run.advance(16);
       const after = sample();
-      if (after.restarts !== restarts) return { before, after };
+      if (after.gameOver) return { before, after };
       before = after;
     }
-    throw new Error("the run did not restart");
+    throw new Error("the run did not end");
   };
-  (window as any).probe = { sample, advance, untilRestart };
+  const untilRestart = (limit: number) => {
+    const { before, after: diedAt } = untilGameOver(limit);
+    handle.run.advance(500);
+    handle.run.jump();
+    return { before, diedAt, after: sample() };
+  };
+  (window as any).probe = { sample, advance, untilGameOver, untilRestart };
 };
 
 export const openGame = async (page: Page, random: number[]) => {
@@ -90,7 +129,10 @@ export const advanceTo = async (page: Page, time: number): Promise<Sample[]> => 
   return advance(page, time - now.time);
 };
 
-export const untilRestart = (page: Page, limit = 30_000): Promise<{ before: Sample; after: Sample }> =>
+export const untilGameOver = (page: Page, limit = 30_000): Promise<{ before: Sample; after: Sample }> =>
+  page.evaluate((duration) => (window as any).probe.untilGameOver(duration), limit);
+
+export const untilRestart = (page: Page, limit = 30_000): Promise<{ before: Sample; diedAt: Sample; after: Sample }> =>
   page.evaluate((duration) => (window as any).probe.untilRestart(duration), limit);
 
 export const settle = (page: Page) =>

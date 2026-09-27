@@ -173,36 +173,71 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And the score reads "13" at 21680 ms, after the rear column of the pair passes x 100 at 21640 ms
       And the run has not restarted
 
-  Rule: Touching a box restarts the run cleanly
+  Rule: Touching a box freezes the run and shows a game over screen
 
-    Scenario: Running into a column restarts at score 0
+    Scenario: Running into a column freezes the run and shows game over
       Given the random source picks 1 box for the first column
       When I do not jump
       Then the panda touches the column at about 2875 ms
-      And the run restarts
-      And 100 ms after the restart the score reads "0"
-      And the panda stands on the floor with its left edge at x 100
-      And no box is on screen
+      And the panda, the columns and the floor stop moving
+      And the page reads "Game over" centred in white 40px
+      And the page reads "Score: 0" and "Best: 0" under it, in white
+      And the page reads "Tap to play again" under those, in white
+      And the run has not restarted
 
-    Scenario: Landing on top of a box restarts the run
+    Scenario: Landing on top of a box also freezes the run
       Given the random source picks 2 boxes for the first column
       When I press Space at 2300 ms and do not jump again
       Then the panda is 168 px above the floor at 2875 ms, higher than the column's top at 128 px
       And the panda comes down onto the column's top and touches it at about 3165 ms
-      And the run restarts
-      And 100 ms after the restart the score reads "0" and no box is on screen
+      And the panda, the columns and the floor stop moving
+      And the page reads "Game over"
 
-    Scenario: Dying after scoring resets the score
+    Scenario: Dying after scoring freezes the run with the score it reached
       Given the random source picks 1 box and no second column for every column
       When I press Space at 2700, 4200 and 5700 ms and then stop jumping
       Then the score reads "3" at 7300 ms
       And the panda touches column 4 at about 7375 ms
-      And the run restarts
-      And 100 ms after the restart the score reads "0"
+      And the page reads "Score: 3" and "Best: 3" on the game over screen
+      And the run has not restarted
+
+    Scenario Outline: No input restarts the run in the first 500ms after death
+      Given the random source picks 1 box for the first column
+      When I do not jump
+      And the panda touches the column
+      And 400 ms pass
+      When I <action>
+      Then the run has not restarted
+      And the page still reads "Game over"
+
+      Examples:
+        | action           |
+        | click the canvas |
+        | tap the canvas   |
+        | press Space      |
+
+    Scenario Outline: Each control restarts the run once 500ms have passed
+      Given the random source picks 1 box for the first column
+      When I do not jump
+      And the panda touches the column
+      And 500 ms pass
+      When I <action>
+      Then the run restarts
+      And the score reads "0"
+      And the panda stands on the floor with its left edge at x 100
+      And no box is on screen
+      And the game over screen is gone
+
+      Examples:
+        | action           |
+        | click the canvas |
+        | tap the canvas   |
+        | press Space      |
 
     Scenario: Nothing from the old run survives a restart
       Given the random source picks 1 box and no second column for every column
-      And I do not jump until the panda has died 3 times, each about 2875 ms after the run began
+      And I do not jump, and 500 ms after each death I tap to play again, until the panda has died 3 times
+      Then the restarts counter reads 3
       When 1400 ms pass after the latest restart
       Then no box is on screen
       When I wait until 1600 ms after the latest restart

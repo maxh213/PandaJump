@@ -5,7 +5,7 @@ Use a desktop browser with dev tools. Clear localStorage for the page's origin b
 1. Run `npm ci` then `npm run dev` and open the URL it prints. **Expected:** below the score, bottom-left near the floor, the page reads "Best: 0" in white 20px text.
 2. Open the Application tab and look at Local Storage for the page's origin. **Expected:** no `pandaJump.best` key yet (or it appears once you play, see step 3).
 3. Play until your live score passes 0 (clear a single column). **Expected:** the moment the score ticks up, "Best: N" updates to match it too, before you die.
-4. Deliberately touch a column. **Expected:** the run restarts, the score drops back to 0, but "Best: N" keeps the value you reached — it does not reset.
+4. Deliberately touch a column, wait for the game-over screen's 500ms freeze to pass, then tap to play again. **Expected:** the run restarts, the score drops back to 0, but "Best: N" keeps the value you reached — it does not reset.
 5. Reload the page. **Expected:** "Best: N" shows the same value you reached before reloading, read back from `pandaJump.best` in Local Storage.
 6. Play again and reach a lower score than your stored best before dying. **Expected:** "Best: N" is unchanged, and the `pandaJump.best` value in Local Storage is unchanged.
 7. Play again and beat your stored best. **Expected:** "Best: N" updates live, and once it does, the `pandaJump.best` value in Local Storage updates to match without needing to die or reload first.

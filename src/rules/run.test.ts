@@ -27,6 +27,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
       { x: 150, y: 100, texture: "cloud_05.png" },
       { x: 300, y: 53, texture: "cloud_02.png" },
     ],
+    gameOver: false,
   });
 });
 
@@ -61,12 +62,43 @@ test("a column spawns every 1500 ms at the right edge", () => {
   expect(run.view().boxes).toEqual([{ x: 380, y: 362 }]);
 });
 
-test("running into a column restarts the run with no boxes", () => {
+test("touching a column freezes the run and shows game over instead of restarting at once", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
-  expect(run.view()).toMatchObject({ restarts: 1, time: 0, boxes: [], score: "0" });
+  const frozen = run.view();
+  expect(frozen).toMatchObject({ restarts: 0, score: "0", gameOver: true });
+  expect(frozen.boxes).not.toEqual([]);
   run.advance(10);
-  expect(run.view()).toMatchObject({ restarts: 1, time: 10, boxes: [], score: "0" });
+  expect(run.view()).toEqual(frozen);
+});
+
+test("no click, tap or Space input restarts the run during the first 500ms after death", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2880);
+  const frozen = run.view();
+  run.advance(499);
+  run.jump();
+  expect(run.view()).toMatchObject({ ...frozen, restarts: 0, gameOver: true });
+});
+
+test("a click, tap or Space input after 500ms starts a fresh run at score 0 and clears the game over screen", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2880);
+  run.advance(500);
+  run.jump();
+  expect(run.view()).toMatchObject({ restarts: 1, time: 0, boxes: [], score: "0", gameOver: false });
+});
+
+test("the restarts counter increments by exactly 1 on every restart", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2880);
+  run.advance(500);
+  run.jump();
+  expect(run.view().restarts).toBe(1);
+  run.advance(2880);
+  run.advance(500);
+  run.jump();
+  expect(run.view().restarts).toBe(2);
 });
 
 test("a fresh run still has no boxes and score 0 after one step", () => {
@@ -134,7 +166,10 @@ test("the best is not saved again once the score falls back below it", () => {
   run.advance(640);
   expect(saved).toEqual([1]);
   run.advance(1040);
-  expect(run.view()).toMatchObject({ restarts: 1, score: "0", best: "1" });
+  expect(run.view()).toMatchObject({ restarts: 0, score: "1", best: "1", gameOver: true });
+  run.advance(600);
+  run.jump();
+  expect(run.view()).toMatchObject({ restarts: 1, score: "0", best: "1", gameOver: false });
   expect(saved).toEqual([1]);
 });
 
@@ -145,5 +180,8 @@ test("dying keeps the best score reached so far", () => {
   run.advance(640);
   expect(run.view().best).toBe("1");
   run.advance(1040);
+  expect(run.view()).toMatchObject({ restarts: 0, score: "1", best: "1", gameOver: true });
+  run.advance(600);
+  run.jump();
   expect(run.view()).toMatchObject({ restarts: 1, score: "0", best: "1" });
 });
