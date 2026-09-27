@@ -3,6 +3,8 @@ PandaJump
 
 A simple box jumping game (flappy bird spin off) made in TypeScript with Phaser 4.
 
+Play it at https://maxh213.github.io/PandaJump/.
+
 Controls: Click/touch to jump (you can double jump).
 
 Development
