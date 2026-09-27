@@ -2,6 +2,7 @@ type Random = () => number;
 
 export interface Options {
   readonly random: Random;
+  readonly cloudRandom: Random;
   readonly timeScale: number;
 }
 
@@ -20,6 +21,7 @@ export const readOptions = (search: string, random: Random): Options => {
   const script = params.get("random");
   return {
     random: script === null ? random : scriptedRandom(script),
+    cloudRandom: script === null ? random : scriptedRandom(script),
     timeScale: params.get("clock") === "manual" ? 0 : 1,
   };
 };

@@ -25,7 +25,7 @@ const saveBest = (best: number): void => {
 const bestStore: BestStore = { load: loadBest, save: saveBest };
 
 const options = readOptions(window.location.search, Math.random);
-const run = createRun(options.random, bestStore);
+const run = createRun(options.random, options.cloudRandom, bestStore);
 const game = startGame(run, options.timeScale);
 
 Object.assign(window, { pandaJump: { run, game } });
