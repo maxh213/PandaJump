@@ -57,9 +57,9 @@ test("a column spawns every 1500 ms at the right edge", () => {
   run.advance(1499);
   expect(run.view().boxes).toEqual([]);
   run.advance(1);
-  expect(run.view().boxes).toEqual([{ x: 400, y: 362 }]);
+  expect(run.view().boxes).toEqual([{ x: 400, y: 362, texture: "ice_06.png" }]);
   run.advance(100);
-  expect(run.view().boxes).toEqual([{ x: 380, y: 362 }]);
+  expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "ice_06.png" }]);
 });
 
 test("touching a column freezes the run and shows game over instead of restarting at once", () => {
@@ -123,7 +123,7 @@ test("the result does not depend on how time is sliced", () => {
 test("cloud spawning draws from a random cursor independent of column spawning", () => {
   const run = createRun(oneBoxEach(), () => 0.5, noStore);
   run.advance(1600);
-  expect(run.view().boxes).toEqual([{ x: 380, y: 362 }]);
+  expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "ice_06.png" }]);
 });
 
 test("clearing a column scores once when its right edge passes the panda", () => {

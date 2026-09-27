@@ -1,6 +1,10 @@
 import Phaser from "phaser";
 import pandaUrl from "../../assets/Panda.png?no-inline";
 import dirtUrl from "../../assets/dirt_06.png?no-inline";
+import iceUrl from "../../assets/ice_06.png?no-inline";
+import metalUrl from "../../assets/metal_06.png?no-inline";
+import sandUrl from "../../assets/sand_06.png?no-inline";
+import snowUrl from "../../assets/snow_06.png?no-inline";
 import rockUrl from "../../assets/rock_06.png?no-inline";
 import grassUrl from "../../assets/top_grass_01.png?no-inline";
 import cloud02Url from "../../assets/cloud_02.png?no-inline";
@@ -41,6 +45,10 @@ export class RunScene extends Phaser.Scene {
   preload(): void {
     this.load.spritesheet("Panda.png", pandaUrl, { frameWidth: 20, frameHeight: 21 });
     this.load.image("dirt_06.png", dirtUrl);
+    this.load.image("ice_06.png", iceUrl);
+    this.load.image("metal_06.png", metalUrl);
+    this.load.image("sand_06.png", sandUrl);
+    this.load.image("snow_06.png", snowUrl);
     this.load.image("rock_06.png", rockUrl);
     this.load.image("top_grass_01.png", grassUrl);
     this.load.image("cloud_02.png", cloud02Url);
@@ -130,7 +138,13 @@ export class RunScene extends Phaser.Scene {
 
   private showBox(box: Box): void {
     const image = this.boxes.get(box.x, box.y) as Phaser.GameObjects.Image;
-    image.setOrigin(0, 0).setPosition(box.x, box.y).setActive(true).setVisible(true).setName("box");
+    image
+      .setTexture(box.texture)
+      .setOrigin(0, 0)
+      .setPosition(box.x, box.y)
+      .setActive(true)
+      .setVisible(true)
+      .setName("box");
   }
 
   private showCloud(cloud: Cloud): void {

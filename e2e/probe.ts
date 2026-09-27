@@ -184,10 +184,10 @@ export const columnsAt = (entry: Sample): Column[] => {
   return lefts.map((x) => ({ x, boxes: entry.boxes.filter((box) => box.x === x) }));
 };
 
-export const oneBox = [0.25, 0.5];
-export const twoBoxes = [0.75, 0.5];
-export const oneBoxAndSecond = [0.25, 0];
-export const twoBoxesAndSecond = [0.75, 0];
+export const oneBox = [0.25, 0.5, 0];
+export const twoBoxes = [0.75, 0.5, 0];
+export const oneBoxAndSecond = [0.25, 0, 0];
+export const twoBoxesAndSecond = [0.75, 0, 0];
 
 export const standardRandom = (exceptions: Record<number, number[]> = {}) =>
   Array.from({ length: 40 }, (_, index) => exceptions[index + 1] ?? oneBox).flat();

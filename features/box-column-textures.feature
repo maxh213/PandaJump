@@ -1,0 +1,49 @@
+Feature: Panda Jump box columns draw from a small set of ground textures
+  As a player on the Panda Jump page
+  I want box columns to look different from one another
+  So that the run does not look like the same dirt block forever
+
+  Times are game time in ms since the page loaded, driven by an injected clock.
+  Column n (n = 1, 2, 3, ...) spawns at 1500 × n ms, same as in features/phaser-4-core-run.feature.
+  "The texture source" means a random source that repeats the 15 values
+  0.25, 0.5, 0, 0.25, 0.5, 0.2, 0.25, 0.5, 0.4, 0.25, 0.5, 0.6, 0.25, 0.5, 0.8 in order: each column
+  draws a height (0.25, always 1 box), a "no second column" value (0.5) and a texture value, in that order.
+  With the texture source, column 1 uses "dirt_06.png", column 2 uses "ice_06.png", column 3 uses
+  "metal_06.png", column 4 uses "sand_06.png" and column 5 uses "snow_06.png". Pressing Space 1200 ms
+  after a column spawns clears it, same as the standard schedule in features/phaser-4-core-run.feature.
+
+  Background:
+    Given I open the Panda Jump page with the texture source and a manual clock
+
+  Rule: Box columns draw from a small set of ground textures
+
+    Scenario: Five columns in a row use five different ground textures from the random source
+      When 1600 ms pass
+      Then the column at x 380 uses "dirt_06.png"
+      When I press Space at 2700 ms
+      And 1500 ms pass
+      Then the column at x 380 uses "ice_06.png"
+      When I press Space at 4200 ms
+      And 1500 ms pass
+      Then the column at x 380 uses "metal_06.png"
+      When I press Space at 5700 ms
+      And 1500 ms pass
+      Then the column at x 380 uses "sand_06.png"
+      When I press Space at 7200 ms
+      And 1500 ms pass
+      Then the column at x 380 uses "snow_06.png"
+      And the run has not restarted
+
+  Rule: Every box in one column uses the same texture as the rest of that column
+
+    Scenario: Both boxes of a two-box column render with the same texture
+      Given the random source picks 2 boxes for the first column
+      When 1600 ms pass
+      Then the column at x 380 has 2 boxes and every box in it uses "dirt_06.png"
+
+  Rule: Box textures are deterministic under the injected random source
+
+    Scenario: Two runs opened with the same texture source draw the same texture sequence
+      Given a second run is opened with the same texture source and manual clock
+      When 7600 ms pass on both runs, sampled every 1500 ms, pressing Space 1200 ms after each column spawns
+      Then both runs show the same box textures at every sampled column
