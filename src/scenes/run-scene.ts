@@ -21,6 +21,7 @@ export class RunScene extends Phaser.Scene {
   private rock!: Phaser.GameObjects.TileSprite;
   private grass!: Phaser.GameObjects.TileSprite;
   private score!: Phaser.GameObjects.Text;
+  private best!: Phaser.GameObjects.Text;
 
   constructor(run: Run, timeScale: number) {
     super("run");
@@ -50,6 +51,10 @@ export class RunScene extends Phaser.Scene {
     this.score = this.add
       .text(20, 20, "0", { fontFamily: "Arial", fontSize: "30px", color: "#ffffff" })
       .setName("score");
+    this.best = this.add
+      .text(20, 450, "Best: 0", { fontFamily: "Arial", fontSize: "20px", color: "#ffffff" })
+      .setOrigin(0, 1)
+      .setName("best");
     this.input.on("pointerdown", this.jump);
     [this.input.keyboard]
       .filter((keyboard) => keyboard !== null)
@@ -83,6 +88,7 @@ export class RunScene extends Phaser.Scene {
     this.rock.tilePositionX = view.floorScroll;
     this.grass.tilePositionX = view.floorScroll;
     this.score.setText(view.score);
+    this.best.setText(`Best: ${view.best}`);
     this.boxes.getChildren().forEach((box) => {
       this.boxes.killAndHide(box);
     });
