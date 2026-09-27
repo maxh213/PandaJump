@@ -1,3 +1,5 @@
+import { nextBest } from "./best.ts";
+import type { BestStore } from "./best.ts";
 import { SPAWN_EVERY, boxesOf, countCleared, hitsPanda, moveColumns, spawnColumns } from "./columns.ts";
 import type { Box, Column, Random } from "./columns.ts";
 import { fall, jump, standingPanda } from "./panda.ts";
@@ -8,6 +10,7 @@ interface View {
   readonly time: number;
   readonly restarts: number;
   readonly score: string;
+  readonly best: string;
   readonly pandaX: number;
   readonly pandaBottom: number;
   readonly pandaFrame: number;
@@ -25,6 +28,7 @@ interface State {
   readonly time: number;
   readonly restarts: number;
   readonly score: number;
+  readonly best: number;
   readonly nextSpawn: number;
   readonly panda: Panda;
   readonly columns: readonly Column[];
@@ -36,10 +40,11 @@ const RUN_FRAMES = 6;
 const FRAMES_PER_MS = 15 / 1000;
 const NO_COLUMNS: readonly Column[] = [];
 
-const freshState = (restarts: number): State => ({
+const freshState = (restarts: number, best: number): State => ({
   time: 0,
   restarts,
   score: 0,
+  best,
   nextSpawn: SPAWN_EVERY,
   panda: standingPanda,
   columns: NO_COLUMNS,
@@ -47,11 +52,13 @@ const freshState = (restarts: number): State => ({
 
 const moveOn = (state: State, ms: number): State => {
   const time = state.time + ms;
+  const score = state.score + countCleared(state.columns, time);
   return {
     ...state,
     time,
     panda: fall(state.panda, ms),
-    score: state.score + countCleared(state.columns, time),
+    score,
+    best: nextBest(state.best, score),
     columns: moveColumns(state.columns, time),
   };
 };
@@ -67,7 +74,7 @@ const spawnIfDue = (state: State, random: Random): State =>
 
 const step = (state: State, ms: number, random: Random): State => {
   const next = spawnIfDue(moveOn(state, ms), random);
-  return hitsPanda(next.columns, next.time, next.panda.height) ? freshState(state.restarts + 1) : next;
+  return hitsPanda(next.columns, next.time, next.panda.height) ? freshState(state.restarts + 1, next.best) : next;
 };
 
 const stepsOf = (ms: number): number[] =>
@@ -80,6 +87,7 @@ const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
   score: String(state.score),
+  best: String(state.best),
   pandaX: PANDA_X,
   pandaBottom: FLOOR_Y - state.panda.height,
   pandaFrame: FIRST_RUN_FRAME + (Math.floor(state.time * FRAMES_PER_MS) % RUN_FRAMES),
@@ -87,14 +95,18 @@ const viewOf = (state: State): View => ({
   boxes: boxesOf(state.columns, state.time),
 });
 
-export const createRun = (random: Random): Run => {
-  let state = freshState(0);
+export const createRun = (random: Random, store: BestStore): Run => {
+  let state = freshState(0, store.load());
   return {
     jump: () => {
       state = { ...state, panda: jump(state.panda) };
     },
     advance: (ms) => {
-      state = advanceState(state, ms, random);
+      const next = advanceState(state, ms, random);
+      if (next.best !== state.best) {
+        store.save(next.best);
+      }
+      state = next;
     },
     view: () => viewOf(state),
   };
