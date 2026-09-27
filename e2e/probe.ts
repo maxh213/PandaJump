@@ -4,10 +4,13 @@ export interface Sample {
   time: number;
   restarts: number;
   score: { text: string; x: number; y: number; color: string; fontSize: string };
+  best: { text: string; x: number; y: number; color: string; fontSize: string };
   panda: { x: number; bottom: number; width: number; height: number; frame: number; cutY: number; cutHeight: number; key: string };
   rock: { y: number; scroll: number; key: string };
   grass: { y: number; scroll: number; key: string };
   boxes: { x: number; y: number; width: number; key: string }[];
+  clouds: { x: number; y: number; depth: number; key: string }[];
+  viewClouds: { x: number; y: number; texture: string }[];
 }
 
 const installProbe = () => {
@@ -19,6 +22,7 @@ const installProbe = () => {
     const view = handle.run.view();
     const panda = named("panda");
     const score = named("score");
+    const best = named("best");
     const rock = named("rock");
     const grass = named("grass");
     const bounds = panda.getBounds();
@@ -26,6 +30,7 @@ const installProbe = () => {
       time: view.time,
       restarts: view.restarts,
       score: { text: score.text, x: score.x, y: score.y, color: score.style.color, fontSize: score.style.fontSize },
+      best: { text: best.text, x: best.x, y: best.y, color: best.style.color, fontSize: best.style.fontSize },
       panda: {
         x: bounds.x,
         bottom: bounds.bottom,
@@ -39,8 +44,12 @@ const installProbe = () => {
       rock: { y: rock.y, scroll: rock.tilePositionX, key: rock.texture.key },
       grass: { y: grass.y, scroll: grass.tilePositionX, key: grass.texture.key },
       boxes: scene.children.list
-        .filter((child: any) => child.visible && child.type === "Image")
+        .filter((child: any) => child.visible && child.type === "Image" && child.name === "box")
         .map((child: any) => ({ x: child.x, y: child.y, width: child.displayWidth, key: child.texture.key })),
+      clouds: scene.children.list
+        .filter((child: any) => child.visible && child.type === "Image" && child.name === "cloud")
+        .map((child: any) => ({ x: child.x, y: child.y, depth: child.depth, key: child.texture.key })),
+      viewClouds: view.clouds,
     };
   };
   const advance = (ms: number) => {
