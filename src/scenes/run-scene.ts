@@ -12,6 +12,7 @@ import cloud05Url from "../../assets/cloud_05.png?no-inline";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, TILE_SIZE } from "../rules/index.ts";
 import type { Box, Cloud, Medal, Run } from "../rules/index.ts";
 
+const OUTLINE = { stroke: "#000000", strokeThickness: 4 };
 const HIT_COLUMN_TINT = 0xff6666;
 const TINT_ACTIONS: Record<"true" | "false", (image: Phaser.GameObjects.Image) => void> = {
   true: (image) => {
@@ -33,7 +34,7 @@ const CENTER_X = CANVAS_WIDTH / 2;
 const SPEED_UP_Y = 120;
 const GAME_OVER_Y = 190;
 const GAME_OVER_MEDAL_Y = 226;
-const GAME_OVER_SCORE_Y = 250;
+const GAME_OVER_SCORE_Y = 252;
 const GAME_OVER_BEST_Y = 280;
 const GAME_OVER_PROMPT_Y = 320;
 const GAME_OVER_SHARE_Y = 360;
@@ -129,14 +130,14 @@ export class RunScene extends Phaser.Scene {
     this.rock = this.addFloorStrip(FLOOR_Y, "rock_06.png").setName("rock");
     this.grass = this.addFloorStrip(GRASS_Y, "top_grass_01.png").setName("grass");
     this.score = this.add
-      .text(20, 20, "0", { fontFamily: "Arial", fontSize: "30px", color: "#ffffff" })
+      .text(20, 20, "0", { fontFamily: "Arial", fontSize: "30px", color: "#ffffff", ...OUTLINE })
       .setName("score");
     this.best = this.add
-      .text(20, 450, "Best: 0", { fontFamily: "Arial", fontSize: "20px", color: "#ffffff" })
+      .text(20, 450, "Best: 0", { fontFamily: "Arial", fontSize: "20px", color: "#ffffff", ...OUTLINE })
       .setOrigin(0, 1)
       .setName("best");
     this.speedUp = this.add
-      .text(CENTER_X, SPEED_UP_Y, "Faster!", { fontFamily: "Arial", fontSize: "24px", color: "#ffd700" })
+      .text(CENTER_X, SPEED_UP_Y, "Faster!", { fontFamily: "Arial", fontSize: "24px", color: "#ffd700", ...OUTLINE })
       .setOrigin(0.5)
       .setName("speedUp");
     this.deathFlash = this.add
@@ -148,7 +149,7 @@ export class RunScene extends Phaser.Scene {
     this.createGameOverTexts();
     this.createPauseTexts();
     this.bestMarker = this.add
-      .text(0, 0, "Best", { fontFamily: "Arial", fontSize: "16px", color: "#ffd700" })
+      .text(0, 0, "Best", { fontFamily: "Arial", fontSize: "16px", color: "#ffd700", ...OUTLINE })
       .setOrigin(0.5, 1)
       .setName("bestMarker");
     this.countdownText = this.centeredText(GAME_OVER_Y, "", "40px").setName("countdownText");
@@ -256,7 +257,7 @@ export class RunScene extends Phaser.Scene {
 
   private centeredText(y: number, text: string, fontSize: string): Phaser.GameObjects.Text {
     return this.add
-      .text(CENTER_X, y, text, { fontFamily: "Arial", fontSize, color: "#ffffff" })
+      .text(CENTER_X, y, text, { fontFamily: "Arial", fontSize, color: "#ffffff", ...OUTLINE })
       .setOrigin(0.5)
       .setDepth(GAME_OVER_DEPTH);
   }
