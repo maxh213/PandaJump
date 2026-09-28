@@ -34,6 +34,13 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
     Scenario: The page has a favicon so the browser does not 404
       Then the page's <link rel="icon"> resolves with status 200
 
+    Scenario: Shared links show a real preview
+      Then the page's <meta name="description"> has non-empty, game-specific text
+      And the page's <meta property="og:title"> reads "Panda Jump"
+      And the page's <meta property="og:description"> has non-empty, game-specific text
+      And the page's <meta property="og:image"> resolves to "assets/Panda.png"
+      And the page's <meta property="og:url"> resolves to "https://maxh213.github.io/PandaJump/"
+
     Scenario: The production build runs from a plain file host
       Given "npm run build" has produced "dist/"
       When "dist/" is served by a static file server under the path "/PandaJump/"

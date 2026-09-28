@@ -119,6 +119,23 @@ test.describe("Rule: The page keeps its content", () => {
     const response = await page.request.get(new URL(href, page.url()).toString());
     expect(response.status()).toBe(200);
   });
+
+  test("Shared links show a real preview", async ({ page }) => {
+    await page.goto("./");
+    const description = await page.locator('meta[name="description"]').getAttribute("content");
+    expect(description).toBeTruthy();
+    expect(description?.toLowerCase()).toContain("panda");
+    const ogTitle = await page.locator('meta[property="og:title"]').getAttribute("content");
+    expect(ogTitle).toBe("Panda Jump");
+    const ogDescription = await page.locator('meta[property="og:description"]').getAttribute("content");
+    expect(ogDescription).toBeTruthy();
+    expect(ogDescription?.toLowerCase()).toContain("panda");
+    const ogImage = await page.locator('meta[property="og:image"]').getAttribute("content");
+    if (!ogImage) throw new Error("og:image content is missing");
+    expect(new URL(ogImage, page.url()).pathname).toBe("/PandaJump/assets/Panda.png");
+    const ogUrl = await page.locator('meta[property="og:url"]').getAttribute("content");
+    expect(ogUrl).toBe("https://maxh213.github.io/PandaJump/");
+  });
 });
 
 test.describe("Rule: The production build", () => {
