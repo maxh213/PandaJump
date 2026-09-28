@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, oneBox, openGame, play, pressSpace, sample, settle, standardRandom, untilGameOver } from "./probe.ts";
+import { advance, advanceTo, oneBox, openGame, play, pressSpace, sample, settle, startRun, standardRandom, untilGameOver } from "./probe.ts";
 
 const tapPauseButton = async (page: Page): Promise<void> => {
   const { pauseButton } = await sample(page);
@@ -18,6 +18,7 @@ const pauseWithButton = async (page: Page, time: number) => {
 test.describe('Rule: The "II" button shows during a live run, top-right and fully on screen', () => {
   test('The button reads "II" in white Arial 24px, right-aligned inside the canvas', async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await advanceTo(page, 1000);
     const live = await sample(page);
     expect(live.pauseButton).toMatchObject({
@@ -38,6 +39,7 @@ test.describe('Rule: The "II" button shows during a live run, top-right and full
 test.describe('Rule: Tapping "II" pauses the run and shows the pause texts, without making the panda jump', () => {
   test("Tapping the button pauses the run", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pauseWithButton(page, 1000);
     const paused = await sample(page);
     expect(paused.pauseTitle).toMatchObject({ text: "Paused", x: 200, y: 190, color: "#ffffff", fontSize: "40px", visible: true });
@@ -53,6 +55,7 @@ test.describe('Rule: Tapping "II" pauses the run and shows the pause texts, with
 
   test("Tapping the button does not change the panda's height", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await advanceTo(page, 1000);
     const before = await sample(page);
     await tapPauseButton(page);
@@ -62,6 +65,7 @@ test.describe('Rule: Tapping "II" pauses the run and shows the pause texts, with
 
   test("A run paused with the button does not advance time, the panda or the floor", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pauseWithButton(page, 1000);
     const frozen = await sample(page);
     await advance(page, 2000);
@@ -76,6 +80,7 @@ test.describe('Rule: Tapping "II" pauses the run and shows the pause texts, with
 test.describe('Rule: The button is hidden while paused, on the game-over screen, and until a new run is live', () => {
   test("The button disappears the moment the run pauses", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pauseWithButton(page, 1000);
     const paused = await sample(page);
     expect(paused.pauseButton.visible).toBe(false);
@@ -83,6 +88,7 @@ test.describe('Rule: The button is hidden while paused, on the game-over screen,
 
   test("The button is hidden on the game-over screen and returns once the new run is live", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     expect((await sample(page)).pauseButton.visible).toBe(false);
     await advance(page, 500);
@@ -101,6 +107,7 @@ test.describe('Rule: Resuming a pause started with "II" works exactly like resum
     page,
   }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pauseWithButton(page, 1000);
     await pressSpace(page);
     const resumed = await sample(page);

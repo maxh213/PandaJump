@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, oneBox, openGame, play, press, pressSpace, sample, settle, standardRandom, untilGameOver } from "./probe.ts";
+import { advance, advanceTo, oneBox, openGame, play, press, pressSpace, sample, settle, startRun, standardRandom, untilGameOver } from "./probe.ts";
 
 const dispatchOnWindow = async (page: Page, type: "blur" | "focus") => {
   await page.evaluate((name) => window.dispatchEvent(new Event(name)), type);
@@ -15,6 +15,7 @@ const blurAt = async (page: Page, time: number) => {
 test.describe("Rule: Losing focus during a live run pauses it at once and shows the pause texts", () => {
   test("The pause texts appear as soon as the window loses focus", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await blurAt(page, 1000);
     const paused = await sample(page);
     expect(paused.pauseTitle).toMatchObject({ text: "Paused", x: 200, y: 190, color: "#ffffff", fontSize: "40px", visible: true });
@@ -31,6 +32,7 @@ test.describe("Rule: Losing focus during a live run pauses it at once and shows 
 
   test("A run paused by losing focus does not advance time, the columns or the score", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await blurAt(page, 1000);
     const frozen = await sample(page);
     await advance(page, 2000);
@@ -43,6 +45,7 @@ test.describe("Rule: Losing focus during a live run pauses it at once and shows 
 
   test("Regaining focus on its own does not resume the run", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await blurAt(page, 1000);
     await dispatchOnWindow(page, "focus");
     await advance(page, 2000);
@@ -66,6 +69,7 @@ test.describe("Rule: A run paused by losing focus resumes with the usual 3, 2, 1
 
       test(`Each control starts a countdown and the run then continues: ${action}`, async ({ page }) => {
         await openGame(page, standardRandom());
+        await startRun(page);
         await blurAt(page, 1000);
         await dispatchOnWindow(page, "focus");
         await act(page);
@@ -94,6 +98,7 @@ test.describe("Rule: A run paused by losing focus resumes with the usual 3, 2, 1
 test.describe("Rule: Losing focus during the resume countdown returns to the paused screen", () => {
   test("The countdown is replaced by the pause texts", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await blurAt(page, 1000);
     await pressSpace(page);
     await advance(page, 500);
@@ -110,6 +115,7 @@ test.describe("Rule: Losing focus during the resume countdown returns to the pau
 test.describe("Rule: Losing focus has no effect on the game-over screen", () => {
   test('Losing focus while the game-over screen is shown does not show "Paused", and restart still works', async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await dispatchOnWindow(page, "blur");
     const stillGameOver = await sample(page);

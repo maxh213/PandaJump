@@ -108,6 +108,7 @@ test.describe("Rule: Tapping the copy prompt confirms the copy by changing its t
     await mockUnsupportedShare(page);
     await mockSupportedClipboard(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await advance(page, 500);
     const before = await sample(page);
@@ -130,6 +131,7 @@ test.describe("Rule: Tapping the copy prompt confirms the copy by changing its t
     await mockUnsupportedShare(page);
     await mockRejectingClipboard(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await advance(page, 500);
     await tapCopyPrompt(page);
@@ -140,6 +142,7 @@ test.describe("Rule: Tapping the copy prompt confirms the copy by changing its t
     await mockUnsupportedShare(page);
     await mockSupportedClipboard(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await advance(page, 500);
     await tapCopyPrompt(page);
