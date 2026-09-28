@@ -115,8 +115,8 @@ test.describe("Rule: The page keeps its content", () => {
   test("The page has a favicon so the browser does not 404", async ({ page }) => {
     await page.goto("./");
     const href = await page.locator('link[rel="icon"]').getAttribute("href");
-    expect(href).toBeTruthy();
-    const response = await page.request.get(new URL(href as string, page.url()).toString());
+    if (!href) throw new Error("favicon href is missing");
+    const response = await page.request.get(new URL(href, page.url()).toString());
     expect(response.status()).toBe(200);
   });
 });
@@ -186,8 +186,8 @@ test.describe("Rule: The production build", () => {
   test("The favicon resolves from the production build's path prefix", async ({ page }) => {
     await page.goto(`${host}/PandaJump/`);
     const href = await page.locator('link[rel="icon"]').getAttribute("href");
-    expect(href).toBeTruthy();
-    const response = await page.request.get(new URL(href as string, page.url()).toString());
+    if (!href) throw new Error("favicon href is missing");
+    const response = await page.request.get(new URL(href, page.url()).toString());
     expect(response.status()).toBe(200);
   });
 });
