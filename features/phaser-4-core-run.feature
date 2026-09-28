@@ -47,7 +47,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       Then the page's <meta name="description"> has non-empty, game-specific text
       And the page's <meta property="og:title"> reads "Panda Jump"
       And the page's <meta property="og:description"> has non-empty, game-specific text
-      And the page's <meta property="og:image"> resolves to "panda-icon.png"
+      And the page's <meta property="og:image"> resolves to "panda-icon.png" and shows a single recognisable Panda, not the raw sprite strip
       And the page's <meta property="og:url"> resolves to "https://maxh213.github.io/PandaJump/"
 
     Scenario: The production build runs from a plain file host

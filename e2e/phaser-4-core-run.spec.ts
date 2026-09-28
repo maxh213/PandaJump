@@ -168,7 +168,11 @@ test.describe("Rule: The page keeps its content", () => {
     expect(ogDescription?.toLowerCase()).toContain("panda");
     const ogImage = await page.locator('meta[property="og:image"]').getAttribute("content");
     if (!ogImage) throw new Error("og:image content is missing");
-    expect(new URL(ogImage, page.url()).pathname).toBe("/PandaJump/panda-icon.png");
+    const ogImagePath = new URL(ogImage).pathname;
+    expect(ogImagePath).toBe("/PandaJump/panda-icon.png");
+    const ogImageDevPath = ogImagePath.replace(/^\/PandaJump/, "");
+    const ogImageUrl = new URL(ogImageDevPath, page.url()).toString();
+    await expectRecognisablePanda(page, ogImageUrl);
     const ogUrl = await page.locator('meta[property="og:url"]').getAttribute("content");
     expect(ogUrl).toBe("https://maxh213.github.io/PandaJump/");
   });
