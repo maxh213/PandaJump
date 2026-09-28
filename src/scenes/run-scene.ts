@@ -14,6 +14,10 @@ import type { Box, Cloud, Medal, Run } from "../rules/index.ts";
 
 const GRASS_Y = 392;
 const PANDA_SCALE = 1.25;
+const PANDA_FRAME_WIDTH = 20;
+const PANDA_FRAME_HEIGHT = 21;
+const PANDA_HALF_WIDTH = (PANDA_FRAME_WIDTH * PANDA_SCALE) / 2;
+const PANDA_HALF_HEIGHT = (PANDA_FRAME_HEIGHT * PANDA_SCALE) / 2;
 const CLOUD_DEPTH = -1;
 const CENTER_X = CANVAS_WIDTH / 2;
 const SPEED_UP_Y = 120;
@@ -94,7 +98,7 @@ export class RunScene extends Phaser.Scene {
     this.clouds = this.add.group({ classType: Phaser.GameObjects.Image, defaultKey: "cloud_02.png", name: "clouds" });
     this.panda = this.add
       .sprite(0, 0, "Panda.png")
-      .setOrigin(0, 1)
+      .setOrigin(0.5, 0.5)
       .setScale(PANDA_SCALE)
       .setName("panda");
     this.boxes = this.add.group({ classType: Phaser.GameObjects.Image, defaultKey: "dirt_06.png", name: "boxes" });
@@ -246,9 +250,17 @@ export class RunScene extends Phaser.Scene {
     keyboard.on("keydown-ESC", this.pauseOrResume);
   }
 
+  private drawPanda(view: ReturnType<Run["view"]>): void {
+    this.panda
+      .setPosition(view.pandaX + PANDA_HALF_WIDTH, view.pandaBottom - PANDA_HALF_HEIGHT)
+      .setFrame(view.pandaFrame)
+      .setFlipY(view.pandaUpsideDown)
+      .setAngle(view.pandaAngle);
+  }
+
   private draw(): void {
     const view = this.run.view();
-    this.panda.setPosition(view.pandaX, view.pandaBottom).setFrame(view.pandaFrame).setFlipY(view.pandaUpsideDown);
+    this.drawPanda(view);
     this.rock.tilePositionX = view.floorScroll;
     this.grass.tilePositionX = view.floorScroll;
     this.score.setText(view.score).setScale(view.scoreScale);

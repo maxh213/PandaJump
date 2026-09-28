@@ -32,6 +32,7 @@ interface View {
   readonly pandaUpsideDown: boolean;
   readonly bestMarker: { x: number; y: number } | null;
   readonly deathFlash: number;
+  readonly pandaAngle: number;
 }
 
 export interface Run {
@@ -78,6 +79,8 @@ const SCORE_POP_DURATION_MS = 150;
 const SPEED_UP_DURATION_MS = 800;
 const DEATH_FLASH_PEAK = 0.6;
 const DEATH_FLASH_DURATION_MS = 200;
+const MAX_PANDA_ANGLE = 25;
+const PANDA_ANGLE_PER_SPEED = 20;
 
 const freshState = (restarts: number, best: number, randoms: Randoms): State => ({
   time: 0,
@@ -193,6 +196,12 @@ const liveBestMarker = (state: State): { x: number; y: number } | null =>
 const deathFlashOf = (deathElapsed: number | null): number =>
   deathElapsed === null ? 0 : Math.max(0, DEATH_FLASH_PEAK * (1 - deathElapsed / DEATH_FLASH_DURATION_MS));
 
+const pandaAngleFor = (state: State): number => {
+  if (state.deathElapsed !== null) return 0;
+  const raw = -state.panda.speed / PANDA_ANGLE_PER_SPEED;
+  return Math.max(-MAX_PANDA_ANGLE, Math.min(MAX_PANDA_ANGLE, raw)) + 0;
+};
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
@@ -215,6 +224,7 @@ const viewOf = (state: State): View => ({
   pandaUpsideDown: state.deathElapsed !== null,
   bestMarker: liveBestMarker(state),
   deathFlash: deathFlashOf(state.deathElapsed),
+  pandaAngle: pandaAngleFor(state),
 });
 
 const act = (state: State, randoms: Randoms): State => {

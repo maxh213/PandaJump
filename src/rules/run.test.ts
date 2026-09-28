@@ -59,6 +59,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     pandaUpsideDown: false,
     bestMarker: null,
     deathFlash: 0,
+    pandaAngle: 0,
   });
 });
 
@@ -615,6 +616,47 @@ test("bestMarker shows over the column that would beat the stored best while liv
   expect(run.view().bestMarker).not.toBeNull();
   run.advance(1040);
   expect(run.view()).toMatchObject({ gameOver: true, bestMarker: null });
+});
+
+test("pandaAngle is 0 while the panda stands on the floor", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  expect(run.view().pandaAngle).toBe(0);
+});
+
+test("pandaAngle is -25, clamped nose up, immediately after a floor jump", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  expect(run.view().pandaAngle).toBe(-25);
+});
+
+test("pandaAngle returns to 0 at the top of a jump, where speed is 0", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  run.advance(580);
+  expect(run.view().pandaAngle).toBeCloseTo(0);
+});
+
+test("pandaAngle is positive but at most 25 while the panda is falling", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  run.advance(600);
+  const angle = run.view().pandaAngle;
+  expect(angle).toBeGreaterThan(0);
+  expect(angle).toBeLessThanOrEqual(25);
+});
+
+test("pandaAngle clamps at 25, nose down, during a long fall", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  run.advance(1100);
+  expect(run.view().pandaBottom).toBeLessThan(426);
+  expect(run.view().pandaAngle).toBe(25);
+});
+
+test("pandaAngle is 0 during game over even though the panda is still falling", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2880);
+  expect(run.view()).toMatchObject({ gameOver: true, pandaAngle: 0 });
 });
 
 test("time, score, columns, clouds and floor scroll stay frozen while the panda falls after a mid-air death", () => {

@@ -45,6 +45,7 @@ export interface Sample {
     key: string;
     flipY: boolean;
     depth: number;
+    angle: number;
   };
   rock: { y: number; scroll: number; key: string };
   grass: { y: number; scroll: number; key: string };
@@ -81,6 +82,7 @@ interface GameSprite {
   texture: { key: string };
   flipY: boolean;
   depth: number;
+  angle: number;
   getBounds: () => Bounds;
 }
 
@@ -210,6 +212,7 @@ export const installProbe = () => {
         key: panda.texture.key,
         flipY: panda.flipY,
         depth: panda.depth,
+        angle: panda.angle,
       },
       rock: { y: rock.y, scroll: rock.tilePositionX, key: rock.texture.key },
       grass: { y: grass.y, scroll: grass.tilePositionX, key: grass.texture.key },
