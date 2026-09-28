@@ -25,6 +25,7 @@ export interface Sample {
   gameOverBest: CenteredText;
   gameOverPrompt: CenteredText;
   gameOverShare: CenteredText;
+  gameOverRuns: CenteredText;
   panda: { x: number; bottom: number; width: number; height: number; frame: number; cutY: number; cutHeight: number; key: string };
   rock: { y: number; scroll: number; key: string };
   grass: { y: number; scroll: number; key: string };
@@ -145,6 +146,7 @@ const installProbe = () => {
       gameOverBest: centeredText("gameOverBest"),
       gameOverPrompt: centeredText("gameOverPrompt"),
       gameOverShare: centeredText("gameOverShare"),
+      gameOverRuns: centeredText("gameOverRuns"),
       panda: {
         x: bounds.x,
         bottom: bounds.bottom,

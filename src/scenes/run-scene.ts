@@ -21,6 +21,7 @@ const GAME_OVER_SCORE_Y = 250;
 const GAME_OVER_BEST_Y = 280;
 const GAME_OVER_PROMPT_Y = 320;
 const GAME_OVER_SHARE_Y = 360;
+const GAME_OVER_RUNS_Y = 400;
 const BEST_COLORS: Record<"true" | "false", string> = { true: "#ffd700", false: "#ffffff" };
 const shareSupported = typeof navigator.share === "function";
 const PAGE_TITLE = "Panda Jump";
@@ -40,6 +41,7 @@ export class RunScene extends Phaser.Scene {
   private gameOverBest!: Phaser.GameObjects.Text;
   private gameOverPrompt!: Phaser.GameObjects.Text;
   private gameOverShare!: Phaser.GameObjects.Text;
+  private gameOverRuns!: Phaser.GameObjects.Text;
 
   constructor(run: Run, timeScale: number) {
     super("run");
@@ -120,6 +122,7 @@ export class RunScene extends Phaser.Scene {
     this.gameOverShare = this.centeredText(GAME_OVER_SHARE_Y, "Share score", "20px")
       .setName("gameOverShare")
       .setInteractive();
+    this.gameOverRuns = this.centeredText(GAME_OVER_RUNS_Y, "", "20px").setName("gameOverRuns");
   }
 
   private addFloorStrip(y: number, texture: string): Phaser.GameObjects.TileSprite {
@@ -145,6 +148,7 @@ export class RunScene extends Phaser.Scene {
     this.gameOverBest.setVisible(view.gameOver).setText(`Best: ${view.best}`);
     this.gameOverPrompt.setVisible(view.canRestart);
     this.gameOverShare.setVisible([view.canRestart, shareSupported].every(Boolean));
+    this.gameOverRuns.setVisible(view.gameOver).setText(`Run ${String(view.restarts + 1)}`);
     this.boxes.getChildren().forEach((box) => {
       this.boxes.killAndHide(box);
     });
