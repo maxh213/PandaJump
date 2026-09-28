@@ -938,3 +938,84 @@ test("a new page session with no stored best shows the hint again", () => {
   expect(first.view().doubleJumpHint).toBe(false);
   expect(freshRun().view().doubleJumpHint).toBe(true);
 });
+
+const bufferedRun = (pressAt: number): Run => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  run.advance(580);
+  run.jump();
+  run.advance(pressAt - 580);
+  run.jump();
+  return run;
+};
+
+test("a jump pressed 70ms before landing fires the moment the panda lands, with a full floor jump and a fresh air jump", () => {
+  const run = bufferedRun(1400);
+  run.advance(60);
+  expect(run.view().pandaBottom).toBeLessThan(426);
+  run.advance(10);
+  expect(run.view().pandaBottom).toBe(426);
+  run.advance(10);
+  expect(426 - run.view().pandaBottom).toBeCloseTo(5.75);
+  run.advance(560);
+  expect(run.view().pandaBottom).toBeLessThan(426 - 160);
+  run.jump();
+  expect(run.view().airPuff).not.toBeNull();
+});
+
+test("a jump pressed 100ms before landing is still buffered", () => {
+  const run = bufferedRun(1370);
+  run.advance(120);
+  expect(run.view().pandaBottom).toBeLessThan(426);
+});
+
+test("a jump pressed more than 100ms before landing is dropped", () => {
+  const run = bufferedRun(1360);
+  run.advance(300);
+  expect(run.view().pandaBottom).toBe(426);
+});
+
+test("a buffered jump fires once and is cleared", () => {
+  const run = bufferedRun(1400);
+  run.advance(1800);
+  expect(run.view().pandaBottom).toBe(426);
+});
+
+test("a buffered jump does not show the double jump puff", () => {
+  const run = bufferedRun(1400);
+  run.advance(200);
+  expect(run.view().airPuff).toBeNull();
+});
+
+test("a press with the air jump still available is an immediate air jump and buffers nothing", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  run.advance(100);
+  run.jump();
+  run.advance(1500);
+  expect(run.view().pandaBottom).toBe(426);
+});
+
+test("a buffered jump is discarded when the run is paused before landing", () => {
+  const run = bufferedRun(1400);
+  run.pause();
+  run.jump();
+  run.advance(1500);
+  run.advance(300);
+  expect(run.view().pandaBottom).toBe(426);
+});
+
+test("a buffered jump is discarded when the panda dies before landing", () => {
+  const run = createRun(twoBoxColumns(), oneBoxEach(), noStore);
+  run.advance(2600);
+  run.jump();
+  run.advance(200);
+  run.jump();
+  run.jump();
+  run.advance(80);
+  expect(run.view().gameOver).toBe(true);
+  run.advance(2000);
+  run.jump();
+  run.advance(500);
+  expect(run.view()).toMatchObject({ gameOver: false, pandaBottom: 426, restarts: 1 });
+});

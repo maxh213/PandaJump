@@ -82,6 +82,7 @@ interface State {
   readonly airPuffStart: number | null;
   readonly airPuffBottom: number;
   readonly hintPending: boolean;
+  readonly bufferedAt: number | null;
 }
 
 const MAX_STEP = 10;
@@ -102,6 +103,7 @@ const COUNTDOWN_MS = 1500;
 const COUNTDOWN_STEP_MS = 500;
 const AIR_PUFF_DURATION_MS = 250;
 const HINT_BELOW_SCORE = 3;
+const JUMP_BUFFER_MS = 100;
 const PANDA_CENTER_X = PANDA_X + 12.5;
 
 type Carried = Pick<State, "restarts" | "best" | "hintPending">;
@@ -128,6 +130,7 @@ const freshState = ({ restarts, best, hintPending }: Carried, randoms: Randoms):
   airPuffStart: null,
   airPuffBottom: 0,
   hintPending,
+  bufferedAt: null,
 });
 
 const distanceAt = (state: State, time: number): number =>
@@ -186,6 +189,12 @@ const spawnIfDue = (state: State, random: Random): State =>
         nextSpawn: state.nextSpawn + spawnGapForScore(state.score),
       };
 
+const reboundIfBuffered = (before: Panda, state: State): State => {
+  if (state.bufferedAt === null || before.height === 0 || state.panda.height > 0) return state;
+  const pressedInTime = state.time - state.bufferedAt <= JUMP_BUFFER_MS;
+  return { ...state, panda: pressedInTime ? jump(state.panda) : state.panda, bufferedAt: null };
+};
+
 const step = (state: State, ms: number, randoms: Randoms): State => {
   if (state.deathElapsed !== null) {
     return { ...state, deathElapsed: state.deathElapsed + ms, panda: fall(state.panda, ms) };
@@ -194,7 +203,7 @@ const step = (state: State, ms: number, randoms: Randoms): State => {
   const hitColumn = touchingColumn(next.columns, currentDistance(next), next.panda.height);
   return hitColumn !== null
     ? { ...next, panda: { ...next.panda, speed: 0 }, deathElapsed: 0, hitColumn }
-    : next;
+    : reboundIfBuffered(state.panda, next);
 };
 
 const stepsOf = (ms: number): number[] =>
@@ -308,13 +317,14 @@ const act = (state: State, randoms: Randoms): State => {
   }
   if (state.deathElapsed === null) {
     const panda = jump(state.panda);
-    return { ...state, panda, ...hintAfterJump(state, panda), ...airPuffAfterJump(state, panda) };
+    const bufferedAt = panda === state.panda ? state.time : state.bufferedAt;
+    return { ...state, panda, bufferedAt, ...hintAfterJump(state, panda), ...airPuffAfterJump(state, panda) };
   }
   return canRestart(state) ? freshState({ restarts: state.restarts + 1, best: state.best, hintPending: state.hintPending }, randoms) : state;
 };
 
 const pausedState = (state: State): State =>
-  state.deathElapsed === null ? { ...state, paused: true, resumeElapsed: null } : state;
+  state.deathElapsed === null ? { ...state, paused: true, resumeElapsed: null, bufferedAt: null } : state;
 
 const togglePause = (state: State): State => (state.paused ? resume(state) : pausedState(state));
 

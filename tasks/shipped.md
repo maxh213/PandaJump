@@ -55,3 +55,4 @@ add a line merge cleanly instead of conflicting.
 - A tap or click anywhere on the page outside the game canvas jumps, resumes and restarts like a canvas tap, except on the GitHub link
 - A white flash over the whole canvas the instant the panda hits a column, fading from 0.6 opacity to nothing over 200ms
 - Columns spawn closer together as the score climbs (1450 ms at score 20 down to 1250 ms at score 60) so the difficulty ramp keeps long runs harder
+- A jump pressed up to 100ms before the panda lands is remembered and fires the moment it touches the floor, instead of being thrown away
