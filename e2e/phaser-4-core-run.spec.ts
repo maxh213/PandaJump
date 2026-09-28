@@ -232,6 +232,14 @@ test.describe("Rule: The production build", () => {
     expect(response.status()).toBe(200);
   });
 
+  test("The apple-touch-icon resolves from the production build's path prefix", async ({ page }) => {
+    await page.goto(`${host}/PandaJump/`);
+    const href = await page.locator('link[rel="apple-touch-icon"]').getAttribute("href");
+    if (!href) throw new Error("apple-touch-icon href is missing");
+    const response = await page.request.get(new URL(href, page.url()).toString());
+    expect(response.status()).toBe(200);
+  });
+
   test("The manifest's icon and start_url resolve from the production build's path prefix", async ({ page }) => {
     await page.goto(`${host}/PandaJump/`);
     const href = await page.locator('link[rel="manifest"]').getAttribute("href");

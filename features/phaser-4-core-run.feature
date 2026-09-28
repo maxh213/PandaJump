@@ -51,6 +51,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And every image in "assets/" that the game uses loads with status 200
       And the page's <link rel="icon"> resolves with status 200
       And the page's <meta property="og:image"> resolves with status 200
+      And the page's <link rel="apple-touch-icon"> resolves with status 200
       And the manifest's icon URL and start_url resolve with status 200
 
   Rule: The panda runs on a scrolling floor
