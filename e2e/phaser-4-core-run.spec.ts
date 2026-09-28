@@ -673,6 +673,12 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     });
     expect(ready.gameOverPrompt.bounds.x).toBeGreaterThanOrEqual(0);
     expect(ready.gameOverPrompt.bounds.x + ready.gameOverPrompt.bounds.width).toBeLessThanOrEqual(400);
+    expect(ready.gameOverTitle.bounds.bottom).toBeLessThanOrEqual(ready.gameOverMedal.bounds.y);
+    expect(ready.gameOverMedal.bounds.bottom).toBeLessThanOrEqual(ready.gameOverScore.bounds.y);
+    expect(ready.gameOverScore.bounds.bottom).toBeLessThanOrEqual(ready.gameOverBest.bounds.y);
+    expect(ready.gameOverBest.bounds.bottom).toBeLessThanOrEqual(ready.gameOverPrompt.bounds.y);
+    expect(ready.gameOverPrompt.bounds.bottom).toBeLessThanOrEqual(ready.gameOverShare.bounds.y);
+    expect(ready.gameOverShare.bounds.bottom).toBeLessThanOrEqual(ready.gameOverRuns.bounds.y);
   });
 
   test("Landing on top of a box also freezes the run", async ({ page }) => {

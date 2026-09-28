@@ -133,6 +133,7 @@ export const installProbe = () => {
   const named = (name: string) => scene.children.getByName(name);
   const centeredText = (name: string): CenteredText => {
     const text = named(name) as GameText;
+    const rect = text.getBounds();
     return {
       text: text.text,
       x: text.x,
@@ -142,7 +143,7 @@ export const installProbe = () => {
       originX: text.originX,
       originY: text.originY,
       visible: text.visible,
-      bounds: text.getBounds(),
+      bounds: { x: rect.x, y: rect.y, width: rect.width, height: rect.height, bottom: rect.bottom },
     };
   };
   const sample = (): Sample => {
