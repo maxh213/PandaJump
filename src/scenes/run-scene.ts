@@ -10,13 +10,14 @@ import grassUrl from "../../assets/top_grass_01.png?no-inline";
 import cloud02Url from "../../assets/cloud_02.png?no-inline";
 import cloud05Url from "../../assets/cloud_05.png?no-inline";
 import { CANVAS_WIDTH, FLOOR_Y, TILE_SIZE } from "../rules/index.ts";
-import type { Box, Cloud, Run } from "../rules/index.ts";
+import type { Box, Cloud, Medal, Run } from "../rules/index.ts";
 
 const GRASS_Y = 392;
 const PANDA_SCALE = 1.25;
 const CLOUD_DEPTH = -1;
 const CENTER_X = CANVAS_WIDTH / 2;
 const GAME_OVER_Y = 190;
+const GAME_OVER_MEDAL_Y = 226;
 const GAME_OVER_SCORE_Y = 250;
 const GAME_OVER_BEST_Y = 280;
 const GAME_OVER_PROMPT_Y = 320;
@@ -24,6 +25,20 @@ const GAME_OVER_SHARE_Y = 360;
 const GAME_OVER_RUNS_Y = 400;
 const BEST_COLORS: Record<"true" | "false", string> = { true: "#ffd700", false: "#ffffff" };
 const GAME_OVER_BEST_LABELS: Record<"true" | "false", string> = { true: "New best", false: "Best" };
+const MEDAL_LABELS: Record<Medal, string> = {
+  none: "",
+  Bronze: "Bronze medal",
+  Silver: "Silver medal",
+  Gold: "Gold medal",
+  Platinum: "Platinum medal",
+};
+const MEDAL_COLORS: Record<Medal, string> = {
+  none: "#ffffff",
+  Bronze: "#cd7f32",
+  Silver: "#c0c0c0",
+  Gold: "#ffd700",
+  Platinum: "#e5e4e2",
+};
 const shareSupported = typeof navigator.share === "function";
 const PAGE_TITLE = "Panda Jump";
 
@@ -38,6 +53,7 @@ export class RunScene extends Phaser.Scene {
   private score!: Phaser.GameObjects.Text;
   private best!: Phaser.GameObjects.Text;
   private gameOverTitle!: Phaser.GameObjects.Text;
+  private gameOverMedal!: Phaser.GameObjects.Text;
   private gameOverScore!: Phaser.GameObjects.Text;
   private gameOverBest!: Phaser.GameObjects.Text;
   private gameOverPrompt!: Phaser.GameObjects.Text;
@@ -125,6 +141,7 @@ export class RunScene extends Phaser.Scene {
 
   private createGameOverTexts(): void {
     this.gameOverTitle = this.centeredText(GAME_OVER_Y, "Game over", "40px").setName("gameOverTitle");
+    this.gameOverMedal = this.centeredText(GAME_OVER_MEDAL_Y, "", "16px").setName("gameOverMedal");
     this.gameOverScore = this.centeredText(GAME_OVER_SCORE_Y, "", "20px").setName("gameOverScore");
     this.gameOverBest = this.centeredText(GAME_OVER_BEST_Y, "", "20px").setName("gameOverBest");
     this.gameOverPrompt = this.centeredText(
@@ -165,6 +182,10 @@ export class RunScene extends Phaser.Scene {
     document.title = titles[String(view.score === "0") as "true" | "false"];
     this.best.setText(`Best: ${view.best}`).setColor(BEST_COLORS[String(view.newBest) as "true" | "false"]);
     this.gameOverTitle.setVisible(view.gameOver);
+    this.gameOverMedal
+      .setVisible([view.gameOver, view.medal !== "none"].every(Boolean))
+      .setText(MEDAL_LABELS[view.medal])
+      .setColor(MEDAL_COLORS[view.medal]);
     this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.score}`);
     const overtookBest = String(view.overtookBest) as "true" | "false";
     this.gameOverBest

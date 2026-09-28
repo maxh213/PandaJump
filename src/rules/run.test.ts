@@ -39,6 +39,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     best: "0",
     newBest: false,
     overtookBest: false,
+    medal: "none",
     pandaX: 100,
     pandaBottom: 426,
     pandaFrame: 17,
