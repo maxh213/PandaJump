@@ -166,6 +166,8 @@ test.describe("Rule: The page keeps its content", () => {
     const description = await page.locator('meta[name="description"]').getAttribute("content");
     expect(description).toBeTruthy();
     expect(description?.toLowerCase()).toContain("panda");
+    const ogType = await page.locator('meta[property="og:type"]').getAttribute("content");
+    expect(ogType).toBe("website");
     const ogTitle = await page.locator('meta[property="og:title"]').getAttribute("content");
     expect(ogTitle).toBe("Panda Jump");
     const ogDescription = await page.locator('meta[property="og:description"]').getAttribute("content");
