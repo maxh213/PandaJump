@@ -31,11 +31,15 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And no request uses an "http://" URL
       And no request is made for "main.js" or "phaser.min.js"
 
+    Scenario: The page has a favicon so the browser does not 404
+      Then the page's <link rel="icon"> resolves with status 200
+
     Scenario: The production build runs from a plain file host
       Given "npm run build" has produced "dist/"
       When "dist/" is served by a static file server under the path "/PandaJump/"
       Then the game canvas is shown and the panda is running
       And every image in "assets/" that the game uses loads with status 200
+      And the page's <link rel="icon"> resolves with status 200
 
   Rule: The panda runs on a scrolling floor
 
