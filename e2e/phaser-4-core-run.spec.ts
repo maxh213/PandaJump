@@ -116,7 +116,7 @@ test.describe("Rule: The page keeps its content", () => {
     await expect(page.locator("p").nth(0)).toHaveText("Check it out on Github");
     await expect(page.getByRole("link", { name: "Github" })).toHaveAttribute("href", "https://github.com/maxh213/PandaJump");
     await expect(page.locator("p").nth(1)).toHaveText(
-      "Controls: Click, tap or press Space or the Up Arrow key to jump (you can double jump); the first press starts the run without jumping. Press P or Escape to pause and resume.",
+      "Controls: Click, tap or press Space or the Up Arrow key to jump (you can double jump); the first one starts the run without jumping. Press P or Escape to pause and resume.",
     );
   });
 
