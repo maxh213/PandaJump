@@ -42,6 +42,48 @@ Feature: Panda Jump on Phaser 4, slice: copy score from the game-over screen
       And the page still reads "Game over"
       And the page still reads "Score: 1"
 
+  Rule: Tapping the copy prompt confirms the copy by changing its text, until the next run starts
+
+    Scenario: Tapping "Copy score" changes the prompt to "Copied!" once the clipboard write resolves
+      Given sharing is not supported
+      And copying is supported
+      And navigator.clipboard.writeText resolves
+      And the random source picks 1 box for the first column
+      When I do not jump
+      And the panda touches the column
+      And 500 ms pass
+      When I tap "Copy score"
+      Then the page reads "Copied!" in the same position, colour and size "Copy score" was in
+      And the run has not restarted
+      And the page still reads "Game over"
+      And the page still reads "Score: 0"
+
+    Scenario: The prompt stays "Copy score" when the clipboard write is rejected
+      Given sharing is not supported
+      And copying is supported
+      And navigator.clipboard.writeText rejects
+      And the random source picks 1 box for the first column
+      When I do not jump
+      And the panda touches the column
+      And 500 ms pass
+      When I tap "Copy score"
+      Then the page still reads "Copy score"
+
+    Scenario: A new run's game-over screen reads "Copy score" again after a previous copy succeeded
+      Given sharing is not supported
+      And copying is supported
+      And navigator.clipboard.writeText resolves
+      And the random source picks 1 box for every column
+      When I do not jump
+      And the panda touches the column
+      And 500 ms pass
+      When I tap "Copy score"
+      Then the page reads "Copied!"
+      When I tap the canvas away from the prompt
+      And the panda touches the next column
+      And 500 ms pass
+      Then the page reads "Copy score"
+
   Rule: On a browser with neither navigator.share nor navigator.clipboard.writeText, no prompt shows and the screen behaves as before
 
     Scenario: Neither prompt is shown when sharing and copying are both unsupported

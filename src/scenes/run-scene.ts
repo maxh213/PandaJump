@@ -67,6 +67,7 @@ const DEATH_VIBRATION_MS = 100;
 interface NavigatorWithVibrate {
   vibrate?: (pattern: number) => boolean;
 }
+const COPY_LABELS: Record<"true" | "false", string> = { true: "Copied!", false: "Copy score" };
 
 export class RunScene extends Phaser.Scene {
   private readonly run: Run;
@@ -95,6 +96,7 @@ export class RunScene extends Phaser.Scene {
   private bestMarker!: Phaser.GameObjects.Text;
   private countdownText!: Phaser.GameObjects.Text;
   private wasGameOver = false;
+  private copied = false;
 
   constructor(run: Run, timeScale: number) {
     super("run");
@@ -224,6 +226,9 @@ export class RunScene extends Phaser.Scene {
         event.stopPropagation();
         navigator.clipboard
           .writeText(`I scored ${this.run.view().score} on Panda Jump! ${window.location.href}`)
+          .then(() => {
+            this.copied = true;
+          })
           .catch(() => undefined);
       });
   };
@@ -240,6 +245,14 @@ export class RunScene extends Phaser.Scene {
         this.run.pause();
       });
   };
+
+  private trackCopied(gameOver: boolean): void {
+    [gameOver]
+      .filter((stillOver) => !stillOver)
+      .forEach(() => {
+        this.copied = false;
+      });
+  }
 
   private centeredText(y: number, text: string, fontSize: string): Phaser.GameObjects.Text {
     return this.add
@@ -322,7 +335,10 @@ export class RunScene extends Phaser.Scene {
     this.pauseTitle.setVisible(view.paused);
     this.pausePrompt.setVisible(view.paused);
     this.pauseButton.setVisible([!view.paused, !view.gameOver].every(Boolean));
-    this.gameOverCopy.setVisible([view.canRestart, !shareSupported, clipboardSupported].every(Boolean));
+    this.gameOverCopy
+      .setVisible([view.canRestart, !shareSupported, clipboardSupported].every(Boolean))
+      .setText(COPY_LABELS[String(this.copied) as "true" | "false"]);
+    this.trackCopied(view.gameOver);
     this.drawBestMarker(view.bestMarker);
     const countdownKey = String(view.countdown) as "3" | "2" | "1" | "null";
     this.countdownText.setVisible(view.countdown !== null).setText(COUNTDOWN_LABELS[countdownKey]);

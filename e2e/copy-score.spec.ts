@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, oneBox, openGame, sample, settle, untilGameOver } from "./probe.ts";
+import { advance, oneBox, openGame, sample, settle, untilGameOver, untilRestart } from "./probe.ts";
 
 interface CapturedWrite {
   text?: string;
@@ -39,6 +39,17 @@ const mockSupportedClipboard = async (page: Page): Promise<CapturedWrite[]> => {
     });
   });
   return calls;
+};
+
+const mockRejectingClipboard = async (page: Page): Promise<void> => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: () => Promise.reject(new Error("denied")),
+      },
+    });
+  });
 };
 
 const tapCopyPrompt = async (page: Page): Promise<void> => {
@@ -87,6 +98,55 @@ test.describe("Rule: Tapping the copy prompt copies the run's score and the page
     expect(after.gameOver).toBe(true);
     expect(after.gameOverTitle.visible).toBe(true);
     expect(after.gameOverScore.text).toBe("Score: 0");
+  });
+});
+
+test.describe("Rule: Tapping the copy prompt confirms the copy by changing its text, until the next run starts", () => {
+  test('Tapping "Copy score" changes the prompt to "Copied!" once the clipboard write resolves', async ({ page }) => {
+    await mockUnsupportedShare(page);
+    await mockSupportedClipboard(page);
+    await openGame(page, oneBox);
+    await untilGameOver(page);
+    await advance(page, 500);
+    const before = await sample(page);
+    await tapCopyPrompt(page);
+    const after = await sample(page);
+    expect(after.gameOverCopy).toMatchObject({
+      text: "Copied!",
+      x: before.gameOverCopy.x,
+      y: before.gameOverCopy.y,
+      color: before.gameOverCopy.color,
+      fontSize: before.gameOverCopy.fontSize,
+    });
+    expect(after.restarts).toBe(0);
+    expect(after.gameOver).toBe(true);
+    expect(after.gameOverTitle.visible).toBe(true);
+    expect(after.gameOverScore.text).toBe("Score: 0");
+  });
+
+  test('The prompt stays "Copy score" when the clipboard write is rejected', async ({ page }) => {
+    await mockUnsupportedShare(page);
+    await mockRejectingClipboard(page);
+    await openGame(page, oneBox);
+    await untilGameOver(page);
+    await advance(page, 500);
+    await tapCopyPrompt(page);
+    expect((await sample(page)).gameOverCopy.text).toBe("Copy score");
+  });
+
+  test('A new run\'s game-over screen reads "Copy score" again after a previous copy succeeded', async ({ page }) => {
+    await mockUnsupportedShare(page);
+    await mockSupportedClipboard(page);
+    await openGame(page, oneBox);
+    await untilGameOver(page);
+    await advance(page, 500);
+    await tapCopyPrompt(page);
+    expect((await sample(page)).gameOverCopy.text).toBe("Copied!");
+    const restart = await untilRestart(page);
+    expect(restart.after.restarts).toBe(1);
+    await untilGameOver(page);
+    await advance(page, 500);
+    expect((await sample(page)).gameOverCopy.text).toBe("Copy score");
   });
 });
 
