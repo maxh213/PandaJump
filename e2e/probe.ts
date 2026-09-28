@@ -86,6 +86,8 @@ export interface Sample {
     strokeRadius: number;
   };
   viewAirPuff: View["airPuff"];
+  landingPuff: { x: number; y: number; alpha: number; visible: boolean };
+  viewLandingPuff: View["landingPuff"];
   sky: string;
   cameraSky: string;
 }
@@ -243,6 +245,7 @@ export const installProbe = () => {
     const hex = (color: number): string => `#${color.toString(16).padStart(6, "0")}`;
     const shadow = named("pandaShadow") as GameEllipse;
     const orderOf = (name: string) => scene.children.list.indexOf(named(name) as object as (typeof scene.children.list)[number]);
+    const landingPuff = named("landingPuff") as GameGraphics;
     const bounds = panda.getBounds();
     return {
       time: view.time,
@@ -342,6 +345,8 @@ export const installProbe = () => {
         strokeRadius: command(21),
       },
       viewAirPuff: view.airPuff,
+      landingPuff: { x: landingPuff.x, y: landingPuff.y, alpha: landingPuff.alpha, visible: landingPuff.visible },
+      viewLandingPuff: view.landingPuff,
       sky: view.sky,
       cameraSky: `#${scene.cameras.main.backgroundColor.color.toString(16).padStart(6, "0")}`,
     };

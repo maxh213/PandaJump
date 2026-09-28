@@ -50,6 +50,7 @@ interface View {
   readonly airPuff: { x: number; y: number; alpha: number } | null;
   readonly doubleJumpHint: boolean;
   readonly pandaShadow: { x: number; y: number; scale: number };
+  readonly landingPuff: { x: number; y: number; alpha: number } | null;
 }
 
 export interface Run {
@@ -88,6 +89,7 @@ interface State {
   readonly airPuffBottom: number;
   readonly hintPending: boolean;
   readonly bufferedAt: number | null;
+  readonly landingStart: number | null;
 }
 
 const MAX_STEP = 10;
@@ -108,6 +110,7 @@ const COUNTDOWN_MS = 1500;
 const COUNTDOWN_STEP_MS = 500;
 const AIR_PUFF_DURATION_MS = 250;
 const SHADOW_PEAK_HEIGHT = 168;
+const LANDING_PUFF_DURATION_MS = 200;
 const HINT_BELOW_SCORE = 3;
 const JUMP_BUFFER_MS = 100;
 const PANDA_CENTER_X = PANDA_X + 12.5;
@@ -137,6 +140,7 @@ const freshState = ({ restarts, best, hintPending }: Carried, randoms: Randoms):
   airPuffBottom: 0,
   hintPending,
   bufferedAt: null,
+  landingStart: null,
 });
 
 const distanceAt = (state: State, time: number): number =>
@@ -162,6 +166,9 @@ const nextRamp = (state: State, advance: Advance): Ramp =>
 const nextSpeedUpStart = (state: State, ramp: Ramp, time: number): number | null =>
   ramp.changed ? time : state.speedUpStart;
 
+const nextLandingStart = (state: State, panda: Panda, time: number): number | null =>
+  state.panda.height > 0 && panda.height === 0 ? time : state.landingStart;
+
 const moveOn = (state: State, ms: number, randoms: Randoms): State => {
   const time = state.time + ms;
   const distance = distanceAt(state, time);
@@ -170,12 +177,14 @@ const moveOn = (state: State, ms: number, randoms: Randoms): State => {
   const calloutStart = state.calloutStart === null && best > state.best ? time : state.calloutStart;
   const scorePopStart = score > state.score ? time : state.scorePopStart;
   const ramp = nextRamp(state, { time, distance, score });
+  const panda = fall(state.panda, ms);
   return {
     ...state,
     time,
     rampTime: ramp.rampTime,
     rampDistance: ramp.rampDistance,
-    panda: fall(state.panda, ms),
+    panda,
+    landingStart: nextLandingStart(state, panda, time),
     score,
     scorePopStart,
     best,
@@ -279,6 +288,14 @@ const airPuffOf = (state: State): View["airPuff"] => {
     : null;
 };
 
+const landingPuffOf = (state: State): View["landingPuff"] => {
+  if (state.landingStart === null || state.deathElapsed !== null) return null;
+  const elapsed = state.time - state.landingStart;
+  return elapsed < LANDING_PUFF_DURATION_MS
+    ? { x: PANDA_CENTER_X, y: FLOOR_Y, alpha: 1 - elapsed / LANDING_PUFF_DURATION_MS }
+    : null;
+};
+
 const doubleJumpHintOf = (state: State): boolean =>
   state.hintPending && isLive(state) && state.score < HINT_BELOW_SCORE;
 
@@ -328,6 +345,7 @@ const viewOf = (state: State): View => ({
   airPuff: airPuffOf(state),
   doubleJumpHint: doubleJumpHintOf(state),
   pandaShadow: pandaShadowOf(state),
+  landingPuff: landingPuffOf(state),
 });
 
 const resume = (state: State): State => (state.resumeElapsed === null ? { ...state, resumeElapsed: 0 } : state);

@@ -24,6 +24,9 @@ const TINT_ACTIONS: Record<"true" | "false", (image: Phaser.GameObjects.Image) =
 };
 const GRASS_Y = 392;
 const AIR_PUFF_RADIUS = 8;
+const LANDING_PUFF_RADIUS = 5;
+const LANDING_PUFF_OFFSET = 10;
+const LANDING_PUFF_COLOR = 0xd2b48c;
 const PANDA_SCALE = 1.25;
 const PANDA_FRAME_WIDTH = 20;
 const PANDA_FRAME_HEIGHT = 21;
@@ -90,6 +93,7 @@ export class RunScene extends Phaser.Scene {
   private panda!: Phaser.GameObjects.Sprite;
   private pandaShadow!: Phaser.GameObjects.Ellipse;
   private airPuff!: Phaser.GameObjects.Graphics;
+  private landingPuff!: Phaser.GameObjects.Graphics;
   private boxes!: Phaser.GameObjects.Group;
   private clouds!: Phaser.GameObjects.Group;
   private stars!: Phaser.GameObjects.Group;
@@ -185,6 +189,7 @@ export class RunScene extends Phaser.Scene {
       .setDepth(SHADOW_DEPTH)
       .setName("pandaShadow");
     this.airPuff = this.add.graphics().setDepth(AIR_PUFF_DEPTH).setName("airPuff");
+    this.landingPuff = this.add.graphics().setDepth(AIR_PUFF_DEPTH).setName("landingPuff");
   }
 
   private wireInput(): void {
@@ -380,6 +385,7 @@ export class RunScene extends Phaser.Scene {
     this.drawPanda(view);
     this.pandaShadow.setPosition(view.pandaShadow.x, view.pandaShadow.y).setScale(view.pandaShadow.scale);
     this.drawAirPuff(view.airPuff);
+    this.drawLandingPuff(view.landingPuff);
     this.rock.tilePositionX = view.floorScroll;
     this.grass.tilePositionX = view.floorScroll;
     this.score.setText(view.score).setScale(view.scoreScale);
@@ -472,6 +478,19 @@ export class RunScene extends Phaser.Scene {
         .setVisible(true);
     });
   }
+  private drawLandingPuff(landingPuff: { x: number; y: number; alpha: number } | null): void {
+    this.landingPuff.clear().setVisible(false);
+    [landingPuff].filter(hasValue).forEach((puff) => {
+      this.landingPuff
+        .fillStyle(LANDING_PUFF_COLOR, 1)
+        .fillCircle(-LANDING_PUFF_OFFSET, 0, LANDING_PUFF_RADIUS)
+        .fillCircle(LANDING_PUFF_OFFSET, 0, LANDING_PUFF_RADIUS)
+        .setPosition(puff.x, puff.y)
+        .setAlpha(puff.alpha)
+        .setVisible(true);
+    });
+  }
+
   private readonly vibrateOnDeath = (gameOver: boolean): void => {
     [gameOver]
       .filter((current) => current)

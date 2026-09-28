@@ -62,3 +62,4 @@ add a line merge cleanly instead of conflicting.
 - A soft black ground shadow under the panda, drawn above the floor and below the panda, that shrinks from full size on the floor to half size at a floor jump's peak and stays visible while paused and at game over
 - The game-over "Score: N" line counts up from 0 to the final score over the 500ms restart freeze, while the top-left score, tab title, medal and shared text show the final score at once
 - A few small white stars scattered across the night sky once the score reaches 40, kept on the game-over screen and cleared on restart
+- A small sand-coloured dust puff at the panda's feet for 200 ms whenever it lands from a jump
