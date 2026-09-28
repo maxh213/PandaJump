@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advanceTo, columnsAt, openGame, pressSpace, sample } from "./probe.ts";
+import { advanceTo, columnsAt, openGame, play, pressSpace, sample, standardJumps, standardRandom } from "./probe.ts";
 
 const TEXTURE_SCRIPT = [0.25, 0.5, 0, 0.25, 0.5, 0.2, 0.25, 0.5, 0.4, 0.25, 0.5, 0.6, 0.25, 0.5, 0.8];
 const STACKED_SCRIPT = [0.75, 0.5, 0];
+const PAIRED_TEXTURE_SCRIPT = [0.25, 0, 0.6];
 
 const SPAWN_TEXTURES = ["dirt_06.png", "ice_06.png", "metal_06.png", "sand_06.png", "snow_06.png"];
 
@@ -32,6 +33,19 @@ test.describe("Rule: Every box in one column uses the same texture as the rest o
     await advanceTo(page, 1600);
     const column = columnsAt(await sample(page)).find((entry) => entry.x === 380);
     expect(column?.boxes.map((box) => box.key)).toEqual(["dirt_06.png", "dirt_06.png"]);
+  });
+
+  test("A front column and its trailing second column render with the same texture", async ({ page }) => {
+    test.setTimeout(120_000);
+    await openGame(page, standardRandom({ 13: PAIRED_TEXTURE_SCRIPT }));
+    await play(page, standardJumps(19500), 19500);
+    expect((await sample(page)).score.text).toBe("11");
+    await advanceTo(page, 20000);
+    const columns = columnsAt(await sample(page)).filter((column) => column.x >= 100);
+    expect(columns.map((column) => column.x)).toEqual([300, 364]);
+    for (const column of columns) {
+      expect(column.boxes.map((box) => box.key)).toEqual(["sand_06.png"]);
+    }
   });
 });
 

@@ -12,6 +12,12 @@ Feature: Panda Jump box columns draw from a small set of ground textures
   "metal_06.png", column 4 uses "sand_06.png" and column 5 uses "snow_06.png". Pressing Space 1200 ms
   after a column spawns clears it, same as the standard schedule in features/phaser-4-core-run.feature.
 
+  For the paired-column scenario, columns follow the standard schedule from features/phaser-4-core-run.feature
+  (1 box, no second column, pressing Space 1200 ms after each spawn) through column 12, so the score
+  reads "11" once column 13 spawns at 19500 ms, above the score of 10 that a second column needs. Column 13
+  instead draws 1 box, a second column and "sand_06.png", so a front column and a trailing column 64 px
+  behind it spawn together at 19500 ms.
+
   Background:
     Given I open the Panda Jump page with the texture source and a manual clock
 
@@ -40,6 +46,13 @@ Feature: Panda Jump box columns draw from a small set of ground textures
       Given the random source picks 2 boxes for the first column
       When 1600 ms pass
       Then the column at x 380 has 2 boxes and every box in it uses "dirt_06.png"
+
+    Scenario: A front column and its trailing second column render with the same texture
+      Given I play the standard schedule, except that the random source picks a second column and "sand_06.png" for column 13
+      Then the score reads "11" at 19500 ms
+      When 500 ms pass
+      Then the column at x 300 and the column at x 364, both spawned at 19500 ms, use "sand_06.png" for every box
+      And neither column uses "dirt_06.png"
 
   Rule: Box textures are deterministic under the injected random source
 
