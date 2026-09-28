@@ -525,6 +525,17 @@ test("a jump pressed during the countdown neither jumps nor restarts the countdo
   expect(run.view().countdown).toBe(1);
 });
 
+test("pausing again during the countdown cancels it and shows Paused instead", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pause();
+  run.jump();
+  run.advance(500);
+  expect(run.view().countdown).toBe(2);
+  run.pause();
+  expect(run.view()).toMatchObject({ paused: true, countdown: null });
+});
+
 test("a jump pressed after the countdown ends jumps as normal", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
