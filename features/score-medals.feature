@@ -58,3 +58,20 @@ Feature: Panda Jump awards a medal on the game-over screen
       Then the panda touches the first column of the new run, freezing it
       And the page reads "Score: 0" on the game-over screen
       And no medal text is shown
+
+  Rule: The game-over medal has a coloured disc beside its name
+
+    Scenario: The medal disc matches the medal colour and sits left of the medal name
+      Given I play the standard schedule through column 10 and then stop jumping
+      Then the game-over screen shows a disc named "gameOverMedalBadge" of radius 10 filled #cd7f32 with a 2px black stroke
+      And the disc is centred at y 226 and 18 px left of the left edge of "Bronze medal"
+      And a silver, gold and platinum medal give discs filled #c0c0c0, #ffd700 and #e5e4e2 (gold and platinum are checked by feeding the scene a game-over view with that medal)
+
+    Scenario: The disc is hidden whenever the medal is hidden
+      Given I play the standard schedule through column 10
+      Then the disc is not visible while the run is live
+      When the panda touches the next column, the game freezes
+      And I press P
+      Then the disc is not visible while paused
+      When I restart and die again without scoring
+      Then the disc is not visible on the score 0 game-over screen

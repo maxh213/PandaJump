@@ -58,6 +58,17 @@ export interface Sample {
   viewClouds: View["clouds"];
   viewDeathFlash: View["deathFlash"];
   airPuff: { x: number; y: number; alpha: number; visible: boolean };
+  gameOverMedalBadge: {
+    x: number;
+    y: number;
+    visible: boolean;
+    depth: number;
+    fill: string;
+    radius: number;
+    strokeWidth: number;
+    stroke: string;
+    strokeRadius: number;
+  };
   viewAirPuff: View["airPuff"];
   sky: string;
   cameraSky: string;
@@ -114,6 +125,8 @@ interface GameGraphics {
   y: number;
   alpha: number;
   visible: boolean;
+  depth: number;
+  commandBuffer: number[];
 }
 
 interface GameNode {
@@ -192,6 +205,9 @@ export const installProbe = () => {
     const grass = named("grass") as GameTileSprite;
     const deathFlash = named("deathFlash") as GameRectangle;
     const airPuff = named("airPuff") as GameGraphics;
+    const badge = named("gameOverMedalBadge") as GameGraphics;
+    const command = (index: number): number => badge.commandBuffer[index] ?? Number.NaN;
+    const hex = (color: number): string => `#${color.toString(16).padStart(6, "0")}`;
     const bounds = panda.getBounds();
     return {
       time: view.time,
@@ -261,6 +277,17 @@ export const installProbe = () => {
       viewClouds: view.clouds,
       viewDeathFlash: view.deathFlash,
       airPuff: { x: airPuff.x, y: airPuff.y, alpha: airPuff.alpha, visible: airPuff.visible },
+      gameOverMedalBadge: {
+        x: badge.x,
+        y: badge.y,
+        visible: badge.visible,
+        depth: badge.depth,
+        fill: hex(command(1)),
+        radius: command(7),
+        strokeWidth: command(14),
+        stroke: hex(command(15)),
+        strokeRadius: command(21),
+      },
       viewAirPuff: view.airPuff,
       sky: view.sky,
       cameraSky: `#${scene.cameras.main.backgroundColor.color.toString(16).padStart(6, "0")}`,

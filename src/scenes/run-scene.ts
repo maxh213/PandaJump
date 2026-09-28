@@ -56,6 +56,9 @@ const MEDAL_COLORS: Record<Medal, string> = {
   Gold: "#ffd700",
   Platinum: "#e5e4e2",
 };
+const MEDAL_BADGE_RADIUS = 10;
+const MEDAL_BADGE_GAP = 18;
+const MEDAL_BADGE_STROKE_WIDTH = 2;
 const DEATH_FLASH_DEPTH = 1;
 const GAME_OVER_DEPTH = 2;
 const DEATH_FLASH_COLOR = 0xffffff;
@@ -86,6 +89,7 @@ export class RunScene extends Phaser.Scene {
   private deathFlash!: Phaser.GameObjects.Rectangle;
   private gameOverTitle!: Phaser.GameObjects.Text;
   private gameOverMedal!: Phaser.GameObjects.Text;
+  private gameOverMedalBadge!: Phaser.GameObjects.Graphics;
   private gameOverScore!: Phaser.GameObjects.Text;
   private gameOverBest!: Phaser.GameObjects.Text;
   private gameOverPrompt!: Phaser.GameObjects.Text;
@@ -289,6 +293,10 @@ export class RunScene extends Phaser.Scene {
   private createGameOverTexts(): void {
     this.gameOverTitle = this.centeredText(GAME_OVER_Y, "Game over", "40px").setName("gameOverTitle");
     this.gameOverMedal = this.centeredText(GAME_OVER_MEDAL_Y, "", "16px").setName("gameOverMedal");
+    this.gameOverMedalBadge = this.add
+      .graphics()
+      .setDepth(GAME_OVER_DEPTH)
+      .setName("gameOverMedalBadge");
     this.gameOverScore = this.centeredText(GAME_OVER_SCORE_Y, "", "20px").setName("gameOverScore");
     this.gameOverBest = this.centeredText(GAME_OVER_BEST_Y, "", "20px").setName("gameOverBest");
     this.gameOverPrompt = this.centeredText(
@@ -401,6 +409,7 @@ export class RunScene extends Phaser.Scene {
       .setVisible([view.gameOver, view.medal !== "none"].every(Boolean))
       .setText(MEDAL_LABELS[view.medal])
       .setColor(MEDAL_COLORS[view.medal]);
+    this.drawMedalBadge(view.gameOver, view.medal);
     this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.score}`);
     const overtookBest = String(view.overtookBest) as "true" | "false";
     this.gameOverBest
@@ -410,6 +419,19 @@ export class RunScene extends Phaser.Scene {
     this.gameOverPrompt.setVisible(view.canRestart);
     this.gameOverShare.setVisible([view.canRestart, shareSupported].every(Boolean));
     this.gameOverRuns.setVisible(view.gameOver).setText(`Run ${String(view.restarts + 1)}`);
+  }
+
+  private drawMedalBadge(gameOver: boolean, medal: Medal): void {
+    const shown = [gameOver, medal !== "none"].every(Boolean);
+    const color = Phaser.Display.Color.HexStringToColor(MEDAL_COLORS[medal]).color;
+    this.gameOverMedalBadge
+      .clear()
+      .fillStyle(color, 1)
+      .fillCircle(0, 0, MEDAL_BADGE_RADIUS)
+      .lineStyle(MEDAL_BADGE_STROKE_WIDTH, 0x000000, 1)
+      .strokeCircle(0, 0, MEDAL_BADGE_RADIUS)
+      .setPosition(this.gameOverMedal.x - this.gameOverMedal.width / 2 - MEDAL_BADGE_GAP, GAME_OVER_MEDAL_Y)
+      .setVisible(shown);
   }
 
   private drawAirPuff(airPuff: { x: number; y: number; alpha: number } | null): void {
