@@ -44,3 +44,10 @@ const run = createRun(options.random, options.cloudRandom, bestStore);
 const game = startGame(run, options.timeScale);
 
 Object.assign(window, { pandaJump: { run, game } });
+
+const registerServiceWorker = (): void => {
+  if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.register("sw.js").catch(() => undefined);
+};
+
+registerServiceWorker();

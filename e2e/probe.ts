@@ -110,7 +110,7 @@ declare global {
   }
 }
 
-const installProbe = () => {
+export const installProbe = () => {
   const handle = window.pandaJump;
   if (!handle) throw new Error("PandaJump has not started");
   const scene = handle.game.scene.getScene("run");
