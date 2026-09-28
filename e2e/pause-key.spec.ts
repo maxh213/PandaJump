@@ -40,9 +40,9 @@ test.describe("Rule: Pressing P or Escape during a live run pauses it and shows 
   }
 });
 
-test.describe("Rule: Pressing P or Escape while paused resumes the run without a jump", () => {
+test.describe("Rule: Pressing P or Escape while paused starts the same 3, 2, 1 countdown as any other control", () => {
   for (const key of KEYS) {
-    test(`The pausing key also resumes the run it paused: ${key}`, async ({ page }) => {
+    test(`The pausing key starts a countdown without a jump: ${key}`, async ({ page }) => {
       await openGame(page, standardRandom());
       await pauseAt(page, 1000, key);
       await press(page, key);
@@ -50,6 +50,18 @@ test.describe("Rule: Pressing P or Escape while paused resumes the run without a
       expect(resumed.pauseTitle.visible).toBe(false);
       expect(resumed.pausePrompt.visible).toBe(false);
       expect(resumed.panda.bottom).toBe(426);
+      expect(resumed.countdownText).toMatchObject({ text: "3", x: 200, y: 190, color: "#ffffff", fontSize: "40px", visible: true });
+
+      await advance(page, 500);
+      expect((await sample(page)).countdownText).toMatchObject({ text: "2", visible: true });
+      await advance(page, 500);
+      expect((await sample(page)).countdownText).toMatchObject({ text: "1", visible: true });
+      await advance(page, 500);
+      const afterCountdown = await sample(page);
+      expect(afterCountdown.countdownText.visible).toBe(false);
+      expect(afterCountdown.time).toBe(1000);
+      expect(afterCountdown.panda.bottom).toBe(426);
+
       await advanceTo(page, 1499);
       expect((await sample(page)).boxes).toEqual([]);
       await advanceTo(page, 1500);
@@ -61,7 +73,7 @@ test.describe("Rule: Pressing P or Escape while paused resumes the run without a
     });
   }
 
-  test("Tap, Space and the Up Arrow key still resume a run paused with P or Escape", async ({ page }) => {
+  test("Tap, Space and the Up Arrow key still start the countdown on a run paused with P or Escape", async ({ page }) => {
     await openGame(page, standardRandom());
     await pauseAt(page, 1000, "p");
     await pressSpace(page);
@@ -69,6 +81,7 @@ test.describe("Rule: Pressing P or Escape while paused resumes the run without a
     expect(resumed.pauseTitle.visible).toBe(false);
     expect(resumed.pausePrompt.visible).toBe(false);
     expect(resumed.panda.bottom).toBe(426);
+    expect(resumed.countdownText).toMatchObject({ text: "3", visible: true });
   });
 });
 
