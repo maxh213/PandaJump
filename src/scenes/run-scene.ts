@@ -42,6 +42,7 @@ const MEDAL_COLORS: Record<Medal, string> = {
 };
 const shareSupported = typeof navigator.share === "function";
 const PAGE_TITLE = "Panda Jump";
+const clipboardSupported = typeof (navigator as { clipboard?: Clipboard }).clipboard?.writeText === "function";
 
 export class RunScene extends Phaser.Scene {
   private readonly run: Run;
@@ -63,6 +64,7 @@ export class RunScene extends Phaser.Scene {
   private gameOverRuns!: Phaser.GameObjects.Text;
   private pauseTitle!: Phaser.GameObjects.Text;
   private pausePrompt!: Phaser.GameObjects.Text;
+  private gameOverCopy!: Phaser.GameObjects.Text;
 
   constructor(run: Run, timeScale: number) {
     super("run");
@@ -108,6 +110,7 @@ export class RunScene extends Phaser.Scene {
     this.createPauseTexts();
     this.input.on("pointerdown", this.jump);
     this.input.on("gameobjectdown", this.shareScore);
+    this.input.on("gameobjectdown", this.copyScore);
     [this.input.keyboard]
       .filter((keyboard) => keyboard !== null)
       .forEach((keyboard) => {
@@ -147,11 +150,30 @@ export class RunScene extends Phaser.Scene {
 
   private readonly shareScore = (
     _pointer: Phaser.Input.Pointer,
-    _gameObject: Phaser.GameObjects.GameObject,
+    gameObject: Phaser.GameObjects.GameObject,
     event: { stopPropagation: () => void },
   ): void => {
-    event.stopPropagation();
-    navigator.share({ text: `I scored ${this.run.view().score} on Panda Jump!`, url: window.location.href }).catch(() => undefined);
+    [gameObject]
+      .filter((target) => target === this.gameOverShare)
+      .forEach(() => {
+        event.stopPropagation();
+        navigator.share({ text: `I scored ${this.run.view().score} on Panda Jump!`, url: window.location.href }).catch(() => undefined);
+      });
+  };
+
+  private readonly copyScore = (
+    _pointer: Phaser.Input.Pointer,
+    gameObject: Phaser.GameObjects.GameObject,
+    event: { stopPropagation: () => void },
+  ): void => {
+    [gameObject]
+      .filter((target) => target === this.gameOverCopy)
+      .forEach(() => {
+        event.stopPropagation();
+        navigator.clipboard
+          .writeText(`I scored ${this.run.view().score} on Panda Jump! ${window.location.href}`)
+          .catch(() => undefined);
+      });
   };
 
   private centeredText(y: number, text: string, fontSize: string): Phaser.GameObjects.Text {
@@ -172,6 +194,9 @@ export class RunScene extends Phaser.Scene {
       .setName("gameOverShare")
       .setInteractive();
     this.gameOverRuns = this.centeredText(GAME_OVER_RUNS_Y, "", "20px").setName("gameOverRuns");
+    this.gameOverCopy = this.centeredText(GAME_OVER_SHARE_Y, "Copy score", "20px")
+      .setName("gameOverCopy")
+      .setInteractive();
   }
 
   private createPauseTexts(): void {
@@ -223,6 +248,7 @@ export class RunScene extends Phaser.Scene {
     this.gameOverRuns.setVisible(view.gameOver).setText(`Run ${String(view.restarts + 1)}`);
     this.pauseTitle.setVisible(view.paused);
     this.pausePrompt.setVisible(view.paused);
+    this.gameOverCopy.setVisible([view.canRestart, !shareSupported, clipboardSupported].every(Boolean));
     this.boxes.getChildren().forEach((box) => {
       this.boxes.killAndHide(box);
     });
