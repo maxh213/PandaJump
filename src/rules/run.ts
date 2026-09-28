@@ -14,6 +14,7 @@ interface View {
   readonly score: string;
   readonly best: string;
   readonly newBest: boolean;
+  readonly overtookBest: boolean;
   readonly pandaX: number;
   readonly pandaBottom: number;
   readonly pandaFrame: number;
@@ -143,6 +144,7 @@ const viewOf = (state: State): View => ({
   score: String(state.score),
   best: String(state.best),
   newBest: state.calloutStart !== null && state.time - state.calloutStart < CALLOUT_DURATION_MS,
+  overtookBest: state.calloutStart !== null,
   pandaX: PANDA_X,
   pandaBottom: FLOOR_Y - state.panda.height,
   pandaFrame: FIRST_RUN_FRAME + (Math.floor(state.time * FRAMES_PER_MS) % RUN_FRAMES),

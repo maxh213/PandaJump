@@ -23,6 +23,7 @@ const GAME_OVER_PROMPT_Y = 320;
 const GAME_OVER_SHARE_Y = 360;
 const GAME_OVER_RUNS_Y = 400;
 const BEST_COLORS: Record<"true" | "false", string> = { true: "#ffd700", false: "#ffffff" };
+const GAME_OVER_BEST_LABELS: Record<"true" | "false", string> = { true: "New best", false: "Best" };
 const shareSupported = typeof navigator.share === "function";
 const PAGE_TITLE = "Panda Jump";
 
@@ -165,7 +166,11 @@ export class RunScene extends Phaser.Scene {
     this.best.setText(`Best: ${view.best}`).setColor(BEST_COLORS[String(view.newBest) as "true" | "false"]);
     this.gameOverTitle.setVisible(view.gameOver);
     this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.score}`);
-    this.gameOverBest.setVisible(view.gameOver).setText(`Best: ${view.best}`);
+    const overtookBest = String(view.overtookBest) as "true" | "false";
+    this.gameOverBest
+      .setVisible(view.gameOver)
+      .setText(`${GAME_OVER_BEST_LABELS[overtookBest]}: ${view.best}`)
+      .setColor(BEST_COLORS[overtookBest]);
     this.gameOverPrompt.setVisible(view.canRestart);
     this.gameOverShare.setVisible([view.canRestart, shareSupported].every(Boolean));
     this.gameOverRuns.setVisible(view.gameOver).setText(`Run ${String(view.restarts + 1)}`);

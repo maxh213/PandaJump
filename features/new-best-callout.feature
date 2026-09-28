@@ -55,3 +55,38 @@ Feature: Panda Jump on Phaser 4, slice: the new-best callout
       When I press Space at 2700 and 4200 ms after the restart
       Then the page reads "Best: 1" in white at 3340 ms after the restart, the same moment the score reads "1", since it only matches the stored best and does not overtake it
       And the page reads "Best: 2" in gold (#ffd700) at 4840 ms after the restart, the same moment the score reads "2"
+
+  Rule: The game-over screen marks a run that overtook the stored best
+
+    Scenario: A first-time player's run that overtook the stored best shows "New best" in gold on the game-over screen
+      Given the stored best is 0
+      When I press Space at 2700 ms and then stop jumping
+      Then the score reads "1" and the panda touches the next column, freezing the run
+      And the page reads "Score: 1" and "New best: 1" in gold (#ffd700) on the game-over screen
+
+    Scenario: A run that dies below the stored best keeps the plain "Best" label, in white
+      Given the stored best is 5
+      When I press Space at 2700, 4200 and 5700 ms and then stop jumping
+      Then the score reads "3" and the panda touches the next column, freezing the run
+      And the page reads "Best: 5" in white (#ffffff) on the game-over screen
+
+    Scenario: A run that only ties the stored best keeps the plain "Best" label, in white
+      Given the stored best is 1
+      When I press Space at 2700 ms and then stop jumping
+      Then the score reads "1" and the panda touches the next column, freezing the run
+      And the page reads "Best: 1" in white (#ffffff) on the game-over screen
+
+    Scenario: A run that dies at score 0 keeps the plain "Best" label, in white
+      Given the stored best is 0
+      When I do not jump
+      Then the score reads "0" and the panda touches the first column, freezing the run
+      And the page reads "Best: 0" in white (#ffffff) on the game-over screen
+
+    Scenario: Restarting after a new best clears the "New best" label until it is beaten again
+      Given the stored best is 0
+      When I press Space at 2700 ms and then stop jumping
+      Then the page reads "New best: 1" in gold (#ffd700) on the game-over screen
+      When the panda touches the next column, the game freezes, and tapping to play again restarts it
+      And I do not jump again
+      Then the score reads "0" and the panda touches the first column of the new run, freezing the run
+      And the page reads "Best: 1" in white (#ffffff) on the game-over screen

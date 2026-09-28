@@ -28,6 +28,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     score: "0",
     best: "0",
     newBest: false,
+    overtookBest: false,
     pandaX: 100,
     pandaBottom: 426,
     pandaFrame: 17,
@@ -306,6 +307,28 @@ test("pause is ignored while the game-over screen is shown", () => {
   expect(run.view().paused).toBe(false);
   run.advance(500);
   expect(run.view()).toMatchObject({ gameOver: true, canRestart: true });
+});
+
+test("overtookBest is false until the run overtakes the stored best, then stays true through death, and resets on restart", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  expect(run.view().overtookBest).toBe(false);
+  run.advance(2700);
+  run.jump();
+  run.advance(640);
+  expect(run.view()).toMatchObject({ score: "1", best: "1", overtookBest: true });
+  run.advance(1040);
+  expect(run.view()).toMatchObject({ restarts: 0, score: "1", best: "1", gameOver: true, overtookBest: true });
+  run.advance(600);
+  run.jump();
+  expect(run.view()).toMatchObject({ restarts: 1, score: "0", best: "1", overtookBest: false });
+});
+
+test("tying the stored best does not count as overtaking it", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), { load: () => 1, save: () => undefined });
+  run.advance(2700);
+  run.jump();
+  run.advance(640);
+  expect(run.view()).toMatchObject({ score: "1", best: "1", overtookBest: false });
 });
 
 test("dying and restarting resets the callout so beating the new, higher best triggers it again", () => {

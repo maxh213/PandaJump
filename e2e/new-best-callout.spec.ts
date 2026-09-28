@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advanceTo, oneBox, openGame, play, sample, untilRestart } from "./probe.ts";
+import { advanceTo, oneBox, openGame, play, sample, untilGameOver, untilRestart } from "./probe.ts";
 
 const seedBest = (page: Page, value: number) =>
   page.addInitScript((seeded) => {
@@ -66,5 +66,55 @@ test.describe("Rule: Dying and restarting resets the callout state", () => {
     expect((await sample(page)).best).toMatchObject({ text: "Best: 1", color: "#ffffff" });
     await play(page, [4200], 4840);
     expect(await sample(page)).toMatchObject({ score: { text: "2" }, best: { text: "Best: 2", color: "#ffd700" } });
+  });
+});
+
+test.describe("Rule: The game-over screen marks a run that overtook the stored best", () => {
+  test('A first-time player\'s run that overtook the stored best shows "New best" in gold on the game-over screen', async ({
+    page,
+  }) => {
+    await openGame(page, oneBox);
+    await play(page, [2700], 3340);
+    expect((await sample(page)).score.text).toBe("1");
+    const { after: diedAt } = await untilGameOver(page);
+    expect(diedAt.gameOverScore.text).toBe("Score: 1");
+    expect(diedAt.gameOverBest).toMatchObject({ text: "New best: 1", color: "#ffd700" });
+  });
+
+  test('A run that dies below the stored best keeps the plain "Best" label, in white', async ({ page }) => {
+    await seedBest(page, 5);
+    await openGame(page, oneBox);
+    await play(page, [2700, 4200, 5700], 7300);
+    const { after: diedAt } = await untilGameOver(page);
+    expect(diedAt.gameOverScore.text).toBe("Score: 3");
+    expect(diedAt.gameOverBest).toMatchObject({ text: "Best: 5", color: "#ffffff" });
+  });
+
+  test('A run that only ties the stored best keeps the plain "Best" label, in white', async ({ page }) => {
+    await seedBest(page, 1);
+    await openGame(page, oneBox);
+    await play(page, [2700], 3340);
+    const { after: diedAt } = await untilGameOver(page);
+    expect(diedAt.gameOverScore.text).toBe("Score: 1");
+    expect(diedAt.gameOverBest).toMatchObject({ text: "Best: 1", color: "#ffffff" });
+  });
+
+  test('A run that dies at score 0 keeps the plain "Best" label, in white', async ({ page }) => {
+    await openGame(page, oneBox);
+    const { after: diedAt } = await untilGameOver(page);
+    expect(diedAt.gameOverScore.text).toBe("Score: 0");
+    expect(diedAt.gameOverBest).toMatchObject({ text: "Best: 0", color: "#ffffff" });
+  });
+
+  test('Restarting after a new best clears the "New best" label until it is beaten again', async ({ page }) => {
+    await openGame(page, oneBox);
+    await play(page, [2700], 3340);
+    const { after: diedAt } = await untilGameOver(page);
+    expect(diedAt.gameOverBest).toMatchObject({ text: "New best: 1", color: "#ffd700" });
+    const restart = await untilRestart(page);
+    expect(restart.after.restarts).toBe(1);
+    const { after: diedAgain } = await untilGameOver(page);
+    expect(diedAgain.gameOverScore.text).toBe("Score: 0");
+    expect(diedAgain.gameOverBest).toMatchObject({ text: "Best: 1", color: "#ffffff" });
   });
 });

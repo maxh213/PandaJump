@@ -262,7 +262,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       When I press Space at 2700, 4200 and 5700 ms and then stop jumping
       Then the score reads "3" at 7300 ms
       And the panda touches column 4 at about 7375 ms
-      And the page reads "Score: 3" and "Best: 3" on the game over screen
+      And the page reads "Score: 3" and "New best: 3" on the game over screen, in gold (#ffd700), since this run overtook the stored best of 0
       And the run has not restarted
 
     Scenario Outline: No input restarts the run in the first 500ms after death
