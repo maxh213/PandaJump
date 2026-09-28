@@ -37,6 +37,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
 
     Scenario: The page has an apple-touch-icon so iOS shows the Panda when added to the home screen
       Then the page's <link rel="apple-touch-icon"> resolves with status 200
+      And the apple-touch-icon image shows a single recognisable Panda, not the raw sprite strip
 
     Scenario: The page asks iOS and Android to launch standalone when added to the home screen
       Then the page's <meta name="mobile-web-app-capable"> has content "yes"
@@ -46,7 +47,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       Then the page's <meta name="description"> has non-empty, game-specific text
       And the page's <meta property="og:title"> reads "Panda Jump"
       And the page's <meta property="og:description"> has non-empty, game-specific text
-      And the page's <meta property="og:image"> resolves to "assets/Panda.png"
+      And the page's <meta property="og:image"> resolves to "panda-icon.png"
       And the page's <meta property="og:url"> resolves to "https://maxh213.github.io/PandaJump/"
 
     Scenario: The production build runs from a plain file host
@@ -55,8 +56,8 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       Then the game canvas is shown and the panda is running
       And every image in "assets/" that the game uses loads with status 200
       And the page's <link rel="icon"> resolves with status 200 and its width equals its height
-      And the page's <meta property="og:image"> resolves with status 200
-      And the page's <link rel="apple-touch-icon"> resolves with status 200
+      And the page's <meta property="og:image"> resolves with status 200 and shows a single recognisable Panda, not the raw sprite strip
+      And the page's <link rel="apple-touch-icon"> resolves with status 200 and shows a single recognisable Panda, not the raw sprite strip
       And the page's <meta name="mobile-web-app-capable"> has content "yes"
       And the page's <meta name="apple-mobile-web-app-capable"> has content "yes"
       And the manifest's icon URL and start_url resolve with status 200

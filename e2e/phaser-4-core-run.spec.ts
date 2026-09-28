@@ -58,13 +58,20 @@ const landingAfter = (samples: Sample[], time: number): Sample => {
   return landing;
 };
 
-const squareDimensions = (page: Page, url: string) =>
+const imageDimensions = (page: Page, url: string) =>
   page.evaluate(async (imageUrl) => {
     const image = new Image();
     image.src = imageUrl;
     await image.decode();
     return { width: image.naturalWidth, height: image.naturalHeight };
   }, url);
+
+const expectRecognisablePanda = async (page: Page, url: string) => {
+  const { width, height } = await imageDimensions(page, url);
+  expect(width / height).toBeGreaterThan(0.5);
+  expect(width / height).toBeLessThan(2);
+};
+
 
 const scoreNow = async (page: Page) => (await sample(page)).score.text;
 
@@ -127,7 +134,7 @@ test.describe("Rule: The page keeps its content", () => {
     const iconUrl = new URL(href, page.url()).toString();
     const response = await page.request.get(iconUrl);
     expect(response.status()).toBe(200);
-    const { width, height } = await squareDimensions(page, iconUrl);
+    const { width, height } = await imageDimensions(page, iconUrl);
     expect(width).toBe(height);
   });
 
@@ -135,8 +142,10 @@ test.describe("Rule: The page keeps its content", () => {
     await page.goto("./");
     const href = await page.locator('link[rel="apple-touch-icon"]').getAttribute("href");
     if (!href) throw new Error("apple-touch-icon href is missing");
-    const response = await page.request.get(new URL(href, page.url()).toString());
+    const iconUrl = new URL(href, page.url()).toString();
+    const response = await page.request.get(iconUrl);
     expect(response.status()).toBe(200);
+    await expectRecognisablePanda(page, iconUrl);
   });
 
   test("The page asks iOS and Android to launch standalone when added to the home screen", async ({ page }) => {
@@ -159,7 +168,7 @@ test.describe("Rule: The page keeps its content", () => {
     expect(ogDescription?.toLowerCase()).toContain("panda");
     const ogImage = await page.locator('meta[property="og:image"]').getAttribute("content");
     if (!ogImage) throw new Error("og:image content is missing");
-    expect(new URL(ogImage, page.url()).pathname).toBe("/PandaJump/assets/Panda.png");
+    expect(new URL(ogImage, page.url()).pathname).toBe("/PandaJump/panda-icon.png");
     const ogUrl = await page.locator('meta[property="og:url"]').getAttribute("content");
     expect(ogUrl).toBe("https://maxh213.github.io/PandaJump/");
   });
@@ -242,7 +251,7 @@ test.describe("Rule: The production build", () => {
     const iconUrl = new URL(href, page.url()).toString();
     const response = await page.request.get(iconUrl);
     expect(response.status()).toBe(200);
-    const { width, height } = await squareDimensions(page, iconUrl);
+    const { width, height } = await imageDimensions(page, iconUrl);
     expect(width).toBe(height);
   });
 
@@ -250,16 +259,20 @@ test.describe("Rule: The production build", () => {
     await page.goto(`${host}/PandaJump/`);
     const content = await page.locator('meta[property="og:image"]').getAttribute("content");
     if (!content) throw new Error("og:image content is missing");
-    const response = await page.request.get(new URL(new URL(content).pathname, host).toString());
+    const imageUrl = new URL(new URL(content).pathname, host).toString();
+    const response = await page.request.get(imageUrl);
     expect(response.status()).toBe(200);
+    await expectRecognisablePanda(page, imageUrl);
   });
 
   test("The apple-touch-icon resolves from the production build's path prefix", async ({ page }) => {
     await page.goto(`${host}/PandaJump/`);
     const href = await page.locator('link[rel="apple-touch-icon"]').getAttribute("href");
     if (!href) throw new Error("apple-touch-icon href is missing");
-    const response = await page.request.get(new URL(href, page.url()).toString());
+    const iconUrl = new URL(href, page.url()).toString();
+    const response = await page.request.get(iconUrl);
     expect(response.status()).toBe(200);
+    await expectRecognisablePanda(page, iconUrl);
   });
 
   test("The standalone-launch meta tags resolve from the production build's path prefix", async ({ page }) => {
@@ -284,7 +297,7 @@ test.describe("Rule: The production build", () => {
     const iconResponse = await page.request.get(iconUrl);
     expect(iconResponse.status()).toBe(200);
     expect(iconResponse.headers()["content-type"]).toContain("image/");
-    const { width, height } = await squareDimensions(page, iconUrl);
+    const { width, height } = await imageDimensions(page, iconUrl);
     expect(width).toBe(height);
     const startResponse = await page.request.get(new URL(manifest.start_url, manifestUrl).toString());
     expect(startResponse.status()).toBe(200);
