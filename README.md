@@ -10,6 +10,7 @@ Controls: Click, tap or press Space to jump (you can double jump).
 Development
 -----------
 
+- Requires Node >=22.12.0 (vitest 5's minimum); `npm ci` fails fast with a clear error on older Node.
 - `npm run dev` serves the game.
 - `npm run build` writes a static site to `dist/` that runs from any file host.
 - `npm test` runs the unit tests for the game rules in `src/rules/`.

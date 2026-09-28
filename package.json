@@ -3,7 +3,11 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
+    "preinstall": "node -e \"const p=process.versions.node.split('.').map(Number);if(p[0]<22||(p[0]===22&&p[1]<12)){console.error('PandaJump requires Node >=22.12.0 (found '+process.version+'). Install Node 22.12.0 or newer.');process.exit(1)}\"",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint . --max-warnings 0",
