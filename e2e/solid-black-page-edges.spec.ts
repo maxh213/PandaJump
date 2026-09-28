@@ -68,3 +68,15 @@ test.describe("Rule: The page has no default-coloured margin or gap anywhere", (
     });
   });
 });
+
+test.describe("Rule: iOS's standalone status bar matches the page's black theme", () => {
+  test("index.html sets the apple-mobile-web-app-status-bar-style meta tag to black-translucent", async ({
+    page,
+  }) => {
+    await page.goto("./");
+    const statusBarStyle = await page.evaluate(
+      () => document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.getAttribute("content") ?? "",
+    );
+    expect(statusBarStyle).toBe("black-translucent");
+  });
+});

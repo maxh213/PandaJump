@@ -19,3 +19,8 @@ Feature: Panda Jump reads solid black edge-to-edge
       Then the pixel colour at each of the four page corners is pure black
       And the pixel colour below the visible content is pure black
       And the html and body backgrounds are pure black with no body margin
+
+  Rule: iOS's standalone status bar matches the page's black theme
+
+    Scenario: index.html sets the apple-mobile-web-app-status-bar-style meta tag to black-translucent
+      Then the page has a <meta name="apple-mobile-web-app-status-bar-style"> tag set to "black-translucent"
