@@ -1,4 +1,7 @@
 import type { Page } from "@playwright/test";
+import type { Run } from "../src/rules/index.ts";
+
+type View = ReturnType<Run["view"]>;
 
 interface CenteredText {
   text: string;
@@ -26,15 +29,90 @@ export interface Sample {
   grass: { y: number; scroll: number; key: string };
   boxes: { x: number; y: number; width: number; key: string }[];
   clouds: { x: number; y: number; depth: number; key: string }[];
-  viewClouds: { x: number; y: number; texture: string }[];
+  viewClouds: View["clouds"];
+}
+
+interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  bottom: number;
+}
+
+export interface GameText {
+  text: string;
+  x: number;
+  y: number;
+  style: { color: string; fontSize: string };
+  originX: number;
+  originY: number;
+  visible: boolean;
+  getBounds: () => Bounds;
+}
+
+interface GameSprite {
+  frame: { name: number; cutY: number; cutHeight: number };
+  texture: { key: string };
+  getBounds: () => Bounds;
+}
+
+interface GameTileSprite {
+  y: number;
+  tilePositionX: number;
+  texture: { key: string };
+}
+
+interface GameNode {
+  visible: boolean;
+  type: string;
+  name: string;
+  x: number;
+  y: number;
+  depth: number;
+  displayWidth: number;
+  texture: { key: string };
+}
+
+interface GameScene {
+  update: (time: number, delta: number) => void;
+  children: {
+    getByName: (name: string) => unknown;
+    list: readonly GameNode[];
+  };
+}
+
+interface RunHandle {
+  run: Run;
+  game: {
+    scene: {
+      getScene: (key: string) => GameScene;
+      isActive: (key: string) => boolean;
+    };
+  };
+}
+
+interface ProbeHandle {
+  sample: () => Sample;
+  advance: (ms: number) => Sample[];
+  untilGameOver: (limit: number) => { before: Sample; after: Sample };
+  untilRestart: (limit: number) => { before: Sample; diedAt: Sample; after: Sample };
+}
+
+declare global {
+  interface Window {
+    pandaJump?: RunHandle;
+    probe: ProbeHandle;
+  }
 }
 
 const installProbe = () => {
-  const handle = (window as any).pandaJump;
+  const handle = window.pandaJump;
+  if (!handle) throw new Error("PandaJump has not started");
   const scene = handle.game.scene.getScene("run");
   const named = (name: string) => scene.children.getByName(name);
-  const centeredText = (name: string) => {
-    const text = named(name);
+  const centeredText = (name: string): CenteredText => {
+    const text = named(name) as GameText;
     return {
       text: text.text,
       x: text.x,
@@ -46,14 +124,14 @@ const installProbe = () => {
       visible: text.visible,
     };
   };
-  const sample = () => {
+  const sample = (): Sample => {
     scene.update(0, 0);
     const view = handle.run.view();
-    const panda = named("panda");
-    const score = named("score");
-    const best = named("best");
-    const rock = named("rock");
-    const grass = named("grass");
+    const panda = named("panda") as GameSprite;
+    const score = named("score") as GameText;
+    const best = named("best") as GameText;
+    const rock = named("rock") as GameTileSprite;
+    const grass = named("grass") as GameTileSprite;
     const bounds = panda.getBounds();
     return {
       time: view.time,
@@ -78,23 +156,23 @@ const installProbe = () => {
       rock: { y: rock.y, scroll: rock.tilePositionX, key: rock.texture.key },
       grass: { y: grass.y, scroll: grass.tilePositionX, key: grass.texture.key },
       boxes: scene.children.list
-        .filter((child: any) => child.visible && child.type === "Image" && child.name === "box")
-        .map((child: any) => ({ x: child.x, y: child.y, width: child.displayWidth, key: child.texture.key })),
+        .filter((child) => child.visible && child.type === "Image" && child.name === "box")
+        .map((child) => ({ x: child.x, y: child.y, width: child.displayWidth, key: child.texture.key })),
       clouds: scene.children.list
-        .filter((child: any) => child.visible && child.type === "Image" && child.name === "cloud")
-        .map((child: any) => ({ x: child.x, y: child.y, depth: child.depth, key: child.texture.key })),
+        .filter((child) => child.visible && child.type === "Image" && child.name === "cloud")
+        .map((child) => ({ x: child.x, y: child.y, depth: child.depth, key: child.texture.key })),
       viewClouds: view.clouds,
     };
   };
-  const advance = (ms: number) => {
-    const samples = [];
+  const advance = (ms: number): Sample[] => {
+    const samples: Sample[] = [];
     for (let done = 0; done < ms; done += 16) {
       handle.run.advance(Math.min(16, ms - done));
       samples.push(sample());
     }
     return samples;
   };
-  const untilGameOver = (limit: number) => {
+  const untilGameOver = (limit: number): { before: Sample; after: Sample } => {
     let before = sample();
     for (let done = 0; done < limit; done += 16) {
       handle.run.advance(16);
@@ -104,25 +182,25 @@ const installProbe = () => {
     }
     throw new Error("the run did not end");
   };
-  const untilRestart = (limit: number) => {
+  const untilRestart = (limit: number): { before: Sample; diedAt: Sample; after: Sample } => {
     const { before, after: diedAt } = untilGameOver(limit);
     handle.run.advance(500);
     handle.run.jump();
     return { before, diedAt, after: sample() };
   };
-  (window as any).probe = { sample, advance, untilGameOver, untilRestart };
+  window.probe = { sample, advance, untilGameOver, untilRestart };
 };
 
-export const openGame = async (page: Page, random: number[]) => {
+export const openGame = async (page: Page, random: number[]): Promise<void> => {
   await page.goto(`./?clock=manual&random=${random.join(",")}`);
-  await page.waitForFunction(() => (window as any).pandaJump?.game.scene.isActive("run"));
+  await page.waitForFunction(() => window.pandaJump?.game.scene.isActive("run"));
   await page.evaluate(installProbe);
 };
 
-export const sample = (page: Page): Promise<Sample> => page.evaluate(() => (window as any).probe.sample());
+export const sample = (page: Page): Promise<Sample> => page.evaluate(() => window.probe.sample());
 
 export const advance = (page: Page, ms: number): Promise<Sample[]> =>
-  page.evaluate((duration) => (window as any).probe.advance(duration), ms);
+  page.evaluate((duration) => window.probe.advance(duration), ms);
 
 export const advanceTo = async (page: Page, time: number): Promise<Sample[]> => {
   const now = await sample(page);
@@ -130,10 +208,10 @@ export const advanceTo = async (page: Page, time: number): Promise<Sample[]> => 
 };
 
 export const untilGameOver = (page: Page, limit = 30_000): Promise<{ before: Sample; after: Sample }> =>
-  page.evaluate((duration) => (window as any).probe.untilGameOver(duration), limit);
+  page.evaluate((duration) => window.probe.untilGameOver(duration), limit);
 
 export const untilRestart = (page: Page, limit = 30_000): Promise<{ before: Sample; diedAt: Sample; after: Sample }> =>
-  page.evaluate((duration) => (window as any).probe.untilRestart(duration), limit);
+  page.evaluate((duration) => window.probe.untilRestart(duration), limit);
 
 export const settle = (page: Page) =>
   page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
@@ -161,7 +239,8 @@ export const pixelRows = async (page: Page, rows: number[]): Promise<number[][][
       const blob = await (await fetch(`data:image/png;base64,${data}`)).blob();
       const bitmap = await createImageBitmap(blob);
       const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-      const context = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("2d context is not available");
       context.drawImage(bitmap, 0, 0);
       return wanted.map((y) => {
         const bytes = Array.from(context.getImageData(0, y, bitmap.width, 1).data);
@@ -194,3 +273,12 @@ export const standardRandom = (exceptions: Record<number, number[]> = {}) =>
 
 export const standardJumps = (until: number) =>
   Array.from({ length: 40 }, (_, index) => 1500 * (index + 1) + 1200).filter((time) => time <= until);
+
+export const at = <T>(items: readonly T[], index: number): T => {
+  const item = items.at(index);
+  if (item === undefined) throw new Error(`expected an element at index ${String(index)}`);
+  return item;
+};
+
+export const first = <T>(items: readonly T[]): T => at(items, 0);
+export const last = <T>(items: readonly T[]): T => at(items, -1);

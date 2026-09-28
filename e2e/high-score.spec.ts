@@ -1,10 +1,14 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { advanceTo, oneBox, openGame, play, sample, untilRestart } from "./probe.ts";
+import type { GameText } from "./probe.ts";
 
 const BEST_KEY = "pandaJump.best";
 
-const seedBest = (page: Page, value: number) => page.addInitScript((seeded) => localStorage.setItem("pandaJump.best", String(seeded)), value);
+const seedBest = (page: Page, value: number) =>
+  page.addInitScript((seeded) => {
+    localStorage.setItem("pandaJump.best", String(seeded));
+  }, value);
 
 const blockLocalStorage = (page: Page) =>
   page.addInitScript(() => {
@@ -17,8 +21,12 @@ const blockLocalStorage = (page: Page) =>
 
 const reloadAndReadBest = async (page: Page): Promise<string> => {
   await page.reload();
-  await page.waitForFunction(() => (window as any).pandaJump?.game.scene.isActive("run"));
-  return page.evaluate(() => (window as any).pandaJump.run.view().best as string);
+  await page.waitForFunction(() => window.pandaJump?.game.scene.isActive("run"));
+  return page.evaluate(() => {
+    const handle = window.pandaJump;
+    if (!handle) throw new Error("PandaJump has not started");
+    return handle.run.view().best;
+  });
 };
 
 test.describe("Rule: The best score is drawn and kept live", () => {
@@ -95,7 +103,9 @@ test.describe("Rule: A missing, corrupt or blocked store never breaks the game",
   test("A non-numeric stored value is treated as a best of 0, with no error", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    await page.addInitScript((key) => localStorage.setItem(key, "not-a-number"), BEST_KEY);
+    await page.addInitScript((key) => {
+      localStorage.setItem(key, "not-a-number");
+    }, BEST_KEY);
     await openGame(page, oneBox);
     expect((await sample(page)).best.text).toBe("Best: 0");
     expect(errors).toEqual([]);
@@ -117,8 +127,10 @@ test.describe("Rule: The existing run keeps its own behaviour", () => {
   test("The best text sits clear of the row the floor-seam check samples", async ({ page }) => {
     await openGame(page, oneBox);
     const bounds = await page.evaluate(() => {
-      const scene = (window as any).pandaJump.game.scene.getScene("run");
-      const best = scene.children.getByName("best");
+      const handle = window.pandaJump;
+      if (!handle) throw new Error("PandaJump has not started");
+      const scene = handle.game.scene.getScene("run");
+      const best = scene.children.getByName("best") as GameText;
       const box = best.getBounds();
       return { top: box.y, bottom: box.bottom };
     });

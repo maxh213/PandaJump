@@ -28,4 +28,13 @@ export default tseslint.config(
       complexity: ["error", 1],
     },
   },
+  {
+    files: ["e2e/**/*.ts", "playwright.config.ts"],
+    extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
+    languageOptions: {
+      ecmaVersion: 2023,
+      globals: { ...globals.browser, ...globals.node },
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+  },
 );

@@ -8,8 +8,11 @@ import type { Page } from "@playwright/test";
 import {
   advance,
   advanceTo,
+  at,
   columnsAt,
+  first,
   heightOf,
+  last,
   oneBox,
   oneBoxAndSecond,
   openGame,
@@ -25,7 +28,7 @@ import {
   untilGameOver,
   untilRestart,
 } from "./probe.ts";
-import type { Column, Sample } from "./probe.ts";
+import type { Sample } from "./probe.ts";
 
 const BACKGROUND = [0x71, 0xc5, 0xcf];
 const ART_ROWS: Record<number, [number, number]> = {
@@ -39,12 +42,21 @@ const ART_ROWS: Record<number, [number, number]> = {
   23: [484, 502],
 };
 
+const artRowsFor = (frame: number): [number, number] => {
+  const rows = ART_ROWS[frame];
+  if (!rows) throw new Error(`no art rows for frame ${String(frame)}`);
+  return rows;
+};
+
 const isBackground = (pixel: number[]) => pixel.every((value, index) => Math.abs(value - (BACKGROUND[index] ?? 0)) <= 2);
 
 const peakOf = (samples: Sample[]) => samples.reduce((best, entry) => (heightOf(entry) > heightOf(best) ? entry : best));
 
-const landingAfter = (samples: Sample[], time: number) =>
-  samples.find((entry) => entry.time > time && heightOf(entry) === 0) as Sample;
+const landingAfter = (samples: Sample[], time: number): Sample => {
+  const landing = samples.find((entry) => entry.time > time && heightOf(entry) === 0);
+  if (!landing) throw new Error("expected a landing sample");
+  return landing;
+};
 
 const scoreNow = async (page: Page) => (await sample(page)).score.text;
 
@@ -93,7 +105,8 @@ test.describe("Rule: The page keeps its content", () => {
     await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.fulfill({ status: 200, body: "" }));
     await openGame(page, oneBox);
     await page.waitForLoadState("networkidle");
-    const origin = new URL(baseURL as string).origin;
+    if (!baseURL) throw new Error("baseURL is required");
+    const origin = new URL(baseURL).origin;
     expect(requests.some((url) => url.startsWith("https://fonts.googleapis.com/css?family=Lato"))).toBe(true);
     expect(requests.filter((url) => url.startsWith("http://") && !url.startsWith(origin))).toEqual([]);
     expect(requests.filter((url) => /\/(main\.js|phaser\.min\.js)(\?|$)/.test(new URL(url).pathname))).toEqual([]);
@@ -122,7 +135,7 @@ test.describe("Rule: The production build", () => {
     return new Promise<void>((resolve) => {
       server.listen(0, () => {
         const address = server.address();
-        host = `http://localhost:${typeof address === "object" && address ? address.port : 0}`;
+        host = `http://localhost:${String(typeof address === "object" && address ? address.port : 0)}`;
         resolve();
       });
     });
@@ -142,11 +155,17 @@ test.describe("Rule: The production build", () => {
     });
     await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.fulfill({ status: 200, body: "" }));
     await page.goto(`${host}/PandaJump/`);
-    await page.waitForFunction(() => (window as any).pandaJump?.run.view().time > 500);
+    await page.waitForFunction(() => (window.pandaJump?.run.view().time ?? 0) > 500);
     await expect(page.locator("#game_div canvas")).toBeVisible();
     const frames = new Set<number>();
     for (let index = 0; index < 10; index += 1) {
-      frames.add(await page.evaluate(() => (window as any).pandaJump.run.view().pandaFrame));
+      frames.add(
+        await page.evaluate(() => {
+          const handle = window.pandaJump;
+          if (!handle) throw new Error("PandaJump has not started");
+          return handle.run.view().pandaFrame;
+        }),
+      );
       await page.waitForTimeout(70);
     }
     expect(frames.size).toBeGreaterThan(1);
@@ -161,8 +180,8 @@ test.describe("Rule: The panda runs on a scrolling floor", () => {
   test("The opening scene", async ({ page }) => {
     await openGame(page, oneBox);
     const start = await sample(page);
-    const [row] = await pixelRows(page, [150]);
-    expect(isBackground((row as number[][])[300] as number[])).toBe(true);
+    const row = first(await pixelRows(page, [150]));
+    expect(isBackground(at(row, 300))).toBe(true);
     expect(start.panda).toMatchObject({ x: 100, bottom: 426, width: 25, height: 26.25, key: "Panda.png" });
     expect(start.score).toEqual({ text: "0", x: 20, y: 20, color: "#ffffff", fontSize: "30px" });
     expect(start.boxes).toEqual([]);
@@ -179,18 +198,18 @@ test.describe("Rule: The panda runs on a scrolling floor", () => {
       expect(entry.panda.frame).toBe(17 + (Math.floor((entry.time * 15) / 1000) % 6));
       const top = entry.panda.cutY;
       const bottom = entry.panda.cutY + entry.panda.cutHeight - 1;
-      const [artTop, artBottom] = ART_ROWS[entry.panda.frame] as [number, number];
+      const [artTop, artBottom] = artRowsFor(entry.panda.frame);
       expect(top).toBeLessThanOrEqual(artTop);
       expect(bottom).toBeGreaterThanOrEqual(artBottom);
-      expect(top).toBeGreaterThan((ART_ROWS[entry.panda.frame - 1] as [number, number])[1]);
-      expect(bottom).toBeLessThan((ART_ROWS[entry.panda.frame + 1] as [number, number])[0]);
+      expect(top).toBeGreaterThan(artRowsFor(entry.panda.frame - 1)[1]);
+      expect(bottom).toBeLessThan(artRowsFor(entry.panda.frame + 1)[0]);
     }
   });
 
   test("The floor scrolls without a seam", async ({ page }) => {
     await openGame(page, oneBox);
     const rows = [424, ...Array.from({ length: 64 }, (_, index) => 426 + index)];
-    const [before] = await pixelRows(page, [460]);
+    const before = first(await pixelRows(page, [460]));
     const samples: Sample[] = [];
     for (let moment = 0; moment < 16; moment += 1) {
       samples.push(...(await advance(page, 125)));
@@ -206,9 +225,9 @@ test.describe("Rule: The panda runs on a scrolling floor", () => {
     expect(scrolled("rock")).toBeCloseTo(400);
     expect(scrolled("grass")).toBeCloseTo(400);
     expect(samples.at(-1)).toMatchObject({ time: 2000, rock: { y: 426, key: "rock_06.png" }, grass: { y: 392, key: "top_grass_01.png" } });
-    const [after] = await pixelRows(page, [460]);
-    const shifted = (after as number[][]).slice(0, 380);
-    expect(shifted).toEqual((before as number[][]).slice(16, 396));
+    const after = first(await pixelRows(page, [460]));
+    const shifted = after.slice(0, 380);
+    expect(shifted).toEqual(before.slice(16, 396));
   });
 });
 
@@ -229,7 +248,7 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
           await act(page);
           await settle(page);
           const samples = await advance(page, 1300);
-          expect(heightOf(samples[0] as Sample)).toBeGreaterThan(0);
+          expect(heightOf(first(samples))).toBeGreaterThan(0);
           const peak = peakOf(samples);
           expect(heightOf(peak)).toBeCloseTo(168, -0.5);
           expect(Math.abs(peak.time - 580)).toBeLessThanOrEqual(16);
@@ -245,10 +264,12 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
     test("Pressing Space does not scroll the page", async ({ page }) => {
       await openGame(page, oneBox);
       expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeGreaterThan(500);
-      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.evaluate(() => {
+        window.scrollTo(0, 0);
+      });
       await pressSpace(page);
       const samples = await advance(page, 100);
-      expect(heightOf(samples.at(-1) as Sample)).toBeGreaterThan(0);
+      expect(heightOf(last(samples))).toBeGreaterThan(0);
       expect(await page.evaluate(() => window.scrollY)).toBe(0);
     });
   });
@@ -272,8 +293,8 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
   test("Landing gives both jumps back", async ({ page }) => {
     await openGame(page, oneBox);
     await pressSpace(page);
-    const first = await play(page, [580], 1600);
-    expect(Math.abs(landingAfter(first, 600).time - 1460)).toBeLessThanOrEqual(16);
+    const firstRun = await play(page, [580], 1600);
+    expect(Math.abs(landingAfter(firstRun, 600).time - 1460)).toBeLessThanOrEqual(16);
     const second = await play(page, [1600, 2180], 2800);
     const peak = peakOf(second);
     expect(Math.abs(heightOf(peak) - 199)).toBeLessThanOrEqual(3);
@@ -287,12 +308,12 @@ test.describe("Rule: Box columns come from the right", () => {
       [1, 362, oneBox],
       [2, 298, twoBoxes],
     ] as const) {
-      test(`A column of one or two boxes spawns every 1500 ms: ${boxes}`, async ({ page }) => {
+      test(`A column of one or two boxes spawns every 1500 ms: ${String(boxes)}`, async ({ page }) => {
         await openGame(page, [...random]);
         await advanceTo(page, 1600);
         const columns = columnsAt(await sample(page));
         expect(columns).toHaveLength(1);
-        const column = columns[0] as Column;
+        const column = first(columns);
         expect(column.x).toBe(380);
         expect(column.boxes).toHaveLength(boxes);
         expect(column.boxes.every((box) => box.key === "dirt_06.png" && box.width === 64)).toBe(true);
@@ -309,7 +330,7 @@ test.describe("Rule: Box columns come from the right", () => {
     const samples = await play(page, [2700, 4200, 5700], 6100);
     expect(spawnTimes(samples)).toEqual([1500, 3000, 4500, 6000]);
     expect(samples.every((entry) => entry.restarts === 0)).toBe(true);
-    expect((samples.at(-1) as Sample).score.text).toBe("2");
+    expect(last(samples).score.text).toBe("2");
   });
 
   test("No second column while the score is 10 or less", async ({ page }) => {
@@ -361,7 +382,7 @@ test.describe("Rule: The score counts cleared columns", () => {
     await play(page, [2530, 2930], 2930);
     expect(await scoreAt(page, 3300)).toBe("0");
     const after = await advanceTo(page, 3340);
-    expect((after.at(-1) as Sample).score.text).toBe("1");
+    expect(last(after).score.text).toBe("1");
     expect(after.every((entry) => entry.restarts === 0)).toBe(true);
   });
 
@@ -370,9 +391,9 @@ test.describe("Rule: The score counts cleared columns", () => {
     await play(page, [2700], 3000);
     const atSpawn = await sample(page);
     expect(atSpawn.time).toBe(3000);
-    const first = columnsAt(atSpawn)[0] as Column;
-    expect(first.x).toBeLessThan(125);
-    expect(first.x + 64).toBeGreaterThan(100);
+    const firstColumn = first(columnsAt(atSpawn));
+    expect(firstColumn.x).toBeLessThan(125);
+    expect(firstColumn.x + 64).toBeGreaterThan(100);
     expect(heightOf(atSpawn)).toBeGreaterThan(64);
     expect(columnsAt(atSpawn).map((column) => column.x)).toContain(400);
     expect(await scoreAt(page, 3010)).toBe("0");
@@ -423,7 +444,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     expect(diedAt.gameOverScore.y).toBeLessThan(diedAt.gameOverBest.y);
     expect(diedAt.gameOverBest.y).toBeLessThan(diedAt.gameOverPrompt.y);
 
-    const frozen = (await advance(page, 300)).at(-1) as Sample;
+    const frozen = last(await advance(page, 300));
     expect(frozen.panda).toEqual(diedAt.panda);
     expect(frozen.boxes).toEqual(diedAt.boxes);
     expect(frozen.rock.scroll).toBe(diedAt.rock.scroll);
