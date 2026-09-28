@@ -33,6 +33,7 @@ interface View {
 export interface Run {
   readonly jump: () => void;
   readonly pause: () => void;
+  readonly pauseOrResume: () => void;
   readonly advance: (ms: number) => void;
   readonly view: () => View;
 }
@@ -174,6 +175,10 @@ const act = (state: State, randoms: Randoms): State => {
   return canRestart(state) ? freshState(state.restarts + 1, state.best, randoms) : state;
 };
 
+const pausedState = (state: State): State => (state.deathElapsed === null ? { ...state, paused: true } : state);
+
+const togglePause = (state: State): State => (state.paused ? { ...state, paused: false } : pausedState(state));
+
 export const createRun = (random: Random, cloudRandom: Random, store: BestStore): Run => {
   const randoms: Randoms = { columns: random, clouds: cloudRandom };
   let state = freshState(0, store.load(), randoms);
@@ -182,9 +187,10 @@ export const createRun = (random: Random, cloudRandom: Random, store: BestStore)
       state = act(state, randoms);
     },
     pause: () => {
-      if (state.deathElapsed === null) {
-        state = { ...state, paused: true };
-      }
+      state = pausedState(state);
+    },
+    pauseOrResume: () => {
+      state = togglePause(state);
     },
     advance: (ms) => {
       if (state.paused) return;

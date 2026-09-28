@@ -321,6 +321,31 @@ test("pause is ignored while the game-over screen is shown", () => {
   expect(run.view()).toMatchObject({ gameOver: true, canRestart: true });
 });
 
+test("pauseOrResume pauses a live run", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pauseOrResume();
+  expect(run.view()).toMatchObject({ paused: true, gameOver: false });
+});
+
+test("pauseOrResume resumes a paused run without making the panda jump", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pauseOrResume();
+  run.pauseOrResume();
+  expect(run.view()).toMatchObject({ paused: false, pandaBottom: 426 });
+});
+
+test("pauseOrResume is ignored while the game-over screen is shown", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2880);
+  expect(run.view()).toMatchObject({ gameOver: true, paused: false });
+  run.pauseOrResume();
+  expect(run.view().paused).toBe(false);
+  run.advance(500);
+  expect(run.view()).toMatchObject({ gameOver: true, canRestart: true });
+});
+
 test("overtookBest is false until the run overtakes the stored best, then stays true through death, and resets on restart", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   expect(run.view().overtookBest).toBe(false);

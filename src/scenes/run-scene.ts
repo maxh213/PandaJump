@@ -106,6 +106,7 @@ export class RunScene extends Phaser.Scene {
       .filter((keyboard) => keyboard !== null)
       .forEach((keyboard) => {
         this.listenForJumpKeys(keyboard);
+        this.listenForPauseKeys(keyboard);
       });
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
     this.draw();
@@ -118,6 +119,10 @@ export class RunScene extends Phaser.Scene {
 
   private readonly jump = (): void => {
     this.run.jump();
+  };
+
+  private readonly pauseOrResume = (): void => {
+    this.run.pauseOrResume();
   };
 
   private readonly handleVisibilityChange = (): void => {
@@ -170,6 +175,12 @@ export class RunScene extends Phaser.Scene {
     keyboard.addCapture(["SPACE", "UP"]);
     keyboard.on("keydown-SPACE", this.jump);
     keyboard.on("keydown-UP", this.jump);
+  }
+
+  private listenForPauseKeys(keyboard: Phaser.Input.Keyboard.KeyboardPlugin): void {
+    keyboard.addCapture(["P", "ESC"]);
+    keyboard.on("keydown-P", this.pauseOrResume);
+    keyboard.on("keydown-ESC", this.pauseOrResume);
   }
 
   private draw(): void {
