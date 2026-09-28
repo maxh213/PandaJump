@@ -3,7 +3,16 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   base: "./",
-  build: { outDir: "dist", emptyOutDir: true },
+  build: {
+    outDir: "dist",
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        assetFileNames: (asset) =>
+          asset.names?.includes("Panda.png") ? "assets/Panda.png" : "assets/[name]-[hash][extname]",
+      },
+    },
+  },
   test: {
     environment: "jsdom",
     globals: false,

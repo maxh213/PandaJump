@@ -47,6 +47,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       Then the game canvas is shown and the panda is running
       And every image in "assets/" that the game uses loads with status 200
       And the page's <link rel="icon"> resolves with status 200
+      And the page's <meta property="og:image"> resolves with status 200
 
   Rule: The panda runs on a scrolling floor
 

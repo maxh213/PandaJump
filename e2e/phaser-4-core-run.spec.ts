@@ -207,6 +207,14 @@ test.describe("Rule: The production build", () => {
     const response = await page.request.get(new URL(href, page.url()).toString());
     expect(response.status()).toBe(200);
   });
+
+  test("The shared preview image resolves from the production build's path prefix", async ({ page }) => {
+    await page.goto(`${host}/PandaJump/`);
+    const content = await page.locator('meta[property="og:image"]').getAttribute("content");
+    if (!content) throw new Error("og:image content is missing");
+    const response = await page.request.get(new URL(new URL(content).pathname, host).toString());
+    expect(response.status()).toBe(200);
+  });
 });
 
 test.describe("Rule: The panda runs on a scrolling floor", () => {
