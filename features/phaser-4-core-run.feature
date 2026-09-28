@@ -54,6 +54,10 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And the page's <meta name="twitter:description"> matches the og:description text
       And the page's <meta name="twitter:image"> resolves to "panda-icon.png" and shows a single recognisable Panda, not the raw sprite strip
 
+    Scenario: The page preconnects to the Google Fonts origins so the font loads sooner
+      Then the page has a <link rel="preconnect" href="https://fonts.googleapis.com">
+      And the page has a <link rel="preconnect" href="https://fonts.gstatic.com"> with a crossorigin attribute
+
     Scenario: The production build runs from a plain file host
       Given "npm run build" has produced "dist/"
       When "dist/" is served by a static file server under the path "/PandaJump/"
