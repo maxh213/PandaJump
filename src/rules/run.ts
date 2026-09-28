@@ -20,6 +20,7 @@ interface View {
   readonly boxes: Box[];
   readonly clouds: Cloud[];
   readonly gameOver: boolean;
+  readonly canRestart: boolean;
 }
 
 export interface Run {
@@ -101,6 +102,8 @@ const stepsOf = (ms: number): number[] =>
 const advanceState = (state: State, ms: number, randoms: Randoms): State =>
   stepsOf(ms).reduce((current, part) => step(current, part, randoms), state);
 
+const canRestart = (state: State): boolean => state.deathElapsed !== null && state.deathElapsed >= RESTART_FREEZE_MS;
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
@@ -113,9 +116,8 @@ const viewOf = (state: State): View => ({
   boxes: boxesOf(state.columns, state.time),
   clouds: cloudsOf(state.clouds, state.time),
   gameOver: state.deathElapsed !== null,
+  canRestart: canRestart(state),
 });
-
-const canRestart = (state: State): boolean => state.deathElapsed !== null && state.deathElapsed >= RESTART_FREEZE_MS;
 
 const act = (state: State, randoms: Randoms): State => {
   if (state.deathElapsed === null) {

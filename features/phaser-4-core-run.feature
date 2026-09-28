@@ -212,8 +212,18 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And the panda, the columns and the floor stop moving
       And the page reads "Game over" centred in white 40px
       And the page reads "Score: 0" and "Best: 0" under it, in white
-      And the page reads "Tap or press Space to play again" under those, in white
+      And the page does not yet invite a tap, click or Space press to restart
       And the run has not restarted
+
+    Scenario: The restart prompt stays hidden until a restart would actually work
+      Given the random source picks 1 box for the first column
+      When I do not jump
+      And the panda touches the column
+      Then the page does not yet invite a tap, click or Space press to restart
+      When 499 ms pass
+      Then the page still does not invite a tap, click or Space press to restart
+      When 1 more ms passes
+      Then the page reads "Tap or press Space to play again" under the Score and Best lines, in white 20px Arial
 
     Scenario: Landing on top of a box also freezes the run
       Given the random source picks 2 boxes for the first column
@@ -239,6 +249,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       When I <action>
       Then the run has not restarted
       And the page still reads "Game over"
+      And the page still does not invite a tap, click or Space press to restart
 
       Examples:
         | action           |

@@ -28,6 +28,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
       { x: 300, y: 53, texture: "cloud_02.png" },
     ],
     gameOver: false,
+    canRestart: false,
   });
 });
 
@@ -66,19 +67,27 @@ test("touching a column freezes the run and shows game over instead of restartin
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
   const frozen = run.view();
-  expect(frozen).toMatchObject({ restarts: 0, score: "0", gameOver: true });
+  expect(frozen).toMatchObject({ restarts: 0, score: "0", gameOver: true, canRestart: false });
   expect(frozen.boxes).not.toEqual([]);
   run.advance(10);
   expect(run.view()).toEqual(frozen);
 });
 
-test("no click, tap or Space input restarts the run during the first 500ms after death", () => {
+test("no click, tap or Space input restarts the run during the first 500ms after death, and canRestart stays false", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
   const frozen = run.view();
   run.advance(499);
+  expect(run.view()).toMatchObject({ gameOver: true, canRestart: false });
   run.jump();
-  expect(run.view()).toMatchObject({ ...frozen, restarts: 0, gameOver: true });
+  expect(run.view()).toMatchObject({ ...frozen, restarts: 0, gameOver: true, canRestart: false });
+});
+
+test("canRestart becomes true once 500ms have passed since death, before any input arrives", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2880);
+  run.advance(500);
+  expect(run.view()).toMatchObject({ restarts: 0, gameOver: true, canRestart: true });
 });
 
 test("a click, tap or Space input after 500ms starts a fresh run at score 0 and clears the game over screen", () => {
@@ -86,7 +95,7 @@ test("a click, tap or Space input after 500ms starts a fresh run at score 0 and 
   run.advance(2880);
   run.advance(500);
   run.jump();
-  expect(run.view()).toMatchObject({ restarts: 1, time: 0, boxes: [], score: "0", gameOver: false });
+  expect(run.view()).toMatchObject({ restarts: 1, time: 0, boxes: [], score: "0", gameOver: false, canRestart: false });
 });
 
 test("the restarts counter increments by exactly 1 on every restart", () => {

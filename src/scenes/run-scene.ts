@@ -123,7 +123,7 @@ export class RunScene extends Phaser.Scene {
     this.gameOverTitle.setVisible(view.gameOver);
     this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.score}`);
     this.gameOverBest.setVisible(view.gameOver).setText(`Best: ${view.best}`);
-    this.gameOverPrompt.setVisible(view.gameOver);
+    this.gameOverPrompt.setVisible(view.canRestart);
     this.boxes.getChildren().forEach((box) => {
       this.boxes.killAndHide(box);
     });
