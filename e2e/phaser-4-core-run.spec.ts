@@ -26,6 +26,7 @@ import {
   spaceUp,
   standardJumps,
   standardRandom,
+  startRun,
   twoBoxes,
   twoBoxesAndSecond,
   untilGameOver,
@@ -115,7 +116,7 @@ test.describe("Rule: The page keeps its content", () => {
     await expect(page.locator("p").nth(0)).toHaveText("Check it out on Github");
     await expect(page.getByRole("link", { name: "Github" })).toHaveAttribute("href", "https://github.com/maxh213/PandaJump");
     await expect(page.locator("p").nth(1)).toHaveText(
-      "Controls: Click, tap or press Space or the Up Arrow key to jump (you can double jump). Press P or Escape to pause and resume.",
+      "Controls: Click, tap or press Space or the Up Arrow key to jump (you can double jump); the first press starts the run without jumping. Press P or Escape to pause and resume.",
     );
   });
 
@@ -129,6 +130,7 @@ test.describe("Rule: The page keeps its content", () => {
     page.on("request", (request) => requests.push(request.url()));
     await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.fulfill({ status: 200, body: "" }));
     await openGame(page, oneBox);
+    await startRun(page);
     await page.waitForLoadState("networkidle");
     if (!baseURL) throw new Error("baseURL is required");
     const origin = new URL(baseURL).origin;
@@ -276,6 +278,8 @@ test.describe("Rule: The production build", () => {
     });
     await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.fulfill({ status: 200, body: "" }));
     await page.goto(`${host}/PandaJump/`);
+    await page.waitForFunction(() => window.pandaJump?.game.scene.isActive("run"));
+    await startRun(page);
     await page.waitForFunction(() => (window.pandaJump?.run.view().time ?? 0) > 500);
     await expect(page.locator("#game_div canvas")).toBeVisible();
     const frames = new Set<number>();
@@ -359,6 +363,7 @@ test.describe("Rule: The production build", () => {
 test.describe("Rule: The panda runs on a scrolling floor", () => {
   test("The opening scene", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const start = await sample(page);
     const row = first(await pixelRows(page, [200]));
     expect(isBackground(at(row, 300))).toBe(true);
@@ -372,6 +377,7 @@ test.describe("Rule: The panda runs on a scrolling floor", () => {
 
   test("The run cycle plays whole frames", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const samples = await advance(page, 1000);
     expect([...new Set(samples.map((entry) => entry.panda.frame))].sort((a, b) => a - b)).toEqual([17, 18, 19, 20, 21, 22]);
     for (const entry of samples) {
@@ -388,6 +394,7 @@ test.describe("Rule: The panda runs on a scrolling floor", () => {
 
   test("The floor scrolls without a seam", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const rows = [424, ...Array.from({ length: 64 }, (_, index) => 426 + index)];
     const before = first(await pixelRows(page, [460]));
     const samples: Sample[] = [];
@@ -426,6 +433,7 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
 
         test(`Each control makes the panda jump: ${action}`, async ({ page }) => {
           await openGame(page, oneBox);
+          await startRun(page);
           await act(page);
           await settle(page);
           const samples = await advance(page, 1300);
@@ -449,6 +457,7 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
 
       test(`Pressing Space or Up Arrow does not scroll the page: ${action}`, async ({ page }) => {
         await openGame(page, oneBox);
+        await startRun(page);
         expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeGreaterThan(500);
         await page.evaluate(() => {
           window.scrollTo(0, 0);
@@ -465,6 +474,7 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
   for (const key of ["Space", "ArrowUp"] as const) {
     test(`A double jump adds a smaller boost: press ${key}`, async ({ page }) => {
       await openGame(page, oneBox);
+      await startRun(page);
       await press(page, key);
       const samples = await play(page, [580], 1300, key);
       expect(Math.abs(heightOf(peakOf(samples)) - 199)).toBeLessThanOrEqual(3);
@@ -472,6 +482,7 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
 
     test(`A third jump in the air is ignored: press ${key}`, async ({ page }) => {
       await openGame(page, oneBox);
+      await startRun(page);
       await press(page, key);
       const samples = await play(page, [580, 680], 1600, key);
       const peak = peakOf(samples);
@@ -482,6 +493,7 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
 
   test("Landing gives both jumps back", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await pressSpace(page);
     const firstRun = await play(page, [580], 1600);
     expect(Math.abs(landingAfter(firstRun, 600).time - 1460)).toBeLessThanOrEqual(16);
@@ -511,6 +523,7 @@ test.describe("Rule: Box columns come from the right", () => {
     ] as const) {
       test(`A column of one or two boxes spawns every 1500 ms: ${String(boxes)}`, async ({ page }) => {
         await openGame(page, [...random]);
+        await startRun(page);
         await advanceTo(page, 1600);
         const columns = columnsAt(await sample(page));
         expect(columns).toHaveLength(1);
@@ -528,6 +541,7 @@ test.describe("Rule: Box columns come from the right", () => {
 
   test("Columns keep coming at a steady rate", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const samples = await play(page, [2700, 4200, 5700], 6100);
     expect(spawnTimes(samples)).toEqual([1500, 3000, 4500, 6000]);
     expect(samples.every((entry) => entry.restarts === 0)).toBe(true);
@@ -537,6 +551,7 @@ test.describe("Rule: Box columns come from the right", () => {
   test("No second column while the score is 10 or less", async ({ page }) => {
     test.setTimeout(120_000);
     await openGame(page, standardRandom({ 12: oneBoxAndSecond }));
+    await startRun(page);
     await play(page, standardJumps(18000), 18000);
     expect(await scoreNow(page)).toBe("10");
     await advanceTo(page, 18100);
@@ -549,6 +564,7 @@ test.describe("Rule: Box columns come from the right", () => {
   test("A second column can follow once the score is above 10", async ({ page }) => {
     test.setTimeout(120_000);
     await openGame(page, standardRandom({ 13: twoBoxesAndSecond }));
+    await startRun(page);
     await play(page, standardJumps(19500), 19500);
     expect(await scoreNow(page)).toBe("11");
     await advanceTo(page, 20000);
@@ -562,6 +578,7 @@ test.describe("Rule: Box columns come from the right", () => {
   test("A second column is not always added above 10", async ({ page }) => {
     test.setTimeout(120_000);
     await openGame(page, standardRandom());
+    await startRun(page);
     await play(page, standardJumps(19500), 19500);
     expect(await scoreNow(page)).toBe("11");
     await advanceTo(page, 20000);
@@ -573,6 +590,7 @@ test.describe("Rule: Box columns come from the right", () => {
 test.describe("Rule: The score counts cleared columns", () => {
   test("Clearing a one-box column scores 1", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 2700);
     expect(await scoreAt(page, 3300)).toBe("0");
     expect(await scoreAt(page, 3340)).toBe("1");
@@ -580,6 +598,7 @@ test.describe("Rule: The score counts cleared columns", () => {
 
   test("Clearing a two-box column with a double jump scores 1", async ({ page }) => {
     await openGame(page, twoBoxes);
+    await startRun(page);
     await play(page, [2530, 2930], 2930);
     expect(await scoreAt(page, 3300)).toBe("0");
     const after = await advanceTo(page, 3340);
@@ -589,6 +608,7 @@ test.describe("Rule: The score counts cleared columns", () => {
 
   test("A spawning column does not score", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 3000);
     const atSpawn = await sample(page);
     expect(atSpawn.time).toBe(3000);
@@ -603,6 +623,7 @@ test.describe("Rule: The score counts cleared columns", () => {
 
   test("A column scores only once", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 2700);
     expect(await scoreAt(page, 3340)).toBe("1");
     expect(await scoreAt(page, 4300)).toBe("1");
@@ -612,6 +633,7 @@ test.describe("Rule: The score counts cleared columns", () => {
   test("A double column counts as one clear", async ({ page }) => {
     test.setTimeout(120_000);
     await openGame(page, standardRandom({ 13: oneBoxAndSecond }));
+    await startRun(page);
     await play(page, standardJumps(19500), 19500);
     expect(await scoreNow(page)).toBe("11");
     expect(await scoreAt(page, 19840)).toBe("12");
@@ -633,6 +655,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
 
   test("Running into a column freezes the run and shows a game over screen", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const { after: diedAt } = await untilGameOver(page);
     expect(Math.abs(diedAt.time - 2875)).toBeLessThanOrEqual(16);
     expect(diedAt.restarts).toBe(0);
@@ -660,6 +683,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
 
   test("The restart prompt stays hidden until a restart would actually work", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const { after: diedAt } = await untilGameOver(page);
     expect(diedAt.gameOverPrompt.visible).toBe(false);
     const stillFrozen = last(await advance(page, 499));
@@ -683,6 +707,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
 
   test("Landing on top of a box also freezes the run", async ({ page }) => {
     await openGame(page, twoBoxes);
+    await startRun(page);
     await play(page, [2300], 2875);
     expect(Math.abs(heightOf(await sample(page)) - 168)).toBeLessThanOrEqual(3);
     const { after: diedAt } = await untilGameOver(page);
@@ -696,6 +721,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
 
   test("Dying after scoring freezes the run with the score it reached", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700, 4200, 5700], 7300);
     expect(await scoreNow(page)).toBe("3");
     const { after: diedAt } = await untilGameOver(page);
@@ -715,6 +741,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
 
         test(`No input restarts the run in the first 500ms after death: ${action}`, async ({ page }) => {
           await openGame(page, oneBox);
+          await startRun(page);
           await untilGameOver(page);
           await advance(page, 400);
           await act(page);
@@ -736,6 +763,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
 
         test(`Each control restarts the run once 500ms have passed: ${action}`, async ({ page }) => {
           await openGame(page, oneBox);
+          await startRun(page);
           await untilGameOver(page);
           await advance(page, 500);
           await act(page);
@@ -780,6 +808,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
 
   test("Nothing from the old run survives a restart", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     for (let death = 0; death < 3; death += 1) {
       const restart = await untilRestart(page);
       expect(Math.abs(restart.diedAt.time - 2875)).toBeLessThanOrEqual(16);
@@ -801,6 +830,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
 test.describe("Rule: The tab title mirrors the live score", () => {
   test("The tab title shows the live score once it rises above 0", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 3340);
     expect(await page.title()).toBe("1 - Panda Jump");
     await play(page, [4200], 4840);
@@ -811,6 +841,7 @@ test.describe("Rule: The tab title mirrors the live score", () => {
 
   test("The tab title returns to 'Panda Jump' once the panda dies and a restart brings the score back to 0", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700, 4200, 5700], 7300);
     expect(await page.title()).toBe("3 - Panda Jump");
     const restart = await untilRestart(page);

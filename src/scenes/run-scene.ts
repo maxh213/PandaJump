@@ -120,6 +120,7 @@ export class RunScene extends Phaser.Scene {
   private countdownText!: Phaser.GameObjects.Text;
   private wasGameOver = false;
   private copied = false;
+  private readyPrompt!: Phaser.GameObjects.Text;
 
   constructor(run: Run, timeScale: number, reducedMotion: boolean) {
     super("run");
@@ -173,6 +174,7 @@ export class RunScene extends Phaser.Scene {
       .setName("bestMarker");
     this.doubleJumpHint = this.hintText();
     this.countdownText = this.centeredText(GAME_OVER_Y, "", "40px").setName("countdownText");
+    this.readyPrompt = this.centeredText(GAME_OVER_PROMPT_Y, "Tap or press Space to start", "20px").setName("readyPrompt");
     this.wireInput();
     this.draw();
   }
@@ -407,6 +409,7 @@ export class RunScene extends Phaser.Scene {
     const countdownKey = String(view.countdown) as "3" | "2" | "1" | "null";
     this.countdownText.setVisible(view.countdown !== null).setText(COUNTDOWN_LABELS[countdownKey]);
     this.vibrateOnDeath(view.gameOver);
+    this.readyPrompt.setVisible(view.ready);
     this.refreshGroup(this.boxes, view.boxes, (box) => {
       this.showBox(box);
     });

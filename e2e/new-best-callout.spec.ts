@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, last, oneBox, openGame, play, sample, untilGameOver, untilRestart } from "./probe.ts";
+import { advance, advanceTo, last, oneBox, openGame, play, sample, startRun, untilGameOver, untilRestart } from "./probe.ts";
 
 const seedBest = (page: Page, value: number) =>
   page.addInitScript((seeded) => {
@@ -12,6 +12,7 @@ test.describe("Rule: The callout fires the instant the live score first overtake
     page,
   }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 3300);
     expect((await sample(page)).best).toMatchObject({ text: "Best: 0", color: "#ffffff" });
     await advanceTo(page, 3340);
@@ -29,6 +30,7 @@ test.describe("Rule: The callout fires the instant the live score first overtake
   test("A returning player beating a non-zero stored best also gets the callout", async ({ page }) => {
     await seedBest(page, 5);
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700, 4200, 5700, 7200, 8700], 10150);
     expect((await sample(page)).best).toMatchObject({ text: "Best: 5", color: "#ffffff" });
     await play(page, [10200], 10840);
@@ -41,6 +43,7 @@ test.describe("Rule: The callout fires at most once per run", () => {
     page,
   }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 3340);
     expect((await sample(page)).best).toMatchObject({ text: "Best: 1", color: "#ffd700" });
     await advanceTo(page, 4000);
@@ -57,6 +60,7 @@ test.describe("Rule: The callout fires at most once per run", () => {
 test.describe("Rule: Dying and restarting resets the callout state", () => {
   test("A later run beating the now-higher stored best triggers the callout again", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 3340);
     expect((await sample(page)).best).toMatchObject({ text: "Best: 1", color: "#ffd700" });
     const restart = await untilRestart(page);
@@ -74,6 +78,7 @@ test.describe("Rule: The game-over screen marks a run that overtook the stored b
     page,
   }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 3340);
     expect((await sample(page)).score.text).toBe("1");
     const { after: diedAt } = await untilGameOver(page);
@@ -84,6 +89,7 @@ test.describe("Rule: The game-over screen marks a run that overtook the stored b
   test('A run that dies below the stored best keeps the plain "Best" label, in white', async ({ page }) => {
     await seedBest(page, 5);
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700, 4200, 5700], 7300);
     const { after: diedAt } = await untilGameOver(page);
     expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 3");
@@ -93,6 +99,7 @@ test.describe("Rule: The game-over screen marks a run that overtook the stored b
   test('A run that only ties the stored best keeps the plain "Best" label, in white', async ({ page }) => {
     await seedBest(page, 1);
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 3340);
     const { after: diedAt } = await untilGameOver(page);
     expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 1");
@@ -101,6 +108,7 @@ test.describe("Rule: The game-over screen marks a run that overtook the stored b
 
   test('A run that dies at score 0 keeps the plain "Best" label, in white', async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const { after: diedAt } = await untilGameOver(page);
     expect(diedAt.gameOverScore.text).toBe("Score: 0");
     expect(diedAt.gameOverBest).toMatchObject({ text: "Best: 0", color: "#ffffff" });
@@ -108,6 +116,7 @@ test.describe("Rule: The game-over screen marks a run that overtook the stored b
 
   test('Restarting after a new best clears the "New best" label until it is beaten again', async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 3340);
     const { after: diedAt } = await untilGameOver(page);
     expect(diedAt.gameOverBest).toMatchObject({ text: "New best: 1", color: "#ffd700" });

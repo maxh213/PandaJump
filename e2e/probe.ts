@@ -19,11 +19,13 @@ interface CenteredText {
 export interface Sample {
   time: number;
   restarts: number;
+  ready: boolean;
   gameOver: boolean;
   score: { text: string; x: number; y: number; color: string; fontSize: string; scale: number };
   best: { text: string; x: number; y: number; color: string; fontSize: string };
   speedUp: CenteredText;
   doubleJumpHint: CenteredText;
+  readyPrompt: CenteredText;
   gameOverTitle: CenteredText;
   gameOverMedal: CenteredText;
   gameOverScore: CenteredText;
@@ -250,6 +252,7 @@ export const installProbe = () => {
     return {
       time: view.time,
       restarts: view.restarts,
+      ready: view.ready,
       gameOver: view.gameOver,
       score: {
         text: score.text,
@@ -262,6 +265,7 @@ export const installProbe = () => {
       best: { text: best.text, x: best.x, y: best.y, color: best.style.color, fontSize: best.style.fontSize },
       speedUp: centeredText("speedUp"),
       doubleJumpHint: centeredText("doubleJumpHint"),
+      readyPrompt: centeredText("readyPrompt"),
       gameOverTitle: centeredText("gameOverTitle"),
       gameOverMedal: centeredText("gameOverMedal"),
       gameOverScore: centeredText("gameOverScore"),
@@ -444,6 +448,8 @@ export const spaceUp = async (page: Page) => {
   await page.keyboard.up("Space");
   await settle(page);
 };
+
+export const startRun = (page: Page) => press(page, "Space");
 
 export const play = async (page: Page, jumps: number[], until: number, key = "Space"): Promise<Sample[]> => {
   const samples: Sample[] = [];

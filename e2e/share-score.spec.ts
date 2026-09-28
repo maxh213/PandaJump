@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, oneBox, openGame, sample, settle, untilGameOver } from "./probe.ts";
+import { advance, oneBox, openGame, sample, settle, startRun, untilGameOver } from "./probe.ts";
 
 interface CapturedShare {
   text?: string;
@@ -46,6 +46,7 @@ test.describe('Rule: Once the restart freeze has passed, a supported browser sho
   test("The share prompt appears alongside the restart prompt once the freeze has elapsed", async ({ page }) => {
     await mockSupportedShare(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     expect((await sample(page)).gameOverShare.visible).toBe(false);
     const stillFrozen = (await advance(page, 499)).at(-1);
@@ -65,6 +66,7 @@ test.describe("Rule: Tapping the share prompt shares the run's score and the pag
   test('Tapping "Share score" calls navigator.share with the run\'s score and the page URL', async ({ page }) => {
     const calls = await mockSupportedShare(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await advance(page, 500);
     await tapSharePrompt(page);
@@ -83,6 +85,7 @@ test.describe("Rule: On a browser without navigator.share, the prompt never show
   test("The share prompt is not shown when sharing is unsupported", async ({ page }) => {
     await mockUnsupportedShare(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await advance(page, 500);
     const after = await sample(page);
@@ -93,6 +96,7 @@ test.describe("Rule: On a browser without navigator.share, the prompt never show
   test("Tapping anywhere on the game-over screen still restarts when sharing is unsupported", async ({ page }) => {
     await mockUnsupportedShare(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await advance(page, 500);
     await page.locator("#game_div canvas").click({ position: { x: 200, y: 200 } });

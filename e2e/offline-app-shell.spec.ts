@@ -5,7 +5,7 @@ import type { Server } from "node:http";
 import { extname, join, normalize } from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Page, Response } from "@playwright/test";
-import { advanceTo, columnsAt, installProbe, oneBox, openGame, play, sample, untilGameOver } from "./probe.ts";
+import { advanceTo, columnsAt, installProbe, oneBox, openGame, play, sample, startRun, untilGameOver } from "./probe.ts";
 
 const OUT_DIR = "dist-offline-e2e";
 
@@ -84,6 +84,7 @@ test.describe("Rule: The built site works offline via a service worker", () => {
     await page.reload();
     await page.waitForFunction(() => window.pandaJump?.game.scene.isActive("run"));
     await page.evaluate(installProbe);
+    await startRun(page);
 
     await advanceTo(page, 1600);
     expect(columnsAt(await sample(page)).length).toBeGreaterThan(0);

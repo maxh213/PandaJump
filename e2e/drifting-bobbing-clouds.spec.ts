@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { advanceTo, oneBox, openGame, play, sample } from "./probe.ts";
+import { advanceTo, oneBox, openGame, play, sample, startRun } from "./probe.ts";
 
 const CLOUD_SCRIPT = [0, 0.5, 1];
 
 test.describe("Rule: Clouds sit behind everything else", () => {
   test("Every cloud renders behind the floor, boxes, panda and score, using the two cloud textures", async ({ page }) => {
     await openGame(page, CLOUD_SCRIPT);
+    await startRun(page);
     const start = await sample(page);
     expect(start.clouds).toHaveLength(3);
     expect(start.clouds.every((cloud) => cloud.depth < 0)).toBe(true);
@@ -16,6 +17,7 @@ test.describe("Rule: Clouds sit behind everything else", () => {
 test.describe("Rule: Clouds drift left at a steady speed while bobbing over a 3 second cycle", () => {
   test("A cloud drifts 40 px per second and bobs up 6 px then back past its base", async ({ page }) => {
     await openGame(page, CLOUD_SCRIPT);
+    await startRun(page);
     const cloudAt = async (time: number) => {
       const samples = await advanceTo(page, time);
       const cloud = (samples.at(-1) ?? (await sample(page))).viewClouds[1];
@@ -36,6 +38,7 @@ test.describe("Rule: Clouds drift left at a steady speed while bobbing over a 3 
 test.describe("Rule: A cloud leaving the left edge is replaced from the right edge", () => {
   test("The leftmost cloud respawns off the right edge with a freshly drawn height and swapped texture", async ({ page }) => {
     await openGame(page, CLOUD_SCRIPT);
+    await startRun(page);
     const before = (await advanceTo(page, 1249)).at(-1)?.viewClouds[0];
     expect(before?.x).toBeLessThan(-49);
     expect(before?.x).toBeGreaterThan(-50);
@@ -48,6 +51,7 @@ test.describe("Rule: A cloud leaving the left edge is replaced from the right ed
 test.describe("Rule: Exactly 3 clouds are always on screen within the top 200 px", () => {
   test("Clouds stay at 3 and within y 0-200 across many respawns", async ({ page }) => {
     await openGame(page, CLOUD_SCRIPT);
+    await startRun(page);
     for (let time = 0; time <= 20000; time += 1250) {
       const now = (await advanceTo(page, time)).at(-1) ?? (await sample(page));
       expect(now.viewClouds).toHaveLength(3);
@@ -62,6 +66,7 @@ test.describe("Rule: Exactly 3 clouds are always on screen within the top 200 px
 test.describe("Rule: Clouds never affect collisions or score", () => {
   test("Clearing a column scores the same with clouds on screen as it would with none", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 2700);
     const early = await sample(page);
     expect(early.viewClouds).toHaveLength(3);
@@ -80,7 +85,9 @@ test.describe("Rule: Clouds are deterministic under the injected random source a
     const first = await browser.newPage();
     const second = await browser.newPage();
     await openGame(first, CLOUD_SCRIPT);
+    await startRun(first);
     await openGame(second, CLOUD_SCRIPT);
+    await startRun(second);
     for (let time = 0; time <= 20000; time += 1250) {
       const a = (await advanceTo(first, time)).at(-1)?.viewClouds ?? (await sample(first)).viewClouds;
       const b = (await advanceTo(second, time)).at(-1)?.viewClouds ?? (await sample(second)).viewClouds;

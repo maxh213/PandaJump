@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, hidePage, oneBox, openGame, play, pressSpace, sample, showPage, standardRandom, untilGameOver } from "./probe.ts";
+import { advance, advanceTo, hidePage, oneBox, openGame, play, pressSpace, sample, showPage, standardRandom, startRun, untilGameOver } from "./probe.ts";
 
 const pauseAt = async (page: Page, time: number) => {
   await advanceTo(page, time);
@@ -11,6 +11,7 @@ const pauseAt = async (page: Page, time: number) => {
 test.describe("Rule: Hiding then showing the tab during a live run pauses it and shows the pause texts", () => {
   test("The pause texts appear once the tab is shown again", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pauseAt(page, 1000);
     const paused = await sample(page);
     expect(paused.pauseTitle).toMatchObject({ text: "Paused", x: 200, y: 190, color: "#ffffff", fontSize: "40px", visible: true });
@@ -32,6 +33,7 @@ test.describe("Rule: Hiding then showing the tab during a live run pauses it and
 
   test("A paused run does not advance time, the panda, the columns, the clouds or the floor", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pauseAt(page, 1000);
     const frozen = await sample(page);
     await advance(page, 2000);
@@ -56,6 +58,7 @@ test.describe("Rule: Resuming a paused run counts down 3, 2, 1 before the run co
 
       test(`Each control starts a countdown without a jump: ${action}`, async ({ page }) => {
         await openGame(page, standardRandom());
+        await startRun(page);
         await pauseAt(page, 1000);
         await act(page);
         const started = await sample(page);
@@ -135,6 +138,7 @@ test.describe("Rule: Pausing has no effect on the game-over screen", () => {
     page,
   }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await hidePage(page);
     await showPage(page);

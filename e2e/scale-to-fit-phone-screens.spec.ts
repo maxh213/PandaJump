@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { advance, first, heightOf, oneBox, openGame, settle } from "./probe.ts";
+import { advance, first, heightOf, oneBox, openGame, settle, startRun } from "./probe.ts";
 
 const canvasBox = async (page: import("@playwright/test").Page) => {
   const box = await page.locator("#game_div canvas").boundingBox();
@@ -139,6 +139,7 @@ test.describe("Rule: Touch input on the game does not move the page", () => {
 
     test("Tapping the canvas still jumps on a touch viewport", async ({ page }) => {
       await openGame(page, oneBox);
+      await startRun(page);
       const box = await settledCanvasBox(page);
       await page.locator("#game_div canvas").tap({ position: { x: box.width / 2, y: box.height / 2 } });
       await settle(page);

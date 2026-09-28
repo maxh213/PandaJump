@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { TILE_SIZE } from "../src/rules/index.ts";
-import { advance, columnClearTime, openGame, play, sample, spawnLog, spawnTimeOf } from "./probe.ts";
+import { advance, columnClearTime, openGame, play, sample, spawnLog, spawnTimeOf, startRun } from "./probe.ts";
 
 const CLEAR_BUFFER = 20;
 const WINDOW_MS = 100;
@@ -21,6 +21,7 @@ const scoreReadAt = (column: number): number => columnClearTime(column) + CLEAR_
 
 const playThroughColumn = async (page: Page, column: number): Promise<void> => {
   await openGame(page, randomThrough(column));
+  await startRun(page);
   await play(page, jumpsThrough(column), scoreReadAt(column));
 };
 
@@ -115,6 +116,7 @@ const expectedGap = (score: number): number => {
 
 const spawnGaps = async (page: Page, column: number) => {
   await openGame(page, randomThrough(column));
+  await startRun(page);
   const spawns = await spawnLog(page, jumpsThrough(column), spawnTimeOf(column) + 1);
   return {
     firstAt: spawns[0]?.time,
@@ -147,6 +149,7 @@ test.describe("Rule: The gap between column spawns shrinks as the score climbs a
     test.setTimeout(120_000);
     const columns = async () => {
       await openGame(page, randomThrough(25));
+      await startRun(page);
       const samples = await play(page, jumpsThrough(25), spawnTimeOf(25) + 1);
       return samples.map((entry) => ({ time: entry.time, boxes: entry.boxes.map((box) => ({ x: box.x, y: box.y })) }));
     };

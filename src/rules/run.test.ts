@@ -43,8 +43,15 @@ const doubleColumnRandom = () => {
 
 const noStore = { load: () => 0, save: () => undefined };
 
-test("a run starts with the panda on the floor, score 0 and no boxes", () => {
+const createStartedRun = (...args: Parameters<typeof createRun>): Run => {
+  const run = createRun(...args);
+  run.jump();
+  return run;
+};
+
+test("a run starts ready, with the panda on the floor, score 0 and no boxes", () => {
   expect(createRun(oneBoxEach(), oneBoxEach(), noStore).view()).toEqual({
+    ready: true,
     time: 0,
     restarts: 0,
     score: "0",
@@ -82,8 +89,34 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
   });
 });
 
-test("time moves the floor and cycles the run frames at 15 per second", () => {
+test("while ready, advancing time changes nothing: clock, panda, columns and clouds all stay put", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const before = run.view();
+  run.advance(5000);
+  expect(run.view()).toEqual(before);
+});
+
+test("the first jump leaves ready without making the panda jump, and starts the run from time 0", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  expect(run.view()).toMatchObject({ ready: false, time: 0, pandaBottom: 426 });
+  run.advance(1500);
+  expect(run.view().boxes).toEqual([{ x: 400, y: 362, texture: "ice_06.png" }]);
+});
+
+test("restarting from the game-over screen stays instant and does not return to ready", () => {
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2880);
+  run.advance(500);
+  run.jump();
+  expect(run.view()).toMatchObject({ ready: false, restarts: 1, time: 0 });
+  run.advance(1500);
+  expect(run.view().boxes.every((box) => box.x === 400)).toBe(true);
+  expect(run.view().boxes).not.toEqual([]);
+});
+
+test("time moves the floor and cycles the run frames at 15 per second", () => {
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(100);
   expect(run.view().floorScroll).toBe(20);
   run.advance(233);
@@ -151,14 +184,14 @@ test("the resume countdown after a mid-jump pause shows the time-based frame, no
 });
 
 test("a jump peaks 168 px up at 580 ms", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.jump();
   run.advance(580);
   expect(run.view().pandaBottom).toBeCloseTo(426 - 168.2);
 });
 
 test("a column spawns every 1500 ms at the right edge", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1499);
   expect(run.view().boxes).toEqual([]);
   run.advance(1);
@@ -168,7 +201,7 @@ test("a column spawns every 1500 ms at the right edge", () => {
 });
 
 test("touching a column freezes the run and shows game over instead of restarting at once", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
   run.advance(200);
   const frozen = run.view();
@@ -195,7 +228,7 @@ test("deathFlash is 0 through a live run, jumps to 0.6 the instant the panda die
 });
 
 test("no click, tap or Space input restarts the run during the first 500ms after death, and canRestart stays false", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
   const frozen = run.view();
   run.advance(499);
@@ -205,14 +238,14 @@ test("no click, tap or Space input restarts the run during the first 500ms after
 });
 
 test("canRestart becomes true once 500ms have passed since death, before any input arrives", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
   run.advance(500);
   expect(run.view()).toMatchObject({ restarts: 0, gameOver: true, canRestart: true });
 });
 
 test("a click, tap or Space input after 500ms starts a fresh run at score 0 and clears the game over screen", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
   run.advance(500);
   run.jump();
@@ -228,7 +261,7 @@ test("a click, tap or Space input after 500ms starts a fresh run at score 0 and 
 });
 
 test("the restarts counter increments by exactly 1 on every restart", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
   run.advance(500);
   run.jump();
@@ -240,14 +273,14 @@ test("the restarts counter increments by exactly 1 on every restart", () => {
 });
 
 test("a fresh run still has no boxes and score 0 after one step", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(10);
   expect(run.view()).toMatchObject({ time: 10, boxes: [], score: "0" });
 });
 
 test("the result does not depend on how time is sliced", () => {
-  const whole = createRun(oneBoxEach(), oneBoxEach(), noStore);
-  const sliced = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const whole = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  const sliced = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   whole.jump();
   sliced.jump();
   whole.advance(25);
@@ -259,13 +292,13 @@ test("the result does not depend on how time is sliced", () => {
 });
 
 test("cloud spawning draws from a random cursor independent of column spawning", () => {
-  const run = createRun(oneBoxEach(), () => 0.5, noStore);
+  const run = createStartedRun(oneBoxEach(), () => 0.5, noStore);
   run.advance(1600);
   expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "ice_06.png", hit: false }]);
 });
 
 test("clearing a column scores once when its right edge passes the panda", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2700);
   run.jump();
   run.advance(600);
@@ -277,7 +310,7 @@ test("clearing a column scores once when its right edge passes the panda", () =>
 });
 
 test("scoreScale starts at 1, pops to 1.3 the instant the score increases, then falls linearly back to 1 over 150ms", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   expect(run.view().scoreScale).toBe(1);
   run.advance(2700);
   run.jump();
@@ -304,7 +337,7 @@ test("scoreScale starts at 1, pops to 1.3 the instant the score increases, then 
 });
 
 test("scoring a further column pops the scale back to 1.3, even once the previous pop has already settled", () => {
-  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  const run = createStartedRun(repeatingOneBox(), oneBoxEach(), noStore);
   let elapsed = 0;
   const advanceTo = (time: number) => {
     run.advance(time - elapsed);
@@ -323,7 +356,7 @@ test("scoring a further column pops the scale back to 1.3, even once the previou
 });
 
 test("restarting after death resets the score pop to scale 1", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2700);
   run.jump();
   run.advance(640);
@@ -336,7 +369,7 @@ test("restarting after death resets the score pop to scale 1", () => {
   expect(run.view()).toMatchObject({ restarts: 1, score: "0", scoreScale: 1 });
 });
 
-test("a run starts with the best loaded from the store", () => {
+test("a run starts with the best loaded from the store, even while ready", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), { load: () => 5, save: () => undefined });
   expect(run.view().best).toBe("5");
 });
@@ -344,7 +377,7 @@ test("a run starts with the best loaded from the store", () => {
 test("the best updates the moment the live score beats it, and is saved", () => {
   const saved: number[] = [];
   const store = { load: () => 0, save: (best: number) => saved.push(best) };
-  const run = createRun(oneBoxEach(), oneBoxEach(), store);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), store);
   run.advance(2700);
   run.jump();
   run.advance(600);
@@ -358,7 +391,7 @@ test("the best updates the moment the live score beats it, and is saved", () => 
 test("the best is not saved again once the score falls back below it", () => {
   const saved: number[] = [];
   const store = { load: () => 0, save: (best: number) => saved.push(best) };
-  const run = createRun(oneBoxEach(), oneBoxEach(), store);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), store);
   run.advance(2700);
   run.jump();
   run.advance(640);
@@ -382,7 +415,7 @@ const repeatingOneBox = () => {
 };
 
 test("the floor and columns speed up once the score passes 20", () => {
-  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  const run = createStartedRun(repeatingOneBox(), oneBoxEach(), noStore);
   let elapsed = 0;
   const advanceTo = (time: number) => {
     run.advance(time - elapsed);
@@ -500,7 +533,7 @@ test("a restart hides speedUp until the next run's score reaches a ramp threshol
 });
 
 test("dying keeps the best score reached so far", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2700);
   run.jump();
   run.advance(640);
@@ -513,7 +546,7 @@ test("dying keeps the best score reached so far", () => {
 });
 
 test("a first-time player's first cleared column triggers the new-best callout, for a fixed duration", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2700);
   run.jump();
   run.advance(600);
@@ -527,7 +560,7 @@ test("a first-time player's first cleared column triggers the new-best callout, 
 });
 
 test("clearing further columns after already holding the best does not retrigger the callout", () => {
-  const run = createRun(standardColumns(), oneBoxEach(), noStore);
+  const run = createStartedRun(standardColumns(), oneBoxEach(), noStore);
   run.advance(2700);
   run.jump();
   run.advance(640);
@@ -541,14 +574,14 @@ test("clearing further columns after already holding the best does not retrigger
 });
 
 test("pause freezes a live run", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pause();
   expect(run.view()).toMatchObject({ paused: true, gameOver: false });
 });
 
 test("advance does not move time, the panda, the columns, the clouds or the floor while paused", () => {
-  const run = createRun(standardColumns(), oneBoxEach(), noStore);
+  const run = createStartedRun(standardColumns(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pause();
   const frozen = run.view();
@@ -557,7 +590,7 @@ test("advance does not move time, the panda, the columns, the clouds or the floo
 });
 
 test("the resume control starts a 1500 ms countdown instead of resuming at once", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pause();
   run.jump();
@@ -565,7 +598,7 @@ test("the resume control starts a 1500 ms countdown instead of resuming at once"
 });
 
 test("the countdown shows 2 after 500 ms, 1 after 1000 ms and ends after 1500 ms", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pause();
   run.jump();
@@ -641,7 +674,7 @@ test("a jump pressed after the countdown ends jumps as normal", () => {
 });
 
 test("pause is ignored while the game-over screen is shown", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
   expect(run.view()).toMatchObject({ gameOver: true, canRestart: false, paused: false });
   run.pause();
@@ -676,7 +709,7 @@ test("pauseOrResume is ignored while the game-over screen is shown", () => {
 });
 
 test("overtookBest is false until the run overtakes the stored best, then stays true through death, and resets on restart", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   expect(run.view().overtookBest).toBe(false);
   run.advance(2700);
   run.jump();
@@ -690,7 +723,7 @@ test("overtookBest is false until the run overtakes the stored best, then stays 
 });
 
 test("tying the stored best does not count as overtaking it", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), { load: () => 1, save: () => undefined });
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), { load: () => 1, save: () => undefined });
   run.advance(2700);
   run.jump();
   run.advance(640);
@@ -698,7 +731,7 @@ test("tying the stored best does not count as overtaking it", () => {
 });
 
 test("dying and restarting resets the callout so beating the new, higher best triggers it again", () => {
-  const run = createRun(standardColumns(), oneBoxEach(), noStore);
+  const run = createStartedRun(standardColumns(), oneBoxEach(), noStore);
   run.advance(2700);
   run.jump();
   run.advance(640);

@@ -21,6 +21,7 @@ import type { Star } from "./stars.ts";
 import { FLOOR_Y, PANDA_X, TILE_SIZE, spawnGapForScore, speedForScore } from "./world.ts";
 
 interface View {
+  readonly ready: boolean;
   readonly time: number;
   readonly restarts: number;
   readonly score: string;
@@ -67,6 +68,7 @@ interface Randoms {
 }
 
 interface State {
+  readonly ready: boolean;
   readonly time: number;
   readonly rampTime: number;
   readonly rampDistance: number;
@@ -118,6 +120,7 @@ const PANDA_CENTER_X = PANDA_X + 12.5;
 type Carried = Pick<State, "restarts" | "best" | "hintPending">;
 
 const freshState = ({ restarts, best, hintPending }: Carried, randoms: Randoms): State => ({
+  ready: false,
   time: 0,
   rampTime: 0,
   rampDistance: 0,
@@ -297,7 +300,7 @@ const landingPuffOf = (state: State): View["landingPuff"] => {
 };
 
 const doubleJumpHintOf = (state: State): boolean =>
-  state.hintPending && isLive(state) && state.score < HINT_BELOW_SCORE;
+  state.hintPending && !state.ready && isLive(state) && state.score < HINT_BELOW_SCORE;
 
 const pandaFrameOf = (state: State): number =>
   isLive(state) && state.panda.height > 0
@@ -316,6 +319,7 @@ const gameOverScoreOf = (state: State): string =>
     : String(Math.floor((state.score * state.deathElapsed) / RESTART_FREEZE_MS));
 
 const viewOf = (state: State): View => ({
+  ready: state.ready,
   time: state.time,
   restarts: state.restarts,
   score: String(state.score),
@@ -366,6 +370,9 @@ const jumpLive = (state: State): State => {
 };
 
 const act = (state: State, randoms: Randoms): State => {
+  if (state.ready) {
+    return { ...state, ready: false };
+  }
   if (state.paused) {
     return resume(state);
   }
@@ -376,14 +383,19 @@ const act = (state: State, randoms: Randoms): State => {
 };
 
 const pausedState = (state: State): State =>
-  state.deathElapsed === null ? { ...state, paused: true, resumeElapsed: null, bufferedAt: null } : state;
+  state.ready || state.deathElapsed !== null
+    ? state
+    : { ...state, paused: true, resumeElapsed: null, bufferedAt: null };
 
 const togglePause = (state: State): State => (state.paused ? resume(state) : pausedState(state));
 
 export const createRun = (random: Random, cloudRandom: Random, store: BestStore): Run => {
   const randoms: Randoms = { columns: random, clouds: cloudRandom };
   const loadedBest = store.load();
-  let state = freshState({ restarts: 0, best: loadedBest, hintPending: loadedBest === 0 }, randoms);
+  let state: State = {
+    ...freshState({ restarts: 0, best: loadedBest, hintPending: loadedBest === 0 }, randoms),
+    ready: true,
+  };
   return {
     jump: () => {
       state = act(state, randoms);
@@ -395,6 +407,7 @@ export const createRun = (random: Random, cloudRandom: Random, store: BestStore)
       state = togglePause(state);
     },
     advance: (ms) => {
+      if (state.ready) return;
       if (state.paused && state.resumeElapsed === null) return;
       const next = stepAdvance(state, ms, randoms);
       if (next.best !== state.best) {
