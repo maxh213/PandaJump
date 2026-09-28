@@ -9,4 +9,5 @@ Use an Android phone with Chrome, or desktop Chrome's device toolbar plus dev to
 5. Open `http://localhost:5180/assets/Panda.png` directly. **Expected:** the browser shows the Panda image, not a 404.
 6. On an Android phone with Chrome, open the deployed page and use the "Add to Home Screen" menu item. **Expected:** the install prompt shows the Panda icon and the name "Panda Jump", not a generic icon and the raw URL; the installed shortcut opens in its own standalone window instead of a browser tab.
 7. Run `git diff master -- assets/`. **Expected:** nothing prints — no asset was added, edited, moved or removed.
-8. Run `npx playwright test`. **Expected:** every scenario in `features/web-app-manifest.feature` has a passing test.
+8. Run `npm run build`, then inspect `dist/manifest.json`. **Expected:** it sits at `dist/manifest.json` (not hashed into `dist/assets/`), and its `icons[0].src` still names `assets/Panda.png`, which the build keeps unhashed at `dist/assets/Panda.png`, so it resolves once deployed.
+9. Run `npx playwright test`. **Expected:** every scenario in `features/web-app-manifest.feature` has a passing test, including the production-build scenario that serves `dist/` from the deployed `/PandaJump/` path prefix.

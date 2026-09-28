@@ -1,3 +1,8 @@
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { createServer } from "node:http";
+import type { Server } from "node:http";
+import { extname, join, normalize } from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
@@ -56,5 +61,50 @@ test.describe("Rule: The manifest's icon points at the real Panda image", () => 
     const response = await page.request.get(iconUrl);
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toContain("image/");
+  });
+});
+
+test.describe("Rule: The manifest survives the production build's asset hashing", () => {
+  const types: Record<string, string> = { ".html": "text/html", ".json": "application/json", ".png": "image/png" };
+  let server: Server;
+  let host = "";
+
+  test.beforeAll(() => {
+    execSync("npm run build", { stdio: "ignore" });
+    const dist = join(process.cwd(), "dist");
+    server = createServer((request, response) => {
+      const path = new URL(request.url ?? "/", "http://host").pathname;
+      const relative = normalize(path.replace(/^\/PandaJump\//, "/").replace(/\/$/, "/index.html"));
+      try {
+        const body = readFileSync(join(dist, relative));
+        response.writeHead(path.startsWith("/PandaJump/") ? 200 : 404, { "content-type": types[extname(relative)] ?? "" });
+        response.end(body);
+      } catch {
+        response.writeHead(404).end();
+      }
+    });
+    return new Promise<void>((resolve) => {
+      server.listen(0, () => {
+        const address = server.address();
+        host = `http://localhost:${String(typeof address === "object" && address ? address.port : 0)}`;
+        resolve();
+      });
+    });
+  });
+
+  test.afterAll(() => {
+    server.close();
+  });
+
+  test("The manifest's icon and start_url resolve against the manifest's own hashed-build URL", async ({ page }) => {
+    await page.goto(`${host}/PandaJump/`);
+    const { url, manifest } = await fetchManifest(page);
+    const icon = manifest.icons[0];
+    if (!icon) throw new Error("manifest has no icons");
+    const iconResponse = await page.request.get(new URL(icon.src, url).toString());
+    expect(iconResponse.status()).toBe(200);
+    expect(iconResponse.headers()["content-type"]).toContain("image/");
+    const startResponse = await page.request.get(new URL(manifest.start_url, url).toString());
+    expect(startResponse.status()).toBe(200);
   });
 });
