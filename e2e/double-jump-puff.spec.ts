@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { advanceTo, at, oneBox, openGame, pixelRows, pressSpace, sample } from "./probe.ts";
+import { advanceTo, at, oneBox, openGame, pixelRows, pressSpace, sample, startRun } from "./probe.ts";
 
 const WHITE = [255, 255, 255];
 
@@ -8,6 +8,7 @@ const isWhite = (pixel: number[]) => pixel.every((value) => Math.abs(value - (WH
 test.describe("Rule: The puff appears only when the air jump actually fires", () => {
   test("A single floor jump never shows a puff", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await pressSpace(page);
     expect((await sample(page)).viewAirPuff).toBeNull();
     await advanceTo(page, 290);
@@ -24,6 +25,7 @@ test.describe("Rule: The puff appears only when the air jump actually fires", ()
 test.describe("Rule: A second tap while airborne marks the moment the air jump fires", () => {
   test("The puff appears at the panda's feet, fully opaque, then fades to gone over 250ms", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await pressSpace(page);
     await advanceTo(page, 580);
     await pressSpace(page);
@@ -54,6 +56,7 @@ test.describe("Rule: A second tap while airborne marks the moment the air jump f
 test.describe("Rule: A third tap in the air, with the air jump already used, shows no new puff", () => {
   test("The puff already showing keeps fading on its original schedule", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await pressSpace(page);
     await advanceTo(page, 580);
     await pressSpace(page);

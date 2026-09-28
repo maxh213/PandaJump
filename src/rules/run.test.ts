@@ -888,13 +888,13 @@ test("pandaAngle is 0 during game over even though the panda is still falling", 
 });
 
 test("no airPuff appears after a single floor jump", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.jump();
   expect(run.view().airPuff).toBeNull();
 });
 
 test("an air jump shows a puff at the panda's centre and its bottom at that moment, fading from alpha 1 to null over 250ms", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.jump();
   run.advance(580);
   const bottomAtAirJump = run.view().pandaBottom;
@@ -907,7 +907,7 @@ test("an air jump shows a puff at the panda's centre and its bottom at that mome
 });
 
 test("a third jump in the air, with the air jump already used, does not create or extend a puff", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.jump();
   run.advance(580);
   run.jump();
@@ -918,7 +918,7 @@ test("a third jump in the air, with the air jump already used, does not create o
 });
 
 test("airPuff clears immediately on death instead of freezing mid-fade", () => {
-  const run = createRun(twoBoxColumns(), oneBoxEach(), noStore);
+  const run = createStartedRun(twoBoxColumns(), oneBoxEach(), noStore);
   run.advance(2600);
   run.jump();
   run.advance(200);
