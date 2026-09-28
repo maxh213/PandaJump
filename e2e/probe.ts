@@ -201,6 +201,12 @@ export const openGame = async (page: Page, random: number[]): Promise<void> => {
   await page.evaluate(installProbe);
 };
 
+export const reload = async (page: Page): Promise<void> => {
+  await page.reload();
+  await page.waitForFunction(() => window.pandaJump?.game.scene.isActive("run"));
+  await page.evaluate(installProbe);
+};
+
 export const sample = (page: Page): Promise<Sample> => page.evaluate(() => window.probe.sample());
 
 export const advance = (page: Page, ms: number): Promise<Sample[]> =>
