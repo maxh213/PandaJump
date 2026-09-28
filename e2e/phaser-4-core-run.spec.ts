@@ -175,6 +175,19 @@ test.describe("Rule: The page keeps its content", () => {
     await expectRecognisablePanda(page, ogImageUrl);
     const ogUrl = await page.locator('meta[property="og:url"]').getAttribute("content");
     expect(ogUrl).toBe("https://maxh213.github.io/PandaJump/");
+    const twitterCard = await page.locator('meta[name="twitter:card"]').getAttribute("content");
+    expect(twitterCard).toBe("summary");
+    const twitterTitle = await page.locator('meta[name="twitter:title"]').getAttribute("content");
+    expect(twitterTitle).toBe("Panda Jump");
+    const twitterDescription = await page.locator('meta[name="twitter:description"]').getAttribute("content");
+    expect(twitterDescription).toBe(ogDescription);
+    const twitterImage = await page.locator('meta[name="twitter:image"]').getAttribute("content");
+    if (!twitterImage) throw new Error("twitter:image content is missing");
+    const twitterImagePath = new URL(twitterImage).pathname;
+    expect(twitterImagePath).toBe("/PandaJump/panda-icon.png");
+    const twitterImageDevPath = twitterImagePath.replace(/^\/PandaJump/, "");
+    const twitterImageUrl = new URL(twitterImageDevPath, page.url()).toString();
+    await expectRecognisablePanda(page, twitterImageUrl);
   });
 });
 

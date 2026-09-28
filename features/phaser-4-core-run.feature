@@ -49,6 +49,10 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And the page's <meta property="og:description"> has non-empty, game-specific text
       And the page's <meta property="og:image"> resolves to "panda-icon.png" and shows a single recognisable Panda, not the raw sprite strip
       And the page's <meta property="og:url"> resolves to "https://maxh213.github.io/PandaJump/"
+      And the page's <meta name="twitter:card"> reads "summary"
+      And the page's <meta name="twitter:title"> reads "Panda Jump"
+      And the page's <meta name="twitter:description"> matches the og:description text
+      And the page's <meta name="twitter:image"> resolves to "panda-icon.png" and shows a single recognisable Panda, not the raw sprite strip
 
     Scenario: The production build runs from a plain file host
       Given "npm run build" has produced "dist/"
