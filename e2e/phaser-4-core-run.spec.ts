@@ -505,6 +505,7 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
 
   test("Holding Space does not add a second jump from its auto-repeat", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await spaceDown(page);
     const early = await advance(page, 580);
     await spaceDown(page);
