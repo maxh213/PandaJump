@@ -173,6 +173,7 @@ export class RunScene extends Phaser.Scene {
       });
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
     window.addEventListener("blur", this.handleWindowBlur);
+    document.addEventListener("pointerdown", this.jumpOffCanvas);
   }
 
   override update(_time: number, delta: number): void {
@@ -182,6 +183,15 @@ export class RunScene extends Phaser.Scene {
 
   private readonly jump = (): void => {
     this.run.jump();
+  };
+
+  private readonly jumpOffCanvas = (event: PointerEvent): void => {
+    [event.target]
+      .filter((target): target is Element => target instanceof Element)
+      .filter((target) => target.closest("canvas, a") === null)
+      .forEach(() => {
+        this.jump();
+      });
   };
 
   private readonly pauseOrResume = (): void => {
