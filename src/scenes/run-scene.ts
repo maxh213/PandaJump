@@ -20,6 +20,7 @@ const GAME_OVER_Y = 190;
 const GAME_OVER_SCORE_Y = 250;
 const GAME_OVER_BEST_Y = 280;
 const GAME_OVER_PROMPT_Y = 320;
+const BEST_COLORS: Record<"true" | "false", string> = { true: "#ffd700", false: "#ffffff" };
 
 export class RunScene extends Phaser.Scene {
   private readonly run: Run;
@@ -119,7 +120,7 @@ export class RunScene extends Phaser.Scene {
     this.rock.tilePositionX = view.floorScroll;
     this.grass.tilePositionX = view.floorScroll;
     this.score.setText(view.score);
-    this.best.setText(`Best: ${view.best}`);
+    this.best.setText(`Best: ${view.best}`).setColor(BEST_COLORS[String(view.newBest) as "true" | "false"]);
     this.gameOverTitle.setVisible(view.gameOver);
     this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.score}`);
     this.gameOverBest.setVisible(view.gameOver).setText(`Best: ${view.best}`);

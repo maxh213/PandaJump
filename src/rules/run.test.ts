@@ -9,6 +9,16 @@ const oneBoxEach = () => {
   };
 };
 
+const standardColumns = () => {
+  const values = [0.25, 0.5, 0];
+  let index = 0;
+  return (): number => {
+    const value = values.at(index % values.length) ?? 0;
+    index += 1;
+    return value;
+  };
+};
+
 const noStore = { load: () => 0, save: () => undefined };
 
 test("a run starts with the panda on the floor, score 0 and no boxes", () => {
@@ -17,6 +27,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     restarts: 0,
     score: "0",
     best: "0",
+    newBest: false,
     pandaX: 100,
     pandaBottom: 426,
     pandaFrame: 17,
@@ -193,4 +204,53 @@ test("dying keeps the best score reached so far", () => {
   run.advance(600);
   run.jump();
   expect(run.view()).toMatchObject({ restarts: 1, score: "0", best: "1" });
+});
+
+test("a first-time player's first cleared column triggers the new-best callout, for a fixed duration", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2700);
+  run.jump();
+  run.advance(600);
+  expect(run.view().newBest).toBe(false);
+  run.advance(40);
+  expect(run.view()).toMatchObject({ score: "1", best: "1", newBest: true });
+  run.advance(579);
+  expect(run.view().newBest).toBe(true);
+  run.advance(1);
+  expect(run.view().newBest).toBe(false);
+});
+
+test("clearing further columns after already holding the best does not retrigger the callout", () => {
+  const run = createRun(standardColumns(), oneBoxEach(), noStore);
+  run.advance(2700);
+  run.jump();
+  run.advance(640);
+  expect(run.view()).toMatchObject({ score: "1", best: "1", newBest: true });
+  run.advance(580);
+  expect(run.view().newBest).toBe(false);
+  run.advance(280);
+  run.jump();
+  run.advance(640);
+  expect(run.view()).toMatchObject({ score: "2", best: "2", newBest: false });
+});
+
+test("dying and restarting resets the callout so beating the new, higher best triggers it again", () => {
+  const run = createRun(standardColumns(), oneBoxEach(), noStore);
+  run.advance(2700);
+  run.jump();
+  run.advance(640);
+  expect(run.view()).toMatchObject({ score: "1", best: "1", newBest: true });
+  run.advance(1040);
+  expect(run.view()).toMatchObject({ restarts: 0, gameOver: true, newBest: false });
+  run.advance(600);
+  run.jump();
+  expect(run.view()).toMatchObject({ restarts: 1, score: "0", best: "1", newBest: false });
+  run.advance(2700);
+  run.jump();
+  run.advance(660);
+  expect(run.view()).toMatchObject({ score: "1", best: "1", newBest: false });
+  run.advance(840);
+  run.jump();
+  run.advance(660);
+  expect(run.view()).toMatchObject({ score: "2", best: "2", newBest: true });
 });

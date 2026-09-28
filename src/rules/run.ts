@@ -13,6 +13,7 @@ interface View {
   readonly restarts: number;
   readonly score: string;
   readonly best: string;
+  readonly newBest: boolean;
   readonly pandaX: number;
   readonly pandaBottom: number;
   readonly pandaFrame: number;
@@ -39,6 +40,7 @@ interface State {
   readonly restarts: number;
   readonly score: number;
   readonly best: number;
+  readonly calloutStart: number | null;
   readonly nextSpawn: number;
   readonly panda: Panda;
   readonly columns: readonly Column[];
@@ -52,12 +54,14 @@ const RUN_FRAMES = 6;
 const FRAMES_PER_MS = 15 / 1000;
 const NO_COLUMNS: readonly Column[] = [];
 const RESTART_FREEZE_MS = 500;
+const CALLOUT_DURATION_MS = 600;
 
 const freshState = (restarts: number, best: number, randoms: Randoms): State => ({
   time: 0,
   restarts,
   score: 0,
   best,
+  calloutStart: null,
   nextSpawn: SPAWN_EVERY,
   panda: standingPanda,
   columns: NO_COLUMNS,
@@ -68,12 +72,15 @@ const freshState = (restarts: number, best: number, randoms: Randoms): State => 
 const moveOn = (state: State, ms: number, randoms: Randoms): State => {
   const time = state.time + ms;
   const score = state.score + countCleared(state.columns, time);
+  const best = nextBest(state.best, score);
+  const calloutStart = state.calloutStart === null && best > state.best ? time : state.calloutStart;
   return {
     ...state,
     time,
     panda: fall(state.panda, ms),
     score,
-    best: nextBest(state.best, score),
+    best,
+    calloutStart,
     columns: moveColumns(state.columns, time),
     clouds: moveClouds(state.clouds, time, randoms.clouds),
   };
@@ -109,6 +116,7 @@ const viewOf = (state: State): View => ({
   restarts: state.restarts,
   score: String(state.score),
   best: String(state.best),
+  newBest: state.calloutStart !== null && state.time - state.calloutStart < CALLOUT_DURATION_MS,
   pandaX: PANDA_X,
   pandaBottom: FLOOR_Y - state.panda.height,
   pandaFrame: FIRST_RUN_FRAME + (Math.floor(state.time * FRAMES_PER_MS) % RUN_FRAMES),
