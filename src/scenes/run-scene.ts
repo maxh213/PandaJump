@@ -23,6 +23,7 @@ const GAME_OVER_PROMPT_Y = 320;
 const GAME_OVER_SHARE_Y = 360;
 const BEST_COLORS: Record<"true" | "false", string> = { true: "#ffd700", false: "#ffffff" };
 const shareSupported = typeof navigator.share === "function";
+const PAGE_TITLE = "Panda Jump";
 
 export class RunScene extends Phaser.Scene {
   private readonly run: Run;
@@ -136,6 +137,8 @@ export class RunScene extends Phaser.Scene {
     this.rock.tilePositionX = view.floorScroll;
     this.grass.tilePositionX = view.floorScroll;
     this.score.setText(view.score);
+    const titles: Record<"true" | "false", string> = { true: PAGE_TITLE, false: `${view.score} - ${PAGE_TITLE}` };
+    document.title = titles[String(view.score === "0") as "true" | "false"];
     this.best.setText(`Best: ${view.best}`).setColor(BEST_COLORS[String(view.newBest) as "true" | "false"]);
     this.gameOverTitle.setVisible(view.gameOver);
     this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.score}`);

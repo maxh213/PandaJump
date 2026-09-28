@@ -718,3 +718,25 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     expect(last.restarts).toBe(3);
   });
 });
+
+test.describe("Rule: The tab title mirrors the live score", () => {
+  test("The tab title shows the live score once it rises above 0", async ({ page }) => {
+    await openGame(page, oneBox);
+    await play(page, [2700], 3340);
+    expect(await page.title()).toBe("1 - Panda Jump");
+    await play(page, [4200], 4840);
+    expect(await page.title()).toBe("2 - Panda Jump");
+    await play(page, [5700], 6340);
+    expect(await page.title()).toBe("3 - Panda Jump");
+  });
+
+  test("The tab title returns to 'Panda Jump' once the panda dies and a restart brings the score back to 0", async ({ page }) => {
+    await openGame(page, oneBox);
+    await play(page, [2700, 4200, 5700], 7300);
+    expect(await page.title()).toBe("3 - Panda Jump");
+    const restart = await untilRestart(page);
+    expect(restart.after.restarts).toBe(1);
+    expect(restart.after.score.text).toBe("0");
+    expect(await page.title()).toBe("Panda Jump");
+  });
+});

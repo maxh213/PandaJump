@@ -294,3 +294,22 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And I wait until 3100 ms after the latest restart
       Then exactly two columns are on screen, with left edges at x 80 and x 380
       And the score reads "0"
+
+  Rule: The tab title mirrors the live score
+
+    Scenario: The tab title shows the live score once it rises above 0
+      Given the random source picks 1 box and no second column for every column
+      When I press Space at 2700 ms
+      Then the document title is "1 - Panda Jump" at 3340 ms
+      When I press Space at 4200 ms
+      Then the document title is "2 - Panda Jump" at 4840 ms
+      When I press Space at 5700 ms
+      Then the document title is "3 - Panda Jump" at 6340 ms
+
+    Scenario: The tab title returns to "Panda Jump" once the panda dies and a restart brings the score back to 0
+      Given the random source picks 1 box and no second column for every column
+      When I press Space at 2700, 4200 and 5700 ms and then stop jumping
+      Then the document title is "3 - Panda Jump" at 7300 ms
+      When the panda touches column 4, the game freezes, and tapping to play again restarts it
+      Then the score reads "0"
+      And the document title is "Panda Jump"
