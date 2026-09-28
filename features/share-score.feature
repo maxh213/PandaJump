@@ -23,7 +23,7 @@ Feature: Panda Jump on Phaser 4, slice: share score from the game-over screen
       When 499 ms pass
       Then the page still does not read "Share score"
       When 1 more ms passes
-      Then the page reads "Share score" under the "Tap or press Space to play again" prompt, in white 20px Arial
+      Then the page reads "Share score" under the "Tap, press Space or the Up Arrow key to play again" prompt, in white 20px Arial
 
   Rule: Tapping the share prompt shares the run's score and the page URL, and does not restart
 
@@ -47,7 +47,7 @@ Feature: Panda Jump on Phaser 4, slice: share score from the game-over screen
       When I do not jump
       And the panda touches the column
       And 500 ms pass
-      Then the page reads "Tap or press Space to play again"
+      Then the page reads "Tap, press Space or the Up Arrow key to play again"
       And the page does not read "Share score"
 
     Scenario: Tapping anywhere on the game-over screen still restarts when sharing is unsupported

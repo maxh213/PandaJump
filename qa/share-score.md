@@ -13,7 +13,7 @@ run `navigator.share = () => Promise.resolve()` in the console before step 4.
    before this change.
 4. In the console, run `navigator.share = (data) => { console.log(data); return Promise.resolve(); }`,
    then reload the page. Play until the panda touches a column and wait for the 500ms freeze to
-   pass. **Expected:** a "Share score" prompt appears under "Tap or press Space to play again", in
+   pass. **Expected:** a "Share score" prompt appears under "Tap, press Space or the Up Arrow key to play again", in
    white 20px Arial, only after the freeze has elapsed (not before).
 5. Tap or click "Share score". **Expected:** the console logs an object with a `text` field like
    "I scored 3 on Panda Jump!" (matching the score on screen) and a `url` field with the page's

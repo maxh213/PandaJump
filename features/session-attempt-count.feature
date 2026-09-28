@@ -21,7 +21,7 @@ Feature: Panda Jump shows the session's attempt count on the game over screen
       When I do not jump
       Then the panda touches the column at about 2875 ms
       And the page reads "Run 1" centred in white 20px Arial text on the game over screen
-      And "Run 1" does not overlap "Game over", "Score: 0", "Best: 0" or "Tap or press Space to play again"
+      And "Run 1" does not overlap "Game over", "Score: 0", "Best: 0" or "Tap, press Space or the Up Arrow key to play again"
 
     Scenario: The count is not shown while the run is live
       Then no text reading "Run 1" is visible

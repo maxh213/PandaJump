@@ -19,7 +19,7 @@ does have `navigator.clipboard.writeText`, so step 2 covers that browser as-is.
 5. In the console, run `Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined })`,
    then reload the page. Play until the panda touches a column and wait for the 500ms freeze to
    pass. **Expected:** no "Share score" or "Copy score" prompt appears anywhere on the screen, only
-   "Tap or press Space to play again".
+   "Tap, press Space or the Up Arrow key to play again".
 6. Tap or click anywhere on the game-over screen. **Expected:** the run restarts exactly as it did
    before this change.
 7. Run `npx playwright test`. **Expected:** every scenario in `features/phaser-4-core-run.feature`,
