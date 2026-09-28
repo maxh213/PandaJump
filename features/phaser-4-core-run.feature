@@ -253,7 +253,8 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       When 499 ms pass
       Then the page still does not invite a tap, click or Space press to restart
       When 1 more ms passes
-      Then the page reads "Tap, press Space or the Up Arrow key to play again" under the Score and Best lines, in white 20px Arial
+      Then the page reads "Tap, press Space or the Up Arrow key to play again" under the Score and Best lines, in white 16px Arial
+      And the prompt fits fully inside the 400px wide canvas
 
     Scenario: Landing on top of a box also freezes the run
       Given the random source picks 2 boxes for the first column

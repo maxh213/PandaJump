@@ -12,6 +12,7 @@ interface CenteredText {
   originX: number;
   originY: number;
   visible: boolean;
+  bounds: Bounds;
 }
 
 export interface Sample {
@@ -141,6 +142,7 @@ export const installProbe = () => {
       originX: text.originX,
       originY: text.originY,
       visible: text.visible,
+      bounds: text.getBounds(),
     };
   };
   const sample = (): Sample => {

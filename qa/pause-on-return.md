@@ -6,7 +6,8 @@ dev tools; alternatively switch to another tab or app for a few seconds and swit
 1. Run `npm ci` then `npm run dev` and open the URL it prints. Let the run start.
 2. Switch to another browser tab (or another app on a phone) for a couple of seconds, then switch
    back. **Expected:** the game shows "Paused" centred in white 40px where "Game over" normally
-   appears, and "Tap or press Space to continue" centred in white 20px below it. The panda, the
+   appears, and "Tap, press Space or the Up Arrow key to continue" centred in white 16px below it,
+   fully on screen with no letters cut off at either edge. The panda, the
    columns and the floor are exactly where they were the moment you left.
 3. Wait a couple more seconds without touching anything. **Expected:** nothing moves; the run is
    still paused and no column appears even if enough real time has passed for one to have spawned.

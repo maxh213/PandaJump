@@ -20,7 +20,8 @@ Feature: Panda Jump holds a run paused after the player leaves the tab
       And the page becomes hidden
       And the page becomes visible again
       Then the page reads "Paused" centred in white 40px at (200, 190)
-      And the page reads "Tap or press Space to continue" centred in white 20px at (200, 320)
+      And the page reads "Tap, press Space or the Up Arrow key to continue" centred in white 16px at (200, 320)
+      And the prompt fits fully inside the 400px wide canvas
 
     Scenario: A paused run does not advance
       When 1000 ms pass

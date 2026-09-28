@@ -188,7 +188,7 @@ export class RunScene extends Phaser.Scene {
     this.gameOverPrompt = this.centeredText(
       GAME_OVER_PROMPT_Y,
       "Tap, press Space or the Up Arrow key to play again",
-      "20px",
+      "16px",
     ).setName("gameOverPrompt");
     this.gameOverShare = this.centeredText(GAME_OVER_SHARE_Y, "Share score", "20px")
       .setName("gameOverShare")
@@ -201,9 +201,11 @@ export class RunScene extends Phaser.Scene {
 
   private createPauseTexts(): void {
     this.pauseTitle = this.centeredText(GAME_OVER_Y, "Paused", "40px").setName("pauseTitle");
-    this.pausePrompt = this.centeredText(GAME_OVER_PROMPT_Y, "Tap or press Space to continue", "20px").setName(
-      "pausePrompt",
-    );
+    this.pausePrompt = this.centeredText(
+      GAME_OVER_PROMPT_Y,
+      "Tap, press Space or the Up Arrow key to continue",
+      "16px",
+    ).setName("pausePrompt");
   }
 
   private addFloorStrip(y: number, texture: string): Phaser.GameObjects.TileSprite {

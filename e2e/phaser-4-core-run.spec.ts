@@ -669,8 +669,10 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
       text: "Tap, press Space or the Up Arrow key to play again",
       visible: true,
       color: "#ffffff",
-      fontSize: "20px",
+      fontSize: "16px",
     });
+    expect(ready.gameOverPrompt.bounds.x).toBeGreaterThanOrEqual(0);
+    expect(ready.gameOverPrompt.bounds.x + ready.gameOverPrompt.bounds.width).toBeLessThanOrEqual(400);
   });
 
   test("Landing on top of a box also freezes the run", async ({ page }) => {

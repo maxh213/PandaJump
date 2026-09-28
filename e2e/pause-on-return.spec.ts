@@ -17,15 +17,17 @@ test.describe("Rule: Hiding then showing the tab during a live run pauses it and
     expect(paused.pauseTitle.originX).toBeCloseTo(0.5);
     expect(paused.pauseTitle.originY).toBeCloseTo(0.5);
     expect(paused.pausePrompt).toMatchObject({
-      text: "Tap or press Space to continue",
+      text: "Tap, press Space or the Up Arrow key to continue",
       x: 200,
       y: 320,
       color: "#ffffff",
-      fontSize: "20px",
+      fontSize: "16px",
       visible: true,
     });
     expect(paused.pausePrompt.originX).toBeCloseTo(0.5);
     expect(paused.pausePrompt.originY).toBeCloseTo(0.5);
+    expect(paused.pausePrompt.bounds.x).toBeGreaterThanOrEqual(0);
+    expect(paused.pausePrompt.bounds.x + paused.pausePrompt.bounds.width).toBeLessThanOrEqual(400);
   });
 
   test("A paused run does not advance time, the panda, the columns, the clouds or the floor", async ({ page }) => {
