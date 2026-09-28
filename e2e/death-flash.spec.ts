@@ -80,30 +80,29 @@ test.describe("Rule: The flash covers the whole canvas, is white, and never gets
 });
 
 test.describe("Rule: Restart and Share score keep working exactly as before, and the flash resets on restart", () => {
-  test("A tap after the freeze still restarts the run, and the flash resets to 0 in the new run", async ({ page }) => {
+  test("Restart and Share score still work exactly as before, and the flash resets to 0 in the new run", async ({
+    page,
+  }) => {
+    const calls = await mockSupportedShare(page);
     await openGame(page, oneBox);
     await untilGameOver(page);
     await advance(page, 500);
     await page.locator("#game_div canvas").click({ position: { x: 200, y: 200 } });
     await settle(page);
-    const after = await sample(page);
-    expect(after.restarts).toBe(1);
-    expect(after.gameOver).toBe(false);
-    expect(after.deathFlash.alpha).toBe(0);
-    expect(after.viewDeathFlash).toBe(0);
-  });
+    const afterRestart = await sample(page);
+    expect(afterRestart.restarts).toBe(1);
+    expect(afterRestart.gameOver).toBe(false);
+    expect(afterRestart.deathFlash.alpha).toBe(0);
+    expect(afterRestart.viewDeathFlash).toBe(0);
 
-  test('Tapping "Share score" still shares instead of restarting, unaffected by the flash', async ({ page }) => {
-    const calls = await mockSupportedShare(page);
-    await openGame(page, oneBox);
     await untilGameOver(page);
     await advance(page, 500);
     const { gameOverShare } = await sample(page);
     await page.locator("#game_div canvas").click({ position: { x: gameOverShare.x, y: gameOverShare.y } });
     await settle(page);
     expect(calls).toHaveLength(1);
-    const after = await sample(page);
-    expect(after.restarts).toBe(0);
-    expect(after.gameOver).toBe(true);
+    const afterShare = await sample(page);
+    expect(afterShare.restarts).toBe(1);
+    expect(afterShare.gameOver).toBe(true);
   });
 });
