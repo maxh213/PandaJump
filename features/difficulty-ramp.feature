@@ -4,9 +4,12 @@ Feature: Panda Jump ramps column and floor speed up as the score climbs
   So that a long run feels harder than the first few columns, giving the high score a reason to chase
 
   Times use the same conventions as features/phaser-4-core-run.feature.
-  "The standard schedule" is as defined in features/phaser-4-core-run.feature: the random source
-  picks 1 box and no second column for every column, and I press Space 1200 ms after each column
-  spawns, so column n is cleared at 1500 × n + 1820 ms and the score reads n from that moment.
+  "The standard schedule" here keeps the random source picking 1 box and no second column for
+  every column, as in features/phaser-4-core-run.feature, but presses Space 788 ms after each
+  column spawns rather than 1200 ms: once the ramp has sped columns up, a jump timed for the flat
+  200 px/s schedule lands too late and the panda is hit, so every scenario below jumps earlier to
+  clear the ramped columns. Column n is still cleared at 1500 × n + 1820 ms and the score reads n
+  from that moment, matching features/phaser-4-core-run.feature's timing.
   "Speed" means the distance a column on screen, or the floor's own scroll offset, travels over a
   fixed 100 ms window, expressed in px per second.
 
