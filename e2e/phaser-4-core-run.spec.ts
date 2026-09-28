@@ -139,7 +139,13 @@ test.describe("Rule: The page keeps its content", () => {
 });
 
 test.describe("Rule: The production build", () => {
-  const types: Record<string, string> = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png" };
+  const types: Record<string, string> = {
+    ".html": "text/html",
+    ".js": "text/javascript",
+    ".css": "text/css",
+    ".png": "image/png",
+    ".json": "application/json",
+  };
   let server: Server;
   let host = "";
 
@@ -214,6 +220,23 @@ test.describe("Rule: The production build", () => {
     if (!content) throw new Error("og:image content is missing");
     const response = await page.request.get(new URL(new URL(content).pathname, host).toString());
     expect(response.status()).toBe(200);
+  });
+
+  test("The manifest's icon and start_url resolve from the production build's path prefix", async ({ page }) => {
+    await page.goto(`${host}/PandaJump/`);
+    const href = await page.locator('link[rel="manifest"]').getAttribute("href");
+    if (!href) throw new Error("manifest href is missing");
+    const manifestUrl = new URL(href, page.url()).toString();
+    const response = await page.request.get(manifestUrl);
+    expect(response.status()).toBe(200);
+    const manifest = (await response.json()) as { start_url: string; icons: { src: string }[] };
+    const icon = manifest.icons[0];
+    if (!icon) throw new Error("manifest has no icons");
+    const iconResponse = await page.request.get(new URL(icon.src, manifestUrl).toString());
+    expect(iconResponse.status()).toBe(200);
+    expect(iconResponse.headers()["content-type"]).toContain("image/");
+    const startResponse = await page.request.get(new URL(manifest.start_url, manifestUrl).toString());
+    expect(startResponse.status()).toBe(200);
   });
 });
 

@@ -3,6 +3,10 @@ Feature: Panda Jump advertises itself with a web app manifest
   I want Chrome to show the Panda icon and the name "Panda Jump"
   So that the shortcut opens like a real app, not a browser tab pointed at a raw URL
 
+  The manifest's icon and start_url surviving the production build's asset hashing is proved
+  by features/phaser-4-core-run.feature's "The production build runs from a plain file host"
+  scenario, which already builds and serves dist/ once for the whole suite.
+
   Background:
     Given I open the Panda Jump page
 
@@ -26,10 +30,3 @@ Feature: Panda Jump advertises itself with a web app manifest
 
     Scenario: The manifest's icon URL resolves to the Panda.png asset
       Then the manifest's icon URL responds with 200 and image content
-
-  Rule: The manifest survives the production build's asset hashing
-
-    Scenario: The manifest's icon and start_url resolve against the manifest's own hashed-build URL
-      Given the production build is served from its deployed path prefix
-      Then the manifest's icon URL responds with 200 and image content
-      And the manifest's start_url responds with 200
