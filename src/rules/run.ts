@@ -18,6 +18,7 @@ interface View {
   readonly best: string;
   readonly newBest: boolean;
   readonly overtookBest: boolean;
+  readonly speedUp: boolean;
   readonly medal: Medal;
   readonly pandaX: number;
   readonly pandaBottom: number;
@@ -53,6 +54,7 @@ interface State {
   readonly scorePopStart: number | null;
   readonly best: number;
   readonly calloutStart: number | null;
+  readonly speedUpStart: number | null;
   readonly nextSpawn: number;
   readonly panda: Panda;
   readonly columns: readonly Column[];
@@ -70,6 +72,7 @@ const RESTART_FREEZE_MS = 500;
 const CALLOUT_DURATION_MS = 600;
 const SCORE_POP_PEAK = 1.3;
 const SCORE_POP_DURATION_MS = 150;
+const SPEED_UP_DURATION_MS = 800;
 
 const freshState = (restarts: number, best: number, randoms: Randoms): State => ({
   time: 0,
@@ -80,6 +83,7 @@ const freshState = (restarts: number, best: number, randoms: Randoms): State => 
   scorePopStart: null,
   best,
   calloutStart: null,
+  speedUpStart: null,
   nextSpawn: SPAWN_EVERY,
   panda: standingPanda,
   columns: NO_COLUMNS,
@@ -99,10 +103,17 @@ interface Advance {
   readonly score: number;
 }
 
-const nextRamp = (state: State, advance: Advance): Pick<State, "rampTime" | "rampDistance"> =>
+interface Ramp extends Pick<State, "rampTime" | "rampDistance"> {
+  readonly changed: boolean;
+}
+
+const nextRamp = (state: State, advance: Advance): Ramp =>
   speedForScore(advance.score) !== speedForScore(state.score)
-    ? { rampTime: advance.time, rampDistance: advance.distance }
-    : { rampTime: state.rampTime, rampDistance: state.rampDistance };
+    ? { rampTime: advance.time, rampDistance: advance.distance, changed: true }
+    : { rampTime: state.rampTime, rampDistance: state.rampDistance, changed: false };
+
+const nextSpeedUpStart = (state: State, ramp: Ramp, time: number): number | null =>
+  ramp.changed ? time : state.speedUpStart;
 
 const moveOn = (state: State, ms: number, randoms: Randoms): State => {
   const time = state.time + ms;
@@ -111,15 +122,18 @@ const moveOn = (state: State, ms: number, randoms: Randoms): State => {
   const best = nextBest(state.best, score);
   const calloutStart = state.calloutStart === null && best > state.best ? time : state.calloutStart;
   const scorePopStart = score > state.score ? time : state.scorePopStart;
+  const ramp = nextRamp(state, { time, distance, score });
   return {
     ...state,
     time,
-    ...nextRamp(state, { time, distance, score }),
+    rampTime: ramp.rampTime,
+    rampDistance: ramp.rampDistance,
     panda: fall(state.panda, ms),
     score,
     scorePopStart,
     best,
     calloutStart,
+    speedUpStart: nextSpeedUpStart(state, ramp, time),
     columns: moveColumns(state.columns, distance),
     clouds: moveClouds(state.clouds, time, randoms.clouds),
   };
@@ -160,6 +174,11 @@ const scoreScaleOf = (state: State): number => {
     : SCORE_POP_PEAK - (SCORE_POP_PEAK - 1) * (elapsed / SCORE_POP_DURATION_MS);
 };
 
+const isLive = (state: State): boolean => state.deathElapsed === null && !state.paused;
+
+const isSpeedUp = (state: State): boolean =>
+  isLive(state) && state.speedUpStart !== null && state.time - state.speedUpStart < SPEED_UP_DURATION_MS;
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
@@ -168,6 +187,7 @@ const viewOf = (state: State): View => ({
   best: String(state.best),
   newBest: state.calloutStart !== null && state.time - state.calloutStart < CALLOUT_DURATION_MS,
   overtookBest: state.calloutStart !== null,
+  speedUp: isSpeedUp(state),
   medal: medalFor(state.score),
   pandaX: PANDA_X,
   pandaBottom: FLOOR_Y - state.panda.height,

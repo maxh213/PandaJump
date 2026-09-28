@@ -55,5 +55,6 @@ All of the above have shipped, along with these slices that had no task file wri
 - Locking the installed PWA to portrait orientation to match the game's fixed portrait canvas
 - Making the iOS standalone status bar black to match the page's solid-black theme
 - Popping the top-left score number to 1.3x size the instant a column is cleared, easing back to its normal size over the next 150ms, so a cleared column is easy to notice mid-jump with no sound
+- A gold "Faster!" callout centred on screen for 800ms of game time each time the difficulty ramp changes the floor and column speed, so a long run's mid-air speed-ups are as legible as the difficulty ramp itself
 
 Sound is not planned: CLAUDE.md's rules say the repository has no audio assets.

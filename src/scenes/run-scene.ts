@@ -16,6 +16,7 @@ const GRASS_Y = 392;
 const PANDA_SCALE = 1.25;
 const CLOUD_DEPTH = -1;
 const CENTER_X = CANVAS_WIDTH / 2;
+const SPEED_UP_Y = 120;
 const GAME_OVER_Y = 190;
 const GAME_OVER_MEDAL_Y = 226;
 const GAME_OVER_SCORE_Y = 250;
@@ -52,6 +53,7 @@ export class RunScene extends Phaser.Scene {
   private grass!: Phaser.GameObjects.TileSprite;
   private score!: Phaser.GameObjects.Text;
   private best!: Phaser.GameObjects.Text;
+  private speedUp!: Phaser.GameObjects.Text;
   private gameOverTitle!: Phaser.GameObjects.Text;
   private gameOverMedal!: Phaser.GameObjects.Text;
   private gameOverScore!: Phaser.GameObjects.Text;
@@ -98,6 +100,10 @@ export class RunScene extends Phaser.Scene {
       .text(20, 450, "Best: 0", { fontFamily: "Arial", fontSize: "20px", color: "#ffffff" })
       .setOrigin(0, 1)
       .setName("best");
+    this.speedUp = this.add
+      .text(CENTER_X, SPEED_UP_Y, "Faster!", { fontFamily: "Arial", fontSize: "24px", color: "#ffd700" })
+      .setOrigin(0.5)
+      .setName("speedUp");
     this.createGameOverTexts();
     this.createPauseTexts();
     this.input.on("pointerdown", this.jump);
@@ -200,6 +206,7 @@ export class RunScene extends Phaser.Scene {
     const titles: Record<"true" | "false", string> = { true: PAGE_TITLE, false: `${view.score} - ${PAGE_TITLE}` };
     document.title = titles[String(view.score === "0") as "true" | "false"];
     this.best.setText(`Best: ${view.best}`).setColor(BEST_COLORS[String(view.newBest) as "true" | "false"]);
+    this.speedUp.setVisible(view.speedUp);
     this.gameOverTitle.setVisible(view.gameOver);
     this.gameOverMedal
       .setVisible([view.gameOver, view.medal !== "none"].every(Boolean))

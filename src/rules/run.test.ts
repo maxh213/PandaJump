@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { createRun } from "./index.ts";
+import type { Run } from "./index.ts";
 
 const oneBoxEach = () => {
   let draws = 0;
@@ -40,6 +41,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     best: "0",
     newBest: false,
     overtookBest: false,
+    speedUp: false,
     medal: "none",
     pandaX: 100,
     pandaBottom: 426,
@@ -295,6 +297,74 @@ test("the floor and columns speed up once the score passes 20", () => {
   run.advance(100);
   const after = run.view().floorScroll;
   expect(((after - before) + 64) % 64).toBeCloseTo(22);
+});
+
+const rampedJumpAt = (column: number): number => 1500 * column + 788;
+
+const advanceToColumn = (run: Run, from: number, to: number): void => {
+  for (let column = from; column <= to; column += 1) {
+    run.advance(rampedJumpAt(column) - run.view().time);
+    run.jump();
+  }
+  while (run.view().score !== String(to)) {
+    run.advance(1);
+  }
+};
+
+test("speedUp is visible for exactly 800ms of game time from the instant the score first reaches the ramp threshold of 20", () => {
+  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  advanceToColumn(run, 1, 19);
+  expect(run.view()).toMatchObject({ score: "19", speedUp: false });
+  advanceToColumn(run, 20, 20);
+  expect(run.view()).toMatchObject({ score: "20", speedUp: true });
+  run.advance(799);
+  expect(run.view()).toMatchObject({ score: "20", speedUp: true });
+  run.advance(1);
+  expect(run.view()).toMatchObject({ score: "20", speedUp: false });
+});
+
+test("speedUp appears again the moment the score reaches the next ramp threshold of 30", () => {
+  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  advanceToColumn(run, 1, 20);
+  expect(run.view()).toMatchObject({ score: "20", speedUp: true });
+  advanceToColumn(run, 21, 29);
+  expect(run.view()).toMatchObject({ score: "29", speedUp: false });
+  advanceToColumn(run, 30, 30);
+  expect(run.view()).toMatchObject({ score: "30", speedUp: true });
+});
+
+test("speedUp does not reappear at score 70 since the speed already reached its cap at 60", () => {
+  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  advanceToColumn(run, 1, 60);
+  expect(run.view()).toMatchObject({ score: "60", speedUp: true });
+  advanceToColumn(run, 61, 70);
+  expect(run.view()).toMatchObject({ score: "70", speedUp: false });
+});
+
+test("speedUp is never visible on the game-over screen, even moments after the ramp changed", () => {
+  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  advanceToColumn(run, 1, 20);
+  expect(run.view()).toMatchObject({ score: "20", speedUp: true });
+  run.advance(5000);
+  expect(run.view()).toMatchObject({ gameOver: true, speedUp: false });
+});
+
+test("speedUp is hidden while the run is paused, even moments after the ramp changed", () => {
+  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  advanceToColumn(run, 1, 20);
+  expect(run.view()).toMatchObject({ score: "20", speedUp: true });
+  run.pause();
+  expect(run.view()).toMatchObject({ paused: true, speedUp: false });
+});
+
+test("a restart hides speedUp until the next run's score reaches a ramp threshold again", () => {
+  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  advanceToColumn(run, 1, 20);
+  run.advance(5000);
+  expect(run.view().gameOver).toBe(true);
+  run.advance(500);
+  run.jump();
+  expect(run.view()).toMatchObject({ restarts: 1, score: "0", speedUp: false });
 });
 
 test("dying keeps the best score reached so far", () => {
