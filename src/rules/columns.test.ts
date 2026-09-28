@@ -1,5 +1,13 @@
 import { expect, test } from "vitest";
-import { bestColumnMarker, boxesOf, countCleared, hitsPanda, moveColumns, spawnColumns } from "./columns.ts";
+import {
+  bestColumnMarker,
+  boxesOf,
+  countCleared,
+  hitsPanda,
+  moveColumns,
+  spawnColumns,
+  touchingColumn,
+} from "./columns.ts";
 import type { Column } from "./columns.ts";
 
 const sequence = (...values: number[]) => () => values.shift() ?? 0.5;
@@ -72,10 +80,30 @@ test("a column touches the panda while they overlap and the panda is below its t
 });
 
 test("boxes stack up from the floor at the column's position", () => {
-  expect(boxesOf([twoBoxes, { ...oneBox, offset: 64, texture: "ice_06.png" }], 320)).toEqual([
-    { x: 380, y: 362, texture: "dirt_06.png" },
-    { x: 380, y: 298, texture: "dirt_06.png" },
-    { x: 444, y: 362, texture: "ice_06.png" },
+  expect(boxesOf([twoBoxes, { ...oneBox, offset: 64, texture: "ice_06.png" }], 320, null)).toEqual([
+    { x: 380, y: 362, texture: "dirt_06.png", hit: false },
+    { x: 380, y: 298, texture: "dirt_06.png", hit: false },
+    { x: 444, y: 362, texture: "ice_06.png", hit: false },
+  ]);
+});
+
+test("a column touching the panda is the one returned as the touching column", () => {
+  expect(touchingColumn([oneBox], 575, 0)).toBeNull();
+  expect(touchingColumn([oneBox], 575.2, 63)).toEqual(oneBox);
+  expect(touchingColumn([oneBox], 575.2, 64)).toBeNull();
+});
+
+test("boxesOf marks every box of the hit column as hit and leaves every other box untouched", () => {
+  const second: Column = { ...oneBox, offset: 64, texture: "ice_06.png" };
+  expect(boxesOf([twoBoxes, second], 320, twoBoxes)).toEqual([
+    { x: 380, y: 362, texture: "dirt_06.png", hit: true },
+    { x: 380, y: 298, texture: "dirt_06.png", hit: true },
+    { x: 444, y: 362, texture: "ice_06.png", hit: false },
+  ]);
+  expect(boxesOf([twoBoxes, second], 320, second)).toEqual([
+    { x: 380, y: 362, texture: "dirt_06.png", hit: false },
+    { x: 380, y: 298, texture: "dirt_06.png", hit: false },
+    { x: 444, y: 362, texture: "ice_06.png", hit: true },
   ]);
 });
 

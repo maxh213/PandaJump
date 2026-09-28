@@ -16,6 +16,7 @@ export interface Box {
   readonly x: number;
   readonly y: number;
   readonly texture: BoxTexture;
+  readonly hit: boolean;
 }
 
 const PANDA_WIDTH = 25;
@@ -69,15 +70,19 @@ const touches = (column: Column, distance: number, height: number): boolean => {
   return x < PANDA_X + PANDA_WIDTH && x + TILE_SIZE > PANDA_X && height < column.boxes * TILE_SIZE;
 };
 
-export const hitsPanda = (columns: readonly Column[], distance: number, height: number): boolean =>
-  columns.some((column) => touches(column, distance, height));
+export const touchingColumn = (columns: readonly Column[], distance: number, height: number): Column | null =>
+  columns.find((column) => touches(column, distance, height)) ?? null;
 
-export const boxesOf = (columns: readonly Column[], distance: number): Box[] =>
+export const hitsPanda = (columns: readonly Column[], distance: number, height: number): boolean =>
+  touchingColumn(columns, distance, height) !== null;
+
+export const boxesOf = (columns: readonly Column[], distance: number, hitColumn: Column | null): Box[] =>
   columns.flatMap((column) =>
     Array.from({ length: column.boxes }, (_, index) => ({
       x: columnX(column, distance),
       y: FLOOR_Y - TILE_SIZE * (index + 1),
       texture: column.texture,
+      hit: column === hitColumn,
     })),
   );
 

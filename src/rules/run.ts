@@ -1,6 +1,14 @@
 import { nextBest } from "./best.ts";
 import type { BestStore } from "./best.ts";
-import { SPAWN_EVERY, bestColumnMarker, boxesOf, countCleared, hitsPanda, moveColumns, spawnColumns } from "./columns.ts";
+import {
+  SPAWN_EVERY,
+  bestColumnMarker,
+  boxesOf,
+  countCleared,
+  moveColumns,
+  spawnColumns,
+  touchingColumn,
+} from "./columns.ts";
 import type { Box, Column, Random } from "./columns.ts";
 import { cloudsOf, initialClouds, moveClouds } from "./clouds.ts";
 import type { Cloud, CloudState } from "./clouds.ts";
@@ -64,6 +72,7 @@ interface State {
   readonly columns: readonly Column[];
   readonly clouds: readonly CloudState[];
   readonly deathElapsed: number | null;
+  readonly hitColumn: Column | null;
   readonly paused: boolean;
 }
 
@@ -98,6 +107,7 @@ const freshState = (restarts: number, best: number, randoms: Randoms): State => 
   columns: NO_COLUMNS,
   clouds: initialClouds(randoms.clouds),
   deathElapsed: null,
+  hitColumn: null,
   paused: false,
 });
 
@@ -162,8 +172,9 @@ const step = (state: State, ms: number, randoms: Randoms): State => {
     return { ...state, deathElapsed: state.deathElapsed + ms, panda: fall(state.panda, ms) };
   }
   const next = spawnIfDue(moveOn(state, ms, randoms), randoms.columns);
-  return hitsPanda(next.columns, currentDistance(next), next.panda.height)
-    ? { ...next, panda: { ...next.panda, speed: 0 }, deathElapsed: 0 }
+  const hitColumn = touchingColumn(next.columns, currentDistance(next), next.panda.height);
+  return hitColumn !== null
+    ? { ...next, panda: { ...next.panda, speed: 0 }, deathElapsed: 0, hitColumn }
     : next;
 };
 
@@ -216,7 +227,7 @@ const viewOf = (state: State): View => ({
   pandaBottom: FLOOR_Y - state.panda.height,
   pandaFrame: FIRST_RUN_FRAME + (Math.floor(state.time * FRAMES_PER_MS) % RUN_FRAMES),
   floorScroll: currentDistance(state) % TILE_SIZE,
-  boxes: boxesOf(state.columns, currentDistance(state)),
+  boxes: boxesOf(state.columns, currentDistance(state), state.hitColumn),
   clouds: cloudsOf(state.clouds, state.time),
   gameOver: state.deathElapsed !== null,
   canRestart: canRestart(state),

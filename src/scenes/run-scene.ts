@@ -12,6 +12,15 @@ import cloud05Url from "../../assets/cloud_05.png?no-inline";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, TILE_SIZE } from "../rules/index.ts";
 import type { Box, Cloud, Medal, Run } from "../rules/index.ts";
 
+const HIT_COLUMN_TINT = 0xff6666;
+const TINT_ACTIONS: Record<"true" | "false", (image: Phaser.GameObjects.Image) => void> = {
+  true: (image) => {
+    image.setTint(HIT_COLUMN_TINT);
+  },
+  false: (image) => {
+    image.clearTint();
+  },
+};
 const GRASS_Y = 392;
 const PANDA_SCALE = 1.25;
 const PANDA_FRAME_WIDTH = 20;
@@ -322,6 +331,7 @@ export class RunScene extends Phaser.Scene {
       .setActive(true)
       .setVisible(true)
       .setName("box");
+    TINT_ACTIONS[String(box.hit) as "true" | "false"](image);
   }
 
   private showCloud(cloud: Cloud): void {

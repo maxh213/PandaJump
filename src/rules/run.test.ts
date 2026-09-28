@@ -30,6 +30,16 @@ const twoBoxColumns = () => {
   };
 };
 
+const doubleColumnRandom = () => {
+  const singleColumn = [0.25, 0.5, 0];
+  const doubleColumn = [0.75, 0, 0.6];
+  let draws = 0;
+  return (): number => {
+    draws += 1;
+    return draws <= 45 ? (singleColumn[(draws - 1) % 3] ?? 0) : (doubleColumn[(draws - 46) % 3] ?? 0);
+  };
+};
+
 const noStore = { load: () => 0, save: () => undefined };
 
 test("a run starts with the panda on the floor, score 0 and no boxes", () => {
@@ -89,9 +99,9 @@ test("a column spawns every 1500 ms at the right edge", () => {
   run.advance(1499);
   expect(run.view().boxes).toEqual([]);
   run.advance(1);
-  expect(run.view().boxes).toEqual([{ x: 400, y: 362, texture: "ice_06.png" }]);
+  expect(run.view().boxes).toEqual([{ x: 400, y: 362, texture: "ice_06.png", hit: false }]);
   run.advance(100);
-  expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "ice_06.png" }]);
+  expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "ice_06.png", hit: false }]);
 });
 
 test("touching a column freezes the run and shows game over instead of restarting at once", () => {
@@ -188,7 +198,7 @@ test("the result does not depend on how time is sliced", () => {
 test("cloud spawning draws from a random cursor independent of column spawning", () => {
   const run = createRun(oneBoxEach(), () => 0.5, noStore);
   run.advance(1600);
-  expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "ice_06.png" }]);
+  expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "ice_06.png", hit: false }]);
 });
 
 test("clearing a column scores once when its right edge passes the panda", () => {
@@ -591,6 +601,23 @@ test("a panda that dies already on the floor stays at pandaBottom 426", () => {
   expect(diedAt.pandaBottom).toBe(426);
   run.advance(300);
   expect(run.view().pandaBottom).toBe(426);
+});
+
+test("dying against the front of a double column marks only its boxes as hit", () => {
+  const run = createRun(doubleColumnRandom(), oneBoxEach(), noStore);
+  advanceToColumn(run, 1, 15);
+  expect(run.view().score).toBe("15");
+  let steps = 0;
+  while (!run.view().gameOver) {
+    steps += 1;
+    if (steps > 1000) throw new Error("the run never ended");
+    run.advance(10);
+  }
+  const boxes = run.view().boxes;
+  expect(boxes).toHaveLength(4);
+  const [frontX, secondX] = [...new Set(boxes.map((box) => box.x))].sort((a, b) => a - b);
+  expect(boxes.filter((box) => box.x === frontX).every((box) => box.hit)).toBe(true);
+  expect(boxes.filter((box) => box.x === secondX).some((box) => box.hit)).toBe(false);
 });
 
 test("pandaUpsideDown is true exactly while gameOver is true, and resets on restart", () => {
