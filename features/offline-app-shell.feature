@@ -38,3 +38,18 @@ Feature: Panda Jump caches its app shell so the installed PWA opens offline
       Given "npm run build" has produced "dist/sw.js" once
       When a build output file's contents change and "npm run build" runs again
       Then the regenerated "dist/sw.js" has different bytes and a different cache name than before
+
+    Scenario: A revisit after a redeploy serves the new build and drops the old cache
+      Given I open the Panda Jump page and the service worker has taken control
+      And exactly one cache holds the first build's files
+      When a build output file's contents change and "npm run build" runs again
+      And I reload the Panda Jump page
+      Then the page reloads a second time on its own once the new service worker takes control
+      And fetching the changed file now returns its new contents
+      And only the new build's cache remains; the previous build's cache is gone
+
+  Rule: The unbuilt dev server never registers a service worker
+
+    Scenario: Running npm run dev does not install an offline cache
+      When I open the Panda Jump page served by the unbuilt Vite dev server
+      Then no service worker is registered for that page

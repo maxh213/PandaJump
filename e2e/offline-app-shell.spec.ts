@@ -5,7 +5,7 @@ import type { Server } from "node:http";
 import { extname, join, normalize } from "node:path";
 import { expect, test } from "@playwright/test";
 import type { Page, Response } from "@playwright/test";
-import { advanceTo, columnsAt, installProbe, oneBox, play, sample, untilGameOver } from "./probe.ts";
+import { advanceTo, columnsAt, installProbe, oneBox, openGame, play, sample, untilGameOver } from "./probe.ts";
 
 const OUT_DIR = "dist-offline-e2e";
 
@@ -114,5 +114,48 @@ test.describe("Rule: The built site works offline via a service worker", () => {
       writeFileSync(manifestPath, originalManifest);
       execSync(`node scripts/generate-sw.mjs ${OUT_DIR}`, { stdio: "ignore" });
     }
+  });
+
+  test("A revisit after a redeploy serves the new build and drops the previous cache", async ({ page }) => {
+    test.setTimeout(30_000);
+    await openOffline(page, oneBox);
+    await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+    const before = await page.evaluate(() => caches.keys());
+    expect(before).toHaveLength(1);
+
+    const manifestPath = join(outDir, "manifest.json");
+    const originalManifest = readFileSync(manifestPath, "utf8");
+    const mutatedManifest = `${originalManifest} `;
+    try {
+      writeFileSync(manifestPath, mutatedManifest);
+      execSync(`node scripts/generate-sw.mjs ${OUT_DIR}`, { stdio: "ignore" });
+
+      const documentLoads: Response[] = [];
+      page.on("response", (response) => {
+        if (response.request().resourceType() === "document") documentLoads.push(response);
+      });
+
+      await page.reload();
+      await expect.poll(() => documentLoads.length, { timeout: 15_000 }).toBeGreaterThanOrEqual(2);
+      await page.waitForFunction(() => window.pandaJump?.game.scene.isActive("run"));
+
+      const after = await page.evaluate(() => caches.keys());
+      expect(after).toHaveLength(1);
+      expect(after[0]).not.toBe(before[0]);
+
+      const manifestText = await page.evaluate(async () => (await fetch("manifest.json")).text());
+      expect(manifestText).toBe(mutatedManifest);
+    } finally {
+      writeFileSync(manifestPath, originalManifest);
+      execSync(`node scripts/generate-sw.mjs ${OUT_DIR}`, { stdio: "ignore" });
+    }
+  });
+});
+
+test.describe("Rule: The unbuilt dev server never registers a service worker", () => {
+  test("Running npm run dev does not install an offline cache", async ({ page }) => {
+    await openGame(page, oneBox);
+    const registrations = await page.evaluate(() => navigator.serviceWorker.getRegistrations());
+    expect(registrations).toHaveLength(0);
   });
 });
