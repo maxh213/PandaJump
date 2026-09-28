@@ -47,3 +47,4 @@ add a line merge cleanly instead of conflicting.
 - A single short vibration on a supporting phone the instant the panda dies
 - A "Run N" attempt count on the game-over screen counting restarts for the current page session, starting at "Run 1" and never read from or written to any store
 - The Up Arrow key also jumps and restarts, like Space
+- Pausing a live run when the browser window loses focus (a window blur), not only when the tab is hidden, so switching to another application never costs a run

@@ -164,6 +164,7 @@ export class RunScene extends Phaser.Scene {
         this.listenForPauseKeys(keyboard);
       });
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
+    window.addEventListener("blur", this.handleWindowBlur);
   }
 
   override update(_time: number, delta: number): void {
@@ -183,6 +184,10 @@ export class RunScene extends Phaser.Scene {
     [document.visibilityState === "hidden"].filter(Boolean).forEach(() => {
       this.run.pause();
     });
+  };
+
+  private readonly handleWindowBlur = (): void => {
+    this.run.pause();
   };
 
   private readonly jumpUnlessRepeating = (event: KeyboardEvent): void => {
