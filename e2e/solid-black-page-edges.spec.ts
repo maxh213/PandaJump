@@ -26,6 +26,13 @@ const cornersAndBelowContent = (width: number, height: number, belowContentY: nu
   { x: Math.floor(width / 2), y: belowContentY },
 ];
 
+const rootBackgroundsAndBodyMargin = (page: Page) =>
+  page.evaluate(() => ({
+    htmlBackground: getComputedStyle(document.documentElement).backgroundColor,
+    bodyBackground: getComputedStyle(document.body).backgroundColor,
+    bodyMarginTop: getComputedStyle(document.body).marginTop,
+  }));
+
 test.describe("Rule: The page has no default-coloured margin or gap anywhere", () => {
   test.describe("A small phone-sized viewport is solid black at every corner and below the content", () => {
     test.use({ viewport: { width: 375, height: 812 } });
@@ -35,6 +42,11 @@ test.describe("Rule: The page has no default-coloured margin or gap anywhere", (
       const pixels = await pixelsAt(page, cornersAndBelowContent(375, 812, 750));
       pixels.forEach((pixel) => {
         expect(pixel).toEqual(BLACK);
+      });
+      expect(await rootBackgroundsAndBodyMargin(page)).toEqual({
+        htmlBackground: "rgb(0, 0, 0)",
+        bodyBackground: "rgb(0, 0, 0)",
+        bodyMarginTop: "0px",
       });
     });
   });
@@ -47,6 +59,11 @@ test.describe("Rule: The page has no default-coloured margin or gap anywhere", (
       const pixels = await pixelsAt(page, cornersAndBelowContent(1024, 1400, 1000));
       pixels.forEach((pixel) => {
         expect(pixel).toEqual(BLACK);
+      });
+      expect(await rootBackgroundsAndBodyMargin(page)).toEqual({
+        htmlBackground: "rgb(0, 0, 0)",
+        bodyBackground: "rgb(0, 0, 0)",
+        bodyMarginTop: "0px",
       });
     });
   });

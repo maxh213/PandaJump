@@ -12,8 +12,10 @@ Feature: Panda Jump reads solid black edge-to-edge
       Given the browser viewport is 375 by 812 px
       Then the pixel colour at each of the four page corners is pure black
       And the pixel colour below the visible content is pure black
+      And the html and body backgrounds are pure black with no body margin
 
     Scenario: A viewport taller than the page's content is solid black at every corner and below the content
       Given the browser viewport is 1024 by 1400 px
       Then the pixel colour at each of the four page corners is pure black
       And the pixel colour below the visible content is pure black
+      And the html and body backgrounds are pure black with no body margin
