@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, oneBox, openGame, press, sample, settle, standardRandom, untilGameOver } from "./probe.ts";
+import { advance, advanceTo, oneBox, openGame, press, sample, settle, standardRandom, startRun, untilGameOver } from "./probe.ts";
 
 const targets: Record<string, (page: Page) => Promise<void>> = {
   "page heading": (page) => page.locator("h1").click(),
@@ -22,6 +22,7 @@ test.describe("Rule: A click outside the canvas does what a click on the canvas 
   for (const [target, click] of Object.entries(targets)) {
     test(`Clicking the ${target} makes a standing panda jump`, async ({ page }) => {
       await openGame(page, oneBox);
+    await startRun(page);
       await click(page);
       await settle(page);
       const samples = await advance(page, 100);
@@ -40,6 +41,7 @@ test.describe("Rule: A click outside the canvas does what a click on the canvas 
 
   test("One click on the canvas is exactly one jump", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await clickCanvas(page);
     await settle(page);
     await secondJumpAdds(page);
@@ -47,6 +49,7 @@ test.describe("Rule: A click outside the canvas does what a click on the canvas 
 
   test("One click outside the canvas is exactly one jump", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await page.locator("h1").click();
     await settle(page);
     await secondJumpAdds(page);
@@ -54,6 +57,7 @@ test.describe("Rule: A click outside the canvas does what a click on the canvas 
 
   test("Clicking outside the canvas during a pause starts the countdown", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await advanceTo(page, 1000);
     await press(page, "p");
     await page.locator("h1").click();
@@ -67,6 +71,7 @@ test.describe("Rule: A click outside the canvas does what a click on the canvas 
 
   test("Clicking outside the canvas restarts the run only after the game-over freeze", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await page.locator("h1").click();
     await settle(page);
@@ -81,6 +86,7 @@ test.describe("Rule: A click outside the canvas does what a click on the canvas 
 test.describe("Rule: A link is still a link", () => {
   test("Clicking the GitHub link does not jump", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await page.evaluate(() => {
       document.querySelector("a")?.addEventListener("click", (event) => {
         event.preventDefault();
