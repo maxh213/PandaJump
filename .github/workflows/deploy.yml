@@ -27,6 +27,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      - run: npx depcruise --config .dependency-cruiser.cjs --output-type err src
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --workers=1
       - if: github.event_name == 'push'
