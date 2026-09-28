@@ -707,6 +707,7 @@ test("bestMarker shows over the column that would beat the stored best while liv
   run.pause();
   expect(run.view().bestMarker).toBeNull();
   run.jump();
+  run.advance(1500);
   expect(run.view().bestMarker).not.toBeNull();
   run.advance(1040);
   expect(run.view()).toMatchObject({ gameOver: true, bestMarker: null });
