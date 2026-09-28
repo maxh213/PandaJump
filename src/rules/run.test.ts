@@ -477,7 +477,7 @@ const advanceToColumn = (run: Run, from: number, to: number): void => {
 };
 
 test("speedUp is visible for exactly 800ms of game time from the instant the score first reaches the ramp threshold of 20", () => {
-  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  const run = createStartedRun(repeatingOneBox(), oneBoxEach(), noStore);
   advanceToColumn(run, 1, 19);
   expect(run.view()).toMatchObject({ score: "19", speedUp: false });
   advanceToColumn(run, 20, 20);
@@ -489,7 +489,7 @@ test("speedUp is visible for exactly 800ms of game time from the instant the sco
 });
 
 test("speedUp appears again the moment the score reaches the next ramp threshold of 30", () => {
-  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  const run = createStartedRun(repeatingOneBox(), oneBoxEach(), noStore);
   advanceToColumn(run, 1, 20);
   expect(run.view()).toMatchObject({ score: "20", speedUp: true });
   advanceToColumn(run, 21, 29);
@@ -499,7 +499,7 @@ test("speedUp appears again the moment the score reaches the next ramp threshold
 });
 
 test("speedUp does not reappear at score 70 since the speed already reached its cap at 60", () => {
-  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  const run = createStartedRun(repeatingOneBox(), oneBoxEach(), noStore);
   advanceToColumn(run, 1, 60);
   expect(run.view()).toMatchObject({ score: "60", speedUp: true });
   advanceToColumn(run, 61, 70);
@@ -507,7 +507,7 @@ test("speedUp does not reappear at score 70 since the speed already reached its 
 });
 
 test("speedUp is never visible on the game-over screen, even moments after the ramp changed", () => {
-  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  const run = createStartedRun(repeatingOneBox(), oneBoxEach(), noStore);
   advanceToColumn(run, 1, 20);
   expect(run.view()).toMatchObject({ score: "20", speedUp: true });
   run.advance(5000);
@@ -515,7 +515,7 @@ test("speedUp is never visible on the game-over screen, even moments after the r
 });
 
 test("speedUp is hidden while the run is paused, even moments after the ramp changed", () => {
-  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  const run = createStartedRun(repeatingOneBox(), oneBoxEach(), noStore);
   advanceToColumn(run, 1, 20);
   expect(run.view()).toMatchObject({ score: "20", speedUp: true });
   run.pause();
@@ -523,7 +523,7 @@ test("speedUp is hidden while the run is paused, even moments after the ramp cha
 });
 
 test("a restart hides speedUp until the next run's score reaches a ramp threshold again", () => {
-  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  const run = createStartedRun(repeatingOneBox(), oneBoxEach(), noStore);
   advanceToColumn(run, 1, 20);
   run.advance(5000);
   expect(run.view().gameOver).toBe(true);

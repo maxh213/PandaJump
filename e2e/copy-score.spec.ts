@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, oneBox, openGame, sample, settle, untilGameOver, untilRestart } from "./probe.ts";
+import { advance, oneBox, openGame, sample, settle, startRun, untilGameOver, untilRestart } from "./probe.ts";
 
 interface CapturedWrite {
   text?: string;
@@ -65,6 +65,7 @@ test.describe(
       await mockUnsupportedShare(page);
       await mockSupportedClipboard(page);
       await openGame(page, oneBox);
+      await startRun(page);
       await untilGameOver(page);
       expect((await sample(page)).gameOverCopy.visible).toBe(false);
       const stillFrozen = (await advance(page, 499)).at(-1);
@@ -88,6 +89,7 @@ test.describe("Rule: Tapping the copy prompt copies the run's score and the page
     await mockUnsupportedShare(page);
     const calls = await mockSupportedClipboard(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await advance(page, 500);
     await tapCopyPrompt(page);
@@ -157,6 +159,7 @@ test.describe(
       await mockUnsupportedShare(page);
       await mockUnsupportedClipboard(page);
       await openGame(page, oneBox);
+      await startRun(page);
       await untilGameOver(page);
       await advance(page, 500);
       const after = await sample(page);
@@ -171,6 +174,7 @@ test.describe(
       await mockUnsupportedShare(page);
       await mockUnsupportedClipboard(page);
       await openGame(page, oneBox);
+      await startRun(page);
       await untilGameOver(page);
       await advance(page, 500);
       await page.locator("#game_div canvas").click({ position: { x: 200, y: 200 } });

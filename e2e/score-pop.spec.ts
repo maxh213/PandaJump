@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { advance, advanceTo, oneBox, openGame, play, sample, untilRestart } from "./probe.ts";
+import { advance, advanceTo, oneBox, openGame, play, sample, startRun, untilRestart } from "./probe.ts";
 
 const FONT = { color: "#ffffff", fontSize: "30px" };
 
 test.describe("Rule: The score pops the instant a column is cleared, then eases back to normal size", () => {
   test("The score starts at scale 1 and stays there until the first column is cleared", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     expect((await sample(page)).score).toMatchObject({ text: "0", scale: 1 });
     await play(page, [2700], 3300);
     expect((await sample(page)).score).toMatchObject({ text: "0", scale: 1 });
@@ -13,6 +14,7 @@ test.describe("Rule: The score pops the instant a column is cleared, then eases 
 
   test("The score jumps to scale 1.3 the instant it changes, then eases back to 1 over 150 ms", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 3300);
     const ticks = [];
     for (let step = 0; step < 10; step += 1) {
@@ -31,6 +33,7 @@ test.describe("Rule: The score pops the instant a column is cleared, then eases 
 
   test("The score text never moves or changes font while it pops", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     expect((await sample(page)).score).toMatchObject({ x: 20, y: 20, ...FONT });
     await play(page, [2700], 3300);
     expect((await sample(page)).score).toMatchObject({ x: 20, y: 20, ...FONT });
@@ -46,6 +49,7 @@ test.describe("Rule: The score pops the instant a column is cleared, then eases 
 test.describe("Rule: A restart clears the pop along with everything else", () => {
   test("Dying and tapping to play again leaves the score at scale 1", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 3340);
     expect((await sample(page)).score).toMatchObject({ text: "1" });
     expect((await sample(page)).score.scale).toBeGreaterThan(1);

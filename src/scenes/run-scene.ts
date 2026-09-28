@@ -397,7 +397,7 @@ export class RunScene extends Phaser.Scene {
     this.speedUp.setVisible(view.speedUp);
     this.doubleJumpHint.setVisible(view.doubleJumpHint);
     this.deathFlash.setAlpha(view.deathFlash * Number(!this.reducedMotion));
-    this.drawGameOver(view);
+    this.drawGameOverTexts(view);
     this.pauseTitle.setVisible(view.paused);
     this.pausePrompt.setVisible(view.paused);
     this.pauseButton.setVisible([!view.paused, !view.gameOver].every(Boolean));
@@ -421,6 +421,24 @@ export class RunScene extends Phaser.Scene {
     });
   }
 
+  private drawGameOverTexts(view: ReturnType<Run["view"]>): void {
+    this.gameOverTitle.setVisible(view.gameOver);
+    this.gameOverMedal
+      .setVisible([view.gameOver, view.medal !== "none"].every(Boolean))
+      .setText(MEDAL_LABELS[view.medal])
+      .setColor(MEDAL_COLORS[view.medal]);
+    this.drawMedalBadge(view.gameOver, view.medal);
+    this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.gameOverScore}`);
+    const overtookBest = String(view.overtookBest) as "true" | "false";
+    this.gameOverBest
+      .setVisible(view.gameOver)
+      .setText(`${GAME_OVER_BEST_LABELS[overtookBest]}: ${view.best}`)
+      .setColor(BEST_COLORS[overtookBest]);
+    this.gameOverPrompt.setVisible(view.canRestart);
+    this.gameOverShare.setVisible([view.canRestart, shareSupported].every(Boolean));
+    this.gameOverRuns.setVisible(view.gameOver).setText(`Run ${String(view.restarts + 1)}`);
+  }
+
   private refreshGroup<T>(group: Phaser.GameObjects.Group, items: readonly T[], show: (item: T) => void): void {
     group.getChildren().forEach((child) => {
       group.killAndHide(child);
@@ -437,24 +455,6 @@ export class RunScene extends Phaser.Scene {
       .forEach((candidate) => {
         this.bestMarker.setPosition(candidate.x, candidate.y);
       });
-  }
-
-  private drawGameOver(view: ReturnType<Run["view"]>): void {
-    this.gameOverTitle.setVisible(view.gameOver);
-    this.gameOverMedal
-      .setVisible([view.gameOver, view.medal !== "none"].every(Boolean))
-      .setText(MEDAL_LABELS[view.medal])
-      .setColor(MEDAL_COLORS[view.medal]);
-    this.drawMedalBadge(view.gameOver, view.medal);
-    this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.gameOverScore}`);
-    const overtookBest = String(view.overtookBest) as "true" | "false";
-    this.gameOverBest
-      .setVisible(view.gameOver)
-      .setText(`${GAME_OVER_BEST_LABELS[overtookBest]}: ${view.best}`)
-      .setColor(BEST_COLORS[overtookBest]);
-    this.gameOverPrompt.setVisible(view.canRestart);
-    this.gameOverShare.setVisible([view.canRestart, shareSupported].every(Boolean));
-    this.gameOverRuns.setVisible(view.gameOver).setText(`Run ${String(view.restarts + 1)}`);
   }
 
   private drawMedalBadge(gameOver: boolean, medal: Medal): void {
