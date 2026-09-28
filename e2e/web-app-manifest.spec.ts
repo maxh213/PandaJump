@@ -6,6 +6,7 @@ interface Manifest {
   short_name: string;
   start_url: string;
   display: string;
+  orientation: string;
   background_color: string;
   theme_color: string;
   icons: { src: string; sizes: string; purpose?: string }[];
@@ -83,6 +84,14 @@ test.describe("Rule: The manifest describes Panda Jump as an installable, standa
     expect(manifest.display).toBe("standalone");
     expect(manifest.background_color).toBe("#000000");
     expect(manifest.theme_color).toBe("#000000");
+  });
+});
+
+test.describe("Rule: The manifest locks the installed app to the game's fixed portrait canvas", () => {
+  test("The manifest declares a portrait orientation", async ({ page }) => {
+    await page.goto("./");
+    const { manifest } = await fetchManifest(page);
+    expect(manifest.orientation).toBe("portrait");
   });
 });
 

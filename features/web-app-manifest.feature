@@ -26,6 +26,11 @@ Feature: Panda Jump advertises itself with a web app manifest
       And the manifest's "display" is "standalone"
       And the manifest's "background_color" and "theme_color" are both "#000000"
 
+  Rule: The manifest locks the installed app to the game's fixed portrait canvas
+
+    Scenario: The manifest declares a portrait orientation
+      Then the manifest's "orientation" is "portrait"
+
   Rule: The manifest's icon is a single square Panda icon, not the raw sprite sheet
 
     Scenario: The manifest's icon URL resolves to a square image matching its declared sizes
