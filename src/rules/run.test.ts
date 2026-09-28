@@ -40,6 +40,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     ],
     gameOver: false,
     canRestart: false,
+    paused: false,
   });
 });
 
@@ -261,6 +262,50 @@ test("clearing further columns after already holding the best does not retrigger
   run.jump();
   run.advance(640);
   expect(run.view()).toMatchObject({ score: "2", best: "2", newBest: false });
+});
+
+test("pause freezes a live run", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pause();
+  expect(run.view()).toMatchObject({ paused: true, gameOver: false });
+});
+
+test("advance does not move time, the panda, the columns, the clouds or the floor while paused", () => {
+  const run = createRun(standardColumns(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pause();
+  const frozen = run.view();
+  run.advance(2000);
+  expect(run.view()).toEqual(frozen);
+});
+
+test("the next jump resumes a paused run without making the panda jump", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pause();
+  run.jump();
+  expect(run.view()).toMatchObject({ paused: false, pandaBottom: 426 });
+});
+
+test("the input after resuming a paused run jumps as normal", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pause();
+  run.jump();
+  run.jump();
+  run.advance(580);
+  expect(run.view().pandaBottom).toBeCloseTo(426 - 168.2);
+});
+
+test("pause is ignored while the game-over screen is shown", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2880);
+  expect(run.view()).toMatchObject({ gameOver: true, canRestart: false, paused: false });
+  run.pause();
+  expect(run.view().paused).toBe(false);
+  run.advance(500);
+  expect(run.view()).toMatchObject({ gameOver: true, canRestart: true });
 });
 
 test("dying and restarting resets the callout so beating the new, higher best triggers it again", () => {

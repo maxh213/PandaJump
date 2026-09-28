@@ -26,6 +26,8 @@ export interface Sample {
   gameOverPrompt: CenteredText;
   gameOverShare: CenteredText;
   gameOverRuns: CenteredText;
+  pauseTitle: CenteredText;
+  pausePrompt: CenteredText;
   panda: { x: number; bottom: number; width: number; height: number; frame: number; cutY: number; cutHeight: number; key: string };
   rock: { y: number; scroll: number; key: string };
   grass: { y: number; scroll: number; key: string };
@@ -147,6 +149,8 @@ const installProbe = () => {
       gameOverPrompt: centeredText("gameOverPrompt"),
       gameOverShare: centeredText("gameOverShare"),
       gameOverRuns: centeredText("gameOverRuns"),
+      pauseTitle: centeredText("pauseTitle"),
+      pausePrompt: centeredText("pausePrompt"),
       panda: {
         x: bounds.x,
         bottom: bounds.bottom,
@@ -232,6 +236,22 @@ export const press = async (page: Page, key: string) => {
 };
 
 export const pressSpace = (page: Page) => press(page, "Space");
+
+const setVisibilityState = (page: Page, state: "hidden" | "visible") =>
+  page.evaluate((value) => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => value });
+    document.dispatchEvent(new Event("visibilitychange"));
+  }, state);
+
+export const hidePage = async (page: Page) => {
+  await setVisibilityState(page, "hidden");
+  await settle(page);
+};
+
+export const showPage = async (page: Page) => {
+  await setVisibilityState(page, "visible");
+  await settle(page);
+};
 
 export const play = async (page: Page, jumps: number[], until: number, key = "Space"): Promise<Sample[]> => {
   const samples: Sample[] = [];

@@ -42,6 +42,8 @@ export class RunScene extends Phaser.Scene {
   private gameOverPrompt!: Phaser.GameObjects.Text;
   private gameOverShare!: Phaser.GameObjects.Text;
   private gameOverRuns!: Phaser.GameObjects.Text;
+  private pauseTitle!: Phaser.GameObjects.Text;
+  private pausePrompt!: Phaser.GameObjects.Text;
 
   constructor(run: Run, timeScale: number) {
     super("run");
@@ -80,6 +82,7 @@ export class RunScene extends Phaser.Scene {
       .setOrigin(0, 1)
       .setName("best");
     this.createGameOverTexts();
+    this.createPauseTexts();
     this.input.on("pointerdown", this.jump);
     this.input.on("gameobjectdown", this.shareScore);
     [this.input.keyboard]
@@ -87,6 +90,7 @@ export class RunScene extends Phaser.Scene {
       .forEach((keyboard) => {
         this.listenForJumpKeys(keyboard);
       });
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
     this.draw();
   }
 
@@ -97,6 +101,12 @@ export class RunScene extends Phaser.Scene {
 
   private readonly jump = (): void => {
     this.run.jump();
+  };
+
+  private readonly handleVisibilityChange = (): void => {
+    [document.visibilityState === "hidden"].filter(Boolean).forEach(() => {
+      this.run.pause();
+    });
   };
 
   private readonly shareScore = (
@@ -127,6 +137,13 @@ export class RunScene extends Phaser.Scene {
     this.gameOverRuns = this.centeredText(GAME_OVER_RUNS_Y, "", "20px").setName("gameOverRuns");
   }
 
+  private createPauseTexts(): void {
+    this.pauseTitle = this.centeredText(GAME_OVER_Y, "Paused", "40px").setName("pauseTitle");
+    this.pausePrompt = this.centeredText(GAME_OVER_PROMPT_Y, "Tap or press Space to continue", "20px").setName(
+      "pausePrompt",
+    );
+  }
+
   private addFloorStrip(y: number, texture: string): Phaser.GameObjects.TileSprite {
     return this.add.tileSprite(0, y, CANVAS_WIDTH, TILE_SIZE, texture).setOrigin(0, 0);
   }
@@ -152,6 +169,8 @@ export class RunScene extends Phaser.Scene {
     this.gameOverPrompt.setVisible(view.canRestart);
     this.gameOverShare.setVisible([view.canRestart, shareSupported].every(Boolean));
     this.gameOverRuns.setVisible(view.gameOver).setText(`Run ${String(view.restarts + 1)}`);
+    this.pauseTitle.setVisible(view.paused);
+    this.pausePrompt.setVisible(view.paused);
     this.boxes.getChildren().forEach((box) => {
       this.boxes.killAndHide(box);
     });

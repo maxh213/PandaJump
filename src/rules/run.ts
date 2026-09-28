@@ -22,10 +22,12 @@ interface View {
   readonly clouds: Cloud[];
   readonly gameOver: boolean;
   readonly canRestart: boolean;
+  readonly paused: boolean;
 }
 
 export interface Run {
   readonly jump: () => void;
+  readonly pause: () => void;
   readonly advance: (ms: number) => void;
   readonly view: () => View;
 }
@@ -48,6 +50,7 @@ interface State {
   readonly columns: readonly Column[];
   readonly clouds: readonly CloudState[];
   readonly deathElapsed: number | null;
+  readonly paused: boolean;
 }
 
 const MAX_STEP = 10;
@@ -71,6 +74,7 @@ const freshState = (restarts: number, best: number, randoms: Randoms): State => 
   columns: NO_COLUMNS,
   clouds: initialClouds(randoms.clouds),
   deathElapsed: null,
+  paused: false,
 });
 
 const distanceAt = (state: State, time: number): number =>
@@ -147,9 +151,13 @@ const viewOf = (state: State): View => ({
   clouds: cloudsOf(state.clouds, state.time),
   gameOver: state.deathElapsed !== null,
   canRestart: canRestart(state),
+  paused: state.paused,
 });
 
 const act = (state: State, randoms: Randoms): State => {
+  if (state.paused) {
+    return { ...state, paused: false };
+  }
   if (state.deathElapsed === null) {
     return { ...state, panda: jump(state.panda) };
   }
@@ -163,7 +171,13 @@ export const createRun = (random: Random, cloudRandom: Random, store: BestStore)
     jump: () => {
       state = act(state, randoms);
     },
+    pause: () => {
+      if (state.deathElapsed === null) {
+        state = { ...state, paused: true };
+      }
+    },
     advance: (ms) => {
+      if (state.paused) return;
       const next = advanceState(state, ms, randoms);
       if (next.best !== state.best) {
         store.save(next.best);
