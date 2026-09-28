@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { oneBox, openGame, play, sample, untilGameOver } from "./probe.ts";
+import { oneBox, openGame, play, sample, startRun, untilGameOver } from "./probe.ts";
 
 const EXTRA_COLUMNS = 3;
 const JUMP_OFFSET = 788;
@@ -61,6 +61,7 @@ const expectAllOutlined = async (page: Page): Promise<void> => {
 test.describe("Rule: Every text is outlined while the run is live", () => {
   test("The texts are outlined the moment a run starts", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await expectAllOutlined(page);
   });
 });
@@ -68,6 +69,7 @@ test.describe("Rule: Every text is outlined while the run is live", () => {
 test.describe("Rule: Every text is still outlined after a death", () => {
   test("The texts are outlined on the game-over screen", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     expect((await sample(page)).gameOverTitle.visible).toBe(true);
     await expectAllOutlined(page);
@@ -79,6 +81,7 @@ test.describe("Rule: The gold callout is outlined while the sunset sky shows", (
     test.setTimeout(60_000);
     const random = Array.from({ length: RAMP_COLUMN + EXTRA_COLUMNS }, () => oneBox).flat();
     await openGame(page, random);
+    await startRun(page);
     const jumps = Array.from({ length: RAMP_COLUMN }, (_, index) => 1500 * (index + 1) + JUMP_OFFSET);
     await play(page, jumps, 1500 * RAMP_COLUMN + 1820 + CLEAR_BUFFER);
     const state = await sample(page);
