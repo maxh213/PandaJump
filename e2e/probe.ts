@@ -54,6 +54,7 @@ export interface Sample {
   grass: { y: number; scroll: number; key: string };
   boxes: { x: number; y: number; width: number; key: string; depth: number; tint: number }[];
   clouds: { x: number; y: number; depth: number; key: string }[];
+  stars: { x: number; y: number; depth: number; radius: number; color: number }[];
   deathFlash: { x: number; y: number; width: number; height: number; alpha: number; color: string; depth: number };
   viewClouds: View["clouds"];
   viewDeathFlash: View["deathFlash"];
@@ -168,6 +169,8 @@ interface GameNode {
   displayWidth: number;
   texture: { key: string };
   tint: number;
+  radius: number;
+  fillColor: number;
 }
 
 interface GameScene {
@@ -297,6 +300,9 @@ export const installProbe = () => {
       clouds: scene.children.list
         .filter((child) => child.visible && child.type === "Image" && child.name === "cloud")
         .map((child) => ({ x: child.x, y: child.y, depth: child.depth, key: child.texture.key })),
+      stars: scene.children.list
+        .filter((child) => child.visible && child.name === "star")
+        .map((child) => ({ x: child.x, y: child.y, depth: child.depth, radius: child.radius, color: child.fillColor })),
       deathFlash: {
         x: deathFlash.x,
         y: deathFlash.y,

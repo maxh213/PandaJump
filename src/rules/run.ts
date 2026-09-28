@@ -16,6 +16,8 @@ import type { Medal } from "./medal.ts";
 import { fall, jump, standingPanda } from "./panda.ts";
 import type { Panda } from "./panda.ts";
 import { skyFor } from "./sky.ts";
+import { starsFor } from "./stars.ts";
+import type { Star } from "./stars.ts";
 import { FLOOR_Y, PANDA_X, TILE_SIZE, spawnGapForScore, speedForScore } from "./world.ts";
 
 interface View {
@@ -30,6 +32,7 @@ interface View {
   readonly speedUp: boolean;
   readonly medal: Medal;
   readonly sky: string;
+  readonly stars: readonly Star[];
   readonly pandaX: number;
   readonly pandaBottom: number;
   readonly pandaFrame: number;
@@ -307,6 +310,7 @@ const viewOf = (state: State): View => ({
   speedUp: isSpeedUp(state),
   medal: medalFor(state.score),
   sky: skyFor(state.score),
+  stars: starsFor(state.score),
   pandaX: PANDA_X,
   pandaBottom: FLOOR_Y - state.panda.height,
   pandaFrame: pandaFrameOf(state),

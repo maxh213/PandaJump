@@ -10,7 +10,7 @@ import grassUrl from "../../assets/top_grass_01.png?no-inline";
 import cloud02Url from "../../assets/cloud_02.png?no-inline";
 import cloud05Url from "../../assets/cloud_05.png?no-inline";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, TILE_SIZE } from "../rules/index.ts";
-import type { Box, Cloud, Medal, Run } from "../rules/index.ts";
+import type { Box, Cloud, Medal, Run, Star } from "../rules/index.ts";
 
 const OUTLINE = { stroke: "#000000", strokeThickness: 4 };
 const HIT_COLUMN_TINT = 0xff6666;
@@ -30,6 +30,9 @@ const PANDA_FRAME_HEIGHT = 21;
 const PANDA_HALF_WIDTH = (PANDA_FRAME_WIDTH * PANDA_SCALE) / 2;
 const PANDA_HALF_HEIGHT = (PANDA_FRAME_HEIGHT * PANDA_SCALE) / 2;
 const CLOUD_DEPTH = -1;
+const STAR_DEPTH = -2;
+const STAR_RADIUS = 2;
+const STAR_COLOR = 0xffffff;
 const CENTER_X = CANVAS_WIDTH / 2;
 const SPEED_UP_Y = 120;
 const DOUBLE_JUMP_HINT_Y = 150;
@@ -89,6 +92,7 @@ export class RunScene extends Phaser.Scene {
   private airPuff!: Phaser.GameObjects.Graphics;
   private boxes!: Phaser.GameObjects.Group;
   private clouds!: Phaser.GameObjects.Group;
+  private stars!: Phaser.GameObjects.Group;
   private rock!: Phaser.GameObjects.TileSprite;
   private grass!: Phaser.GameObjects.TileSprite;
   private score!: Phaser.GameObjects.Text;
@@ -134,6 +138,7 @@ export class RunScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.stars = this.add.group({ classType: Phaser.GameObjects.Arc, name: "stars" });
     this.clouds = this.add.group({ classType: Phaser.GameObjects.Image, defaultKey: "cloud_02.png", name: "clouds" });
     this.createPandaAndEffects();
     this.boxes = this.add.group({ classType: Phaser.GameObjects.Image, defaultKey: "dirt_06.png", name: "boxes" });
@@ -399,6 +404,9 @@ export class RunScene extends Phaser.Scene {
     this.refreshGroup(this.boxes, view.boxes, (box) => {
       this.showBox(box);
     });
+    this.refreshGroup(this.stars, view.stars, (star) => {
+      this.showStar(star);
+    });
     this.refreshGroup(this.clouds, view.clouds, (cloud) => {
       this.showCloud(cloud);
     });
@@ -493,6 +501,18 @@ export class RunScene extends Phaser.Scene {
       .setVisible(true)
       .setName("box");
     TINT_ACTIONS[String(box.hit) as "true" | "false"](image);
+  }
+
+  private showStar(star: Star): void {
+    const dot = this.stars.get(star.x, star.y) as Phaser.GameObjects.Arc;
+    dot
+      .setRadius(STAR_RADIUS)
+      .setFillStyle(STAR_COLOR)
+      .setPosition(star.x, star.y)
+      .setDepth(STAR_DEPTH)
+      .setActive(true)
+      .setVisible(true)
+      .setName("star");
   }
 
   private showCloud(cloud: Cloud): void {

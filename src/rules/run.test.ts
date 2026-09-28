@@ -56,6 +56,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     speedUp: false,
     medal: "none",
     sky: "#71c5cf",
+    stars: [],
     pandaX: 100,
     pandaBottom: 426,
     pandaFrame: 17,
