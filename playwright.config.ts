@@ -7,6 +7,10 @@ const port = String(20000 + (worktreeSeed % 40000));
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: true,
+  // Several agents run this suite at once on one machine; Playwright's
+  // default of half the cores per run starved the box (load 160 on 24
+  // cores) and timed out the slowest scenarios. PW_WORKERS overrides it.
+  workers: Number(process.env.PW_WORKERS) || 2,
   timeout: 60_000,
   use: { baseURL: `http://localhost:${port}/` },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
