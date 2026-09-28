@@ -57,5 +57,6 @@ All of the above have shipped, along with these slices that had no task file wri
 - Popping the top-left score number to 1.3x size the instant a column is cleared, easing back to its normal size over the next 150ms, so a cleared column is easy to notice mid-jump with no sound
 - A gold "Faster!" callout centred on screen for 800ms of game time each time the difficulty ramp changes the floor and column speed, so a long run's mid-air speed-ups are as legible as the difficulty ramp itself
 - A "Copy score" prompt in the "Share score" prompt's slot for browsers without navigator.share but with navigator.clipboard.writeText
+- A gold "Best" label floating above whichever on-screen column would beat the stored best if cleared, tracking that column left as it scrolls and disappearing once the run's score passes the stored best, dies or pauses
 
 Sound is not planned: CLAUDE.md's rules say the repository has no audio assets.

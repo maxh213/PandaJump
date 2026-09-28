@@ -32,6 +32,7 @@ export interface Sample {
   pauseTitle: CenteredText;
   pausePrompt: CenteredText;
   gameOverCopy: CenteredText;
+  bestMarker: CenteredText;
   panda: {
     x: number;
     bottom: number;
@@ -179,6 +180,7 @@ export const installProbe = () => {
       pauseTitle: centeredText("pauseTitle"),
       pausePrompt: centeredText("pausePrompt"),
       gameOverCopy: centeredText("gameOverCopy"),
+      bestMarker: centeredText("bestMarker"),
       panda: {
         x: bounds.x,
         bottom: bounds.bottom,

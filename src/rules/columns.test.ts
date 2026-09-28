@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { boxesOf, countCleared, hitsPanda, moveColumns, spawnColumns } from "./columns.ts";
+import { bestColumnMarker, boxesOf, countCleared, hitsPanda, moveColumns, spawnColumns } from "./columns.ts";
 import type { Column } from "./columns.ts";
 
 const sequence = (...values: number[]) => () => values.shift() ?? 0.5;
@@ -77,4 +77,30 @@ test("boxes stack up from the floor at the column's position", () => {
     { x: 380, y: 298, texture: "dirt_06.png" },
     { x: 444, y: 362, texture: "ice_06.png" },
   ]);
+});
+
+test("bestColumnMarker is null when the stored best is 0", () => {
+  expect(bestColumnMarker([oneBox], 320, { score: 0, best: 0 })).toBeNull();
+});
+
+test("bestColumnMarker is null once the score has passed the best", () => {
+  expect(bestColumnMarker([oneBox], 320, { score: 2, best: 1 })).toBeNull();
+});
+
+test("bestColumnMarker sits over the column whose clearing would take the score to best + 1", () => {
+  expect(bestColumnMarker([oneBox], 320, { score: 1, best: 1 })).toEqual({ x: 412, y: 354 });
+});
+
+test("bestColumnMarker sits over the later of two uncleared columns when score trails best by more than one clear", () => {
+  const later: Column = { ...oneBox, spawnDistance: 600 };
+  expect(bestColumnMarker([oneBox, later], 668, { score: 2, best: 3 })).toEqual({ x: 364, y: 354 });
+});
+
+test("bestColumnMarker is null when the target column has not spawned yet", () => {
+  expect(bestColumnMarker([oneBox], 320, { score: 0, best: 2 })).toBeNull();
+});
+
+test("bestColumnMarker sits over the rear column of a back-to-back pair, not the front one", () => {
+  const pair = spawnColumns(300, 11, sequence(0.75, 0, 0));
+  expect(bestColumnMarker(pair, 320, { score: 1, best: 1 })).toEqual({ x: 476, y: 290 });
 });

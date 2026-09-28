@@ -20,6 +20,7 @@ export interface Box {
 
 const PANDA_WIDTH = 25;
 const SECOND_COLUMN_SCORE = 10;
+const MARKER_GAP = 8;
 
 const DEFAULT_TEXTURE: BoxTexture = "dirt_06.png";
 
@@ -79,3 +80,20 @@ export const boxesOf = (columns: readonly Column[], distance: number): Box[] =>
       texture: column.texture,
     })),
   );
+
+export interface Progress {
+  readonly score: number;
+  readonly best: number;
+}
+
+export const bestColumnMarker = (
+  columns: readonly Column[],
+  distance: number,
+  progress: Progress,
+): { x: number; y: number } | null => {
+  if (progress.best <= 0 || progress.score > progress.best) return null;
+  const target = columns.filter((column) => column.scoresWhenCleared).at(progress.best - progress.score);
+  return target
+    ? { x: columnX(target, distance) + TILE_SIZE / 2, y: FLOOR_Y - TILE_SIZE * target.boxes - MARKER_GAP }
+    : null;
+};

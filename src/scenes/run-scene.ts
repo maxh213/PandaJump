@@ -65,6 +65,7 @@ export class RunScene extends Phaser.Scene {
   private pauseTitle!: Phaser.GameObjects.Text;
   private pausePrompt!: Phaser.GameObjects.Text;
   private gameOverCopy!: Phaser.GameObjects.Text;
+  private bestMarker!: Phaser.GameObjects.Text;
 
   constructor(run: Run, timeScale: number) {
     super("run");
@@ -108,6 +109,10 @@ export class RunScene extends Phaser.Scene {
       .setName("speedUp");
     this.createGameOverTexts();
     this.createPauseTexts();
+    this.bestMarker = this.add
+      .text(0, 0, "Best", { fontFamily: "Arial", fontSize: "16px", color: "#ffd700" })
+      .setOrigin(0.5, 1)
+      .setName("bestMarker");
     this.input.on("pointerdown", this.jump);
     this.input.on("gameobjectdown", this.shareScore);
     this.input.on("gameobjectdown", this.copyScore);
@@ -251,18 +256,31 @@ export class RunScene extends Phaser.Scene {
     this.pauseTitle.setVisible(view.paused);
     this.pausePrompt.setVisible(view.paused);
     this.gameOverCopy.setVisible([view.canRestart, !shareSupported, clipboardSupported].every(Boolean));
-    this.boxes.getChildren().forEach((box) => {
-      this.boxes.killAndHide(box);
-    });
-    view.boxes.forEach((box) => {
+    this.drawBestMarker(view.bestMarker);
+    this.refreshGroup(this.boxes, view.boxes, (box) => {
       this.showBox(box);
     });
-    this.clouds.getChildren().forEach((cloud) => {
-      this.clouds.killAndHide(cloud);
-    });
-    view.clouds.forEach((cloud) => {
+    this.refreshGroup(this.clouds, view.clouds, (cloud) => {
       this.showCloud(cloud);
     });
+  }
+
+  private refreshGroup<T>(group: Phaser.GameObjects.Group, items: readonly T[], show: (item: T) => void): void {
+    group.getChildren().forEach((child) => {
+      group.killAndHide(child);
+    });
+    items.forEach((item) => {
+      show(item);
+    });
+  }
+
+  private drawBestMarker(marker: { x: number; y: number } | null): void {
+    this.bestMarker.setVisible(marker !== null);
+    [marker]
+      .filter((candidate): candidate is { x: number; y: number } => candidate !== null)
+      .forEach((candidate) => {
+        this.bestMarker.setPosition(candidate.x, candidate.y);
+      });
   }
 
   private showBox(box: Box): void {

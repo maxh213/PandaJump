@@ -1,6 +1,6 @@
 import { nextBest } from "./best.ts";
 import type { BestStore } from "./best.ts";
-import { SPAWN_EVERY, boxesOf, countCleared, hitsPanda, moveColumns, spawnColumns } from "./columns.ts";
+import { SPAWN_EVERY, bestColumnMarker, boxesOf, countCleared, hitsPanda, moveColumns, spawnColumns } from "./columns.ts";
 import type { Box, Column, Random } from "./columns.ts";
 import { cloudsOf, initialClouds, moveClouds } from "./clouds.ts";
 import type { Cloud, CloudState } from "./clouds.ts";
@@ -30,6 +30,7 @@ interface View {
   readonly canRestart: boolean;
   readonly paused: boolean;
   readonly pandaUpsideDown: boolean;
+  readonly bestMarker: { x: number; y: number } | null;
 }
 
 export interface Run {
@@ -53,6 +54,7 @@ interface State {
   readonly score: number;
   readonly scorePopStart: number | null;
   readonly best: number;
+  readonly startingBest: number;
   readonly calloutStart: number | null;
   readonly speedUpStart: number | null;
   readonly nextSpawn: number;
@@ -82,6 +84,7 @@ const freshState = (restarts: number, best: number, randoms: Randoms): State => 
   score: 0,
   scorePopStart: null,
   best,
+  startingBest: best,
   calloutStart: null,
   speedUpStart: null,
   nextSpawn: SPAWN_EVERY,
@@ -179,6 +182,11 @@ const isLive = (state: State): boolean => state.deathElapsed === null && !state.
 const isSpeedUp = (state: State): boolean =>
   isLive(state) && state.speedUpStart !== null && state.time - state.speedUpStart < SPEED_UP_DURATION_MS;
 
+const liveBestMarker = (state: State): { x: number; y: number } | null =>
+  isLive(state)
+    ? bestColumnMarker(state.columns, currentDistance(state), { score: state.score, best: state.startingBest })
+    : null;
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
@@ -199,6 +207,7 @@ const viewOf = (state: State): View => ({
   canRestart: canRestart(state),
   paused: state.paused,
   pandaUpsideDown: state.deathElapsed !== null,
+  bestMarker: liveBestMarker(state),
 });
 
 const act = (state: State, randoms: Randoms): State => {

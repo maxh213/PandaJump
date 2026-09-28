@@ -57,6 +57,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     canRestart: false,
     paused: false,
     pandaUpsideDown: false,
+    bestMarker: null,
   });
 });
 
@@ -573,6 +574,21 @@ test("pandaUpsideDown is true exactly while gameOver is true, and resets on rest
   run.advance(500);
   run.jump();
   expect(run.view()).toMatchObject({ gameOver: false, pandaUpsideDown: false });
+});
+
+test("bestMarker shows over the column that would beat the stored best while live, and hides on pause or game over", () => {
+  const store = { load: () => 1, save: () => undefined };
+  const run = createRun(standardColumns(), oneBoxEach(), store);
+  run.advance(2700);
+  run.jump();
+  run.advance(640);
+  expect(run.view()).toMatchObject({ score: "1", bestMarker: { x: 364, y: 354 } });
+  run.pause();
+  expect(run.view().bestMarker).toBeNull();
+  run.jump();
+  expect(run.view().bestMarker).not.toBeNull();
+  run.advance(1040);
+  expect(run.view()).toMatchObject({ gameOver: true, bestMarker: null });
 });
 
 test("time, score, columns, clouds and floor scroll stay frozen while the panda falls after a mid-air death", () => {
