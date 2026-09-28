@@ -590,7 +590,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     expect(diedAt.gameOverTitle.originY).toBeCloseTo(0.5);
     expect(diedAt.gameOverScore).toMatchObject({ text: "Score: 0", visible: true });
     expect(diedAt.gameOverBest).toMatchObject({ text: "Best: 0", visible: true });
-    expect(diedAt.gameOverPrompt).toMatchObject({ text: "Tap or press Space to play again", visible: true });
+    expect(diedAt.gameOverPrompt.visible).toBe(false);
     expect(diedAt.gameOverTitle.y).toBeLessThan(diedAt.gameOverScore.y);
     expect(diedAt.gameOverScore.y).toBeLessThan(diedAt.gameOverBest.y);
     expect(diedAt.gameOverBest.y).toBeLessThan(diedAt.gameOverPrompt.y);
@@ -605,6 +605,21 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     const restart = await untilRestart(page);
     expect(restart.after.restarts).toBe(1);
     await expectCleanRestart(page);
+  });
+
+  test("The restart prompt stays hidden until a restart would actually work", async ({ page }) => {
+    await openGame(page, oneBox);
+    const { after: diedAt } = await untilGameOver(page);
+    expect(diedAt.gameOverPrompt.visible).toBe(false);
+    const stillFrozen = last(await advance(page, 499));
+    expect(stillFrozen.gameOverPrompt.visible).toBe(false);
+    const ready = last(await advance(page, 1));
+    expect(ready.gameOverPrompt).toMatchObject({
+      text: "Tap or press Space to play again",
+      visible: true,
+      color: "#ffffff",
+      fontSize: "20px",
+    });
   });
 
   test("Landing on top of a box also freezes the run", async ({ page }) => {
@@ -649,6 +664,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
           expect(after.restarts).toBe(0);
           expect(after.gameOver).toBe(true);
           expect(after.gameOverTitle.visible).toBe(true);
+          expect(after.gameOverPrompt.visible).toBe(false);
         });
       });
     }
