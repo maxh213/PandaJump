@@ -33,3 +33,9 @@ Feature: Panda Jump advertises itself with a web app manifest
       And the manifest's icon URL responds with 200 and image content
       And the icon image's width equals its height
       And the manifest's "sizes" field matches the icon's actual width and height
+
+  Rule: The manifest's icon is padded for Android's adaptive-icon mask
+
+    Scenario: The manifest's icon keeps every panda pixel inside the maskable safe zone
+      Then the manifest's icon is marked "maskable"
+      And every non-transparent pixel in the icon image lies within the adaptive-icon safe zone

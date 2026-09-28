@@ -8,8 +8,40 @@ interface Manifest {
   display: string;
   background_color: string;
   theme_color: string;
-  icons: { src: string; sizes: string }[];
+  icons: { src: string; sizes: string; purpose?: string }[];
 }
+
+const MASKABLE_SAFE_ZONE_INSET = 0.17;
+
+const countSafeZoneViolations = (page: Page, url: string, inset: number) =>
+  page.evaluate(
+    async ({ imageUrl, safeInset }) => {
+      const image = new Image();
+      image.src = imageUrl;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("2d context unavailable");
+      context.drawImage(image, 0, 0);
+      const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+      const center = canvas.width / 2;
+      const radius = canvas.width * (0.5 - safeInset);
+      let violations = 0;
+      for (let y = 0; y < canvas.height; y += 1) {
+        for (let x = 0; x < canvas.width; x += 1) {
+          const alpha = data[(y * canvas.width + x) * 4 + 3];
+          if (!alpha) continue;
+          const dx = x + 0.5 - center;
+          const dy = y + 0.5 - center;
+          if (Math.sqrt(dx * dx + dy * dy) > radius) violations += 1;
+        }
+      }
+      return violations;
+    },
+    { imageUrl: url, safeInset: inset },
+  );
 
 const manifestHref = (page: Page) =>
   page.evaluate(() => document.querySelector('link[rel="manifest"]')?.getAttribute("href") ?? "");
@@ -65,5 +97,18 @@ test.describe("Rule: The manifest's icon is a single square Panda icon, not the 
     }, iconUrl);
     expect(width).toBe(height);
     expect(icon.sizes).toBe(`${String(width)}x${String(height)}`);
+  });
+});
+
+test.describe("Rule: The manifest's icon is padded for Android's adaptive-icon mask", () => {
+  test("The manifest's icon keeps every panda pixel inside the maskable safe zone", async ({ page }) => {
+    await page.goto("./");
+    const { url, manifest } = await fetchManifest(page);
+    const icon = manifest.icons[0];
+    if (!icon) throw new Error("manifest has no icons");
+    expect(icon.purpose).toBe("maskable");
+    const iconUrl = new URL(icon.src, url).toString();
+    const violations = await countSafeZoneViolations(page, iconUrl, MASKABLE_SAFE_ZONE_INSET);
+    expect(violations).toBe(0);
   });
 });
