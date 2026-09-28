@@ -45,3 +45,5 @@ add a line merge cleanly instead of conflicting.
 - A small white puff drawn under the panda's feet for 250ms, fading out, the instant a double jump fires, so a second tap in the air is never a silently dropped input
 - The sky changing from day to a sunset orange at score 20 and to a night blue at score 40, instantly and reset to day on restart
 - A single short vibration on a supporting phone the instant the panda dies
+- A "Run N" attempt count on the game-over screen counting restarts for the current page session, starting at "Run 1" and never read from or written to any store
+- The Up Arrow key also jumps and restarts, like Space
