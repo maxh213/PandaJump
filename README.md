@@ -14,7 +14,7 @@ Development
 - `npm run build` writes a static site to `dist/` that runs from any file host.
 - `npm test` runs the unit tests for the game rules in `src/rules/`.
 - `npm run lint` lints the project with ESLint.
-- `npx playwright test` plays the real game in a browser, following `features/phaser-4-core-run.feature`, `features/drifting-bobbing-clouds.feature`, `features/high-score.feature`, `features/scale-to-fit-phone-screens.feature` and `features/box-column-textures.feature`.
+- `npx playwright test` plays the real game in a browser, following `features/phaser-4-core-run.feature`, `features/drifting-bobbing-clouds.feature`, `features/high-score.feature`, `features/scale-to-fit-phone-screens.feature`, `features/box-column-textures.feature` and `features/web-app-manifest.feature`.
 
 The rules (jumping, box columns, scoring, clouds, high score) are plain TypeScript in `src/rules/`. The Phaser scene in `src/scenes/` draws what they decide. Art lives in `assets/`. `src/main.ts` reads the page options from `src/options/` and wires the rules to the scene; `.dependency-cruiser.cjs` keeps each of these folders to its own imports.
 

@@ -1,0 +1,15 @@
+{
+  "name": "Panda Jump",
+  "short_name": "Panda Jump",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "assets/Panda.png",
+      "sizes": "20x713",
+      "type": "image/png"
+    }
+  ]
+}
