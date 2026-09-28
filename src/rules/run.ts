@@ -6,7 +6,7 @@ import { cloudsOf, initialClouds, moveClouds } from "./clouds.ts";
 import type { Cloud, CloudState } from "./clouds.ts";
 import { fall, jump, standingPanda } from "./panda.ts";
 import type { Panda } from "./panda.ts";
-import { FLOOR_Y, PANDA_X, SCROLL_PX_PER_MS, TILE_SIZE } from "./world.ts";
+import { FLOOR_Y, PANDA_X, TILE_SIZE, speedForScore } from "./world.ts";
 
 interface View {
   readonly time: number;
@@ -37,6 +37,8 @@ interface Randoms {
 
 interface State {
   readonly time: number;
+  readonly rampTime: number;
+  readonly rampDistance: number;
   readonly restarts: number;
   readonly score: number;
   readonly best: number;
@@ -58,6 +60,8 @@ const CALLOUT_DURATION_MS = 600;
 
 const freshState = (restarts: number, best: number, randoms: Randoms): State => ({
   time: 0,
+  rampTime: 0,
+  rampDistance: 0,
   restarts,
   score: 0,
   best,
@@ -69,19 +73,28 @@ const freshState = (restarts: number, best: number, randoms: Randoms): State => 
   deathElapsed: null,
 });
 
+const distanceAt = (state: State, time: number): number =>
+  state.rampDistance + speedForScore(state.score) * (time - state.rampTime);
+
+const currentDistance = (state: State): number => distanceAt(state, state.time);
+
 const moveOn = (state: State, ms: number, randoms: Randoms): State => {
   const time = state.time + ms;
-  const score = state.score + countCleared(state.columns, time);
+  const distance = distanceAt(state, time);
+  const score = state.score + countCleared(state.columns, distance);
+  const rampChanged = speedForScore(score) !== speedForScore(state.score);
   const best = nextBest(state.best, score);
   const calloutStart = state.calloutStart === null && best > state.best ? time : state.calloutStart;
   return {
     ...state,
     time,
+    rampTime: rampChanged ? time : state.rampTime,
+    rampDistance: rampChanged ? distance : state.rampDistance,
     panda: fall(state.panda, ms),
     score,
     best,
     calloutStart,
-    columns: moveColumns(state.columns, time),
+    columns: moveColumns(state.columns, distance),
     clouds: moveClouds(state.clouds, time, randoms.clouds),
   };
 };
@@ -91,7 +104,7 @@ const spawnIfDue = (state: State, random: Random): State =>
     ? state
     : {
         ...state,
-        columns: [...state.columns, ...spawnColumns(state.nextSpawn, state.score, random)],
+        columns: [...state.columns, ...spawnColumns(distanceAt(state, state.nextSpawn), state.score, random)],
         nextSpawn: state.nextSpawn + SPAWN_EVERY,
       };
 
@@ -100,7 +113,7 @@ const step = (state: State, ms: number, randoms: Randoms): State => {
     return { ...state, deathElapsed: state.deathElapsed + ms };
   }
   const next = spawnIfDue(moveOn(state, ms, randoms), randoms.columns);
-  return hitsPanda(next.columns, next.time, next.panda.height) ? { ...next, deathElapsed: 0 } : next;
+  return hitsPanda(next.columns, currentDistance(next), next.panda.height) ? { ...next, deathElapsed: 0 } : next;
 };
 
 const stepsOf = (ms: number): number[] =>
@@ -120,8 +133,8 @@ const viewOf = (state: State): View => ({
   pandaX: PANDA_X,
   pandaBottom: FLOOR_Y - state.panda.height,
   pandaFrame: FIRST_RUN_FRAME + (Math.floor(state.time * FRAMES_PER_MS) % RUN_FRAMES),
-  floorScroll: (state.time * SCROLL_PX_PER_MS) % TILE_SIZE,
-  boxes: boxesOf(state.columns, state.time),
+  floorScroll: currentDistance(state) % TILE_SIZE,
+  boxes: boxesOf(state.columns, currentDistance(state)),
   clouds: cloudsOf(state.clouds, state.time),
   gameOver: state.deathElapsed !== null,
   canRestart: canRestart(state),

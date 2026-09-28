@@ -193,6 +193,35 @@ test("the best is not saved again once the score falls back below it", () => {
   expect(saved).toEqual([1]);
 });
 
+const repeatingOneBox = () => {
+  const values = [0.25, 0.5, 0];
+  let index = 0;
+  return () => {
+    const value = values[index % values.length] ?? 0;
+    index += 1;
+    return value;
+  };
+};
+
+test("the floor and columns speed up once the score passes 20", () => {
+  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  let elapsed = 0;
+  const advanceTo = (time: number) => {
+    run.advance(time - elapsed);
+    elapsed = time;
+  };
+  for (let column = 1; column <= 20; column += 1) {
+    advanceTo(1500 * column + 1200);
+    run.jump();
+  }
+  advanceTo(1500 * 20 + 1840);
+  expect(run.view().score).toBe("20");
+  const before = run.view().floorScroll;
+  run.advance(100);
+  const after = run.view().floorScroll;
+  expect(((after - before) + 64) % 64).toBeCloseTo(22);
+});
+
 test("dying keeps the best score reached so far", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2700);

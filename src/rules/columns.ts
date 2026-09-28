@@ -1,11 +1,11 @@
-import { CANVAS_WIDTH, FLOOR_Y, PANDA_X, SCROLL_PX_PER_MS, TILE_SIZE } from "./world.ts";
+import { CANVAS_WIDTH, FLOOR_Y, PANDA_X, TILE_SIZE } from "./world.ts";
 
 export type Random = () => number;
 
 type BoxTexture = "dirt_06.png" | "ice_06.png" | "metal_06.png" | "sand_06.png" | "snow_06.png";
 
 export interface Column {
-  readonly spawnedAt: number;
+  readonly spawnDistance: number;
   readonly offset: number;
   readonly boxes: number;
   readonly scoresWhenCleared: boolean;
@@ -33,8 +33,8 @@ const TEXTURE_THRESHOLDS: readonly (readonly [number, BoxTexture])[] = [
 
 export const SPAWN_EVERY = 1500;
 
-const columnX = (column: Column, time: number): number =>
-  CANVAS_WIDTH + column.offset - SCROLL_PX_PER_MS * (time - column.spawnedAt);
+const columnX = (column: Column, distance: number): number =>
+  CANVAS_WIDTH + column.offset - (distance - column.spawnDistance);
 
 const drawTexture = (random: Random): BoxTexture => {
   const value = random();
@@ -44,37 +44,37 @@ const drawTexture = (random: Random): BoxTexture => {
   );
 };
 
-export const spawnColumns = (time: number, score: number, random: Random): Column[] => {
+export const spawnColumns = (distance: number, score: number, random: Random): Column[] => {
   const boxes = Math.floor(random() * 2) + 1;
   const second = Math.floor(random() * 3) === 0 && score > SECOND_COLUMN_SCORE;
   const texture = drawTexture(random);
-  const front = { spawnedAt: time, offset: 0, boxes, scoresWhenCleared: !second, texture };
+  const front = { spawnDistance: distance, offset: 0, boxes, scoresWhenCleared: !second, texture };
   return second ? [front, { ...front, offset: TILE_SIZE, scoresWhenCleared: true }] : [front];
 };
 
-const isCleared = (column: Column, time: number): boolean =>
-  column.scoresWhenCleared && columnX(column, time) + TILE_SIZE <= PANDA_X;
+const isCleared = (column: Column, distance: number): boolean =>
+  column.scoresWhenCleared && columnX(column, distance) + TILE_SIZE <= PANDA_X;
 
-export const countCleared = (columns: readonly Column[], time: number): number =>
-  columns.filter((column) => isCleared(column, time)).length;
+export const countCleared = (columns: readonly Column[], distance: number): number =>
+  columns.filter((column) => isCleared(column, distance)).length;
 
-export const moveColumns = (columns: readonly Column[], time: number): Column[] =>
+export const moveColumns = (columns: readonly Column[], distance: number): Column[] =>
   columns
-    .filter((column) => columnX(column, time) + TILE_SIZE > 0)
-    .map((column) => (isCleared(column, time) ? { ...column, scoresWhenCleared: false } : column));
+    .filter((column) => columnX(column, distance) + TILE_SIZE > 0)
+    .map((column) => (isCleared(column, distance) ? { ...column, scoresWhenCleared: false } : column));
 
-const touches = (column: Column, time: number, height: number): boolean => {
-  const x = columnX(column, time);
+const touches = (column: Column, distance: number, height: number): boolean => {
+  const x = columnX(column, distance);
   return x < PANDA_X + PANDA_WIDTH && x + TILE_SIZE > PANDA_X && height < column.boxes * TILE_SIZE;
 };
 
-export const hitsPanda = (columns: readonly Column[], time: number, height: number): boolean =>
-  columns.some((column) => touches(column, time, height));
+export const hitsPanda = (columns: readonly Column[], distance: number, height: number): boolean =>
+  columns.some((column) => touches(column, distance, height));
 
-export const boxesOf = (columns: readonly Column[], time: number): Box[] =>
+export const boxesOf = (columns: readonly Column[], distance: number): Box[] =>
   columns.flatMap((column) =>
     Array.from({ length: column.boxes }, (_, index) => ({
-      x: columnX(column, time),
+      x: columnX(column, distance),
       y: FLOOR_Y - TILE_SIZE * (index + 1),
       texture: column.texture,
     })),
