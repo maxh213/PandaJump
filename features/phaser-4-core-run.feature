@@ -186,7 +186,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And the panda, the columns and the floor stop moving
       And the page reads "Game over" centred in white 40px
       And the page reads "Score: 0" and "Best: 0" under it, in white
-      And the page reads "Tap to play again" under those, in white
+      And the page reads "Tap or press Space to play again" under those, in white
       And the run has not restarted
 
     Scenario: Landing on top of a box also freezes the run

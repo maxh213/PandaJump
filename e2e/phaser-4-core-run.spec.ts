@@ -455,7 +455,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     expect(diedAt.gameOverTitle.originY).toBeCloseTo(0.5);
     expect(diedAt.gameOverScore).toMatchObject({ text: "Score: 0", visible: true });
     expect(diedAt.gameOverBest).toMatchObject({ text: "Best: 0", visible: true });
-    expect(diedAt.gameOverPrompt).toMatchObject({ text: "Tap to play again", visible: true });
+    expect(diedAt.gameOverPrompt).toMatchObject({ text: "Tap or press Space to play again", visible: true });
     expect(diedAt.gameOverTitle.y).toBeLessThan(diedAt.gameOverScore.y);
     expect(diedAt.gameOverScore.y).toBeLessThan(diedAt.gameOverBest.y);
     expect(diedAt.gameOverBest.y).toBeLessThan(diedAt.gameOverPrompt.y);
