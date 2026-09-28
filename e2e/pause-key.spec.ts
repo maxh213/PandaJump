@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, oneBox, openGame, play, press, pressSpace, sample, standardRandom, untilGameOver } from "./probe.ts";
+import { advance, advanceTo, oneBox, openGame, play, press, pressSpace, sample, standardRandom, startRun, untilGameOver } from "./probe.ts";
 
 const KEYS = ["p", "Escape"] as const;
 
@@ -13,6 +13,7 @@ test.describe("Rule: Pressing P or Escape during a live run pauses it and shows 
   for (const key of KEYS) {
     test(`The pause texts appear as soon as the key is pressed: ${key}`, async ({ page }) => {
       await openGame(page, standardRandom());
+      await startRun(page);
       await pauseAt(page, 1000, key);
       const paused = await sample(page);
       expect(paused.pauseTitle).toMatchObject({ text: "Paused", x: 200, y: 190, color: "#ffffff", fontSize: "40px", visible: true });
@@ -28,6 +29,7 @@ test.describe("Rule: Pressing P or Escape during a live run pauses it and shows 
 
     test(`A run paused with the key does not advance time, the panda or the floor: ${key}`, async ({ page }) => {
       await openGame(page, standardRandom());
+      await startRun(page);
       await pauseAt(page, 1000, key);
       const frozen = await sample(page);
       await advance(page, 2000);
@@ -44,6 +46,7 @@ test.describe("Rule: Pressing P or Escape while paused starts the same 3, 2, 1 c
   for (const key of KEYS) {
     test(`The pausing key starts a countdown without a jump: ${key}`, async ({ page }) => {
       await openGame(page, standardRandom());
+      await startRun(page);
       await pauseAt(page, 1000, key);
       await press(page, key);
       const resumed = await sample(page);
@@ -75,6 +78,7 @@ test.describe("Rule: Pressing P or Escape while paused starts the same 3, 2, 1 c
 
   test("Tap, Space and the Up Arrow key still start the countdown on a run paused with P or Escape", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pauseAt(page, 1000, "p");
     await pressSpace(page);
     const resumed = await sample(page);
@@ -89,6 +93,7 @@ test.describe("Rule: Pressing P or Escape on the game-over screen does nothing",
   for (const key of KEYS) {
     test(`The key neither restarts the run nor shows the pause texts: ${key}`, async ({ page }) => {
       await openGame(page, oneBox);
+      await startRun(page);
       await untilGameOver(page);
       await press(page, key);
       const stillGameOver = await sample(page);
