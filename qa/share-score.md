@@ -7,8 +7,8 @@ run `navigator.share = () => Promise.resolve()` in the console before step 4.
 1. Run `npm ci` then `npm run dev` and open the URL it prints. In the console, run
    `typeof navigator.share`. **Expected:** most desktop browsers print `"undefined"`.
 2. Play until the panda touches a column, then wait for the game over screen's 500ms freeze to
-   pass. **Expected:** the page reads "Game over", "Score: N", "Best: N" and "Tap or press Space to
-   play again" as before, but no "Share score" prompt appears anywhere on the screen.
+   pass. **Expected:** the page reads "Game over", "Score: N", "Best: N" and "Tap, press Space or the Up Arrow key
+   to play again" as before, but no "Share score" prompt appears anywhere on the screen.
 3. Tap or click anywhere on the game-over screen. **Expected:** the run restarts exactly as it did
    before this change.
 4. In the console, run `navigator.share = (data) => { console.log(data); return Promise.resolve(); }`,

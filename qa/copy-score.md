@@ -7,8 +7,8 @@ does have `navigator.clipboard.writeText`, so step 2 covers that browser as-is.
    `typeof navigator.share` and `typeof navigator.clipboard?.writeText`. **Expected:** most desktop
    browsers print `"undefined"` then `"function"`.
 2. Play until the panda touches a column, then wait for the game over screen's 500ms freeze to
-   pass. **Expected:** the page reads "Game over", "Score: N", "Best: N" and "Tap or press Space to
-   play again" as before, and a "Copy score" prompt appears in the same spot "Share score" used to,
+   pass. **Expected:** the page reads "Game over", "Score: N", "Best: N" and "Tap, press Space or the Up Arrow key
+   to play again" as before, and a "Copy score" prompt appears in the same spot "Share score" used to,
    in white 20px Arial.
 3. Tap or click "Copy score". **Expected:** the clipboard now holds text like
    "I scored 3 on Panda Jump! " followed by the page's current URL (paste it somewhere to check).
