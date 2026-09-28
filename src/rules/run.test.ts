@@ -503,6 +503,15 @@ test("the world does not move during the countdown and advances normally once it
   expect(run.view().time).toBe(1500);
 });
 
+test("a single advance() call that crosses the countdown boundary carries the leftover ms into world movement", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pause();
+  run.jump();
+  run.advance(1700);
+  expect(run.view()).toMatchObject({ countdown: null, paused: false, time: 1200 });
+});
+
 test("a jump pressed during the countdown neither jumps nor restarts the countdown", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
