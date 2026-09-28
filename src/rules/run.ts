@@ -276,6 +276,11 @@ const airPuffOf = (state: State): View["airPuff"] => {
 const doubleJumpHintOf = (state: State): boolean =>
   state.hintPending && isLive(state) && state.score < HINT_BELOW_SCORE;
 
+const pandaFrameOf = (state: State): number =>
+  isLive(state) && state.panda.height > 0
+    ? FIRST_RUN_FRAME
+    : FIRST_RUN_FRAME + (Math.floor(state.time * FRAMES_PER_MS) % RUN_FRAMES);
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
@@ -289,7 +294,7 @@ const viewOf = (state: State): View => ({
   sky: skyFor(state.score),
   pandaX: PANDA_X,
   pandaBottom: FLOOR_Y - state.panda.height,
-  pandaFrame: FIRST_RUN_FRAME + (Math.floor(state.time * FRAMES_PER_MS) % RUN_FRAMES),
+  pandaFrame: pandaFrameOf(state),
   floorScroll: currentDistance(state) % TILE_SIZE,
   boxes: boxesOf(state.columns, currentDistance(state), state.hitColumn),
   clouds: cloudsOf(state.clouds, state.time),
