@@ -19,6 +19,16 @@ const standardColumns = () => {
   };
 };
 
+const twoBoxColumns = () => {
+  const values = [0.75, 0.5, 0];
+  let index = 0;
+  return (): number => {
+    const value = values.at(index % values.length) ?? 0;
+    index += 1;
+    return value;
+  };
+};
+
 const noStore = { load: () => 0, save: () => undefined };
 
 test("a run starts with the panda on the floor, score 0 and no boxes", () => {
@@ -42,6 +52,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     gameOver: false,
     canRestart: false,
     paused: false,
+    pandaUpsideDown: false,
   });
 });
 
@@ -350,4 +361,78 @@ test("dying and restarting resets the callout so beating the new, higher best tr
   run.jump();
   run.advance(660);
   expect(run.view()).toMatchObject({ score: "2", best: "2", newBest: true });
+});
+
+test("a panda that dies while still rising has its speed zeroed so it never rises again", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2870);
+  run.jump();
+  run.advance(10);
+  const diedAt = run.view();
+  expect(diedAt.gameOver).toBe(true);
+  expect(diedAt.pandaBottom).toBeLessThan(426);
+  run.advance(10);
+  expect(run.view().pandaBottom).toBeGreaterThan(diedAt.pandaBottom);
+});
+
+test("a panda that dies above the floor keeps falling every step until it settles exactly on the floor, then stays there", () => {
+  const run = createRun(twoBoxColumns(), oneBoxEach(), noStore);
+  run.advance(2300);
+  run.jump();
+  run.advance(900);
+  const diedAt = run.view();
+  expect(diedAt.gameOver).toBe(true);
+  expect(diedAt.pandaBottom).toBeLessThan(426);
+  let previous = diedAt.pandaBottom;
+  let steps = 0;
+  while (previous < 426) {
+    steps += 1;
+    if (steps > 1000) throw new Error("the panda never reached the floor");
+    run.advance(10);
+    const current = run.view().pandaBottom;
+    expect(current).toBeGreaterThan(previous);
+    expect(current).toBeLessThanOrEqual(426);
+    previous = current;
+  }
+  run.advance(50);
+  expect(run.view().pandaBottom).toBe(426);
+});
+
+test("a panda that dies already on the floor stays at pandaBottom 426", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2880);
+  const diedAt = run.view();
+  expect(diedAt.gameOver).toBe(true);
+  expect(diedAt.pandaBottom).toBe(426);
+  run.advance(300);
+  expect(run.view().pandaBottom).toBe(426);
+});
+
+test("pandaUpsideDown is true exactly while gameOver is true, and resets on restart", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  expect(run.view().pandaUpsideDown).toBe(false);
+  run.advance(2880);
+  expect(run.view()).toMatchObject({ gameOver: true, pandaUpsideDown: true });
+  run.advance(500);
+  run.jump();
+  expect(run.view()).toMatchObject({ gameOver: false, pandaUpsideDown: false });
+});
+
+test("time, score, columns, clouds and floor scroll stay frozen while the panda falls after a mid-air death", () => {
+  const run = createRun(twoBoxColumns(), oneBoxEach(), noStore);
+  run.advance(2300);
+  run.jump();
+  run.advance(900);
+  const diedAt = run.view();
+  expect(diedAt.gameOver).toBe(true);
+  run.advance(200);
+  const later = run.view();
+  expect(later.pandaBottom).not.toBe(diedAt.pandaBottom);
+  expect(later).toMatchObject({
+    time: diedAt.time,
+    score: diedAt.score,
+    boxes: diedAt.boxes,
+    clouds: diedAt.clouds,
+    floorScroll: diedAt.floorScroll,
+  });
 });

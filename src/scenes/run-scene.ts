@@ -157,7 +157,7 @@ export class RunScene extends Phaser.Scene {
 
   private draw(): void {
     const view = this.run.view();
-    this.panda.setPosition(view.pandaX, view.pandaBottom).setFrame(view.pandaFrame);
+    this.panda.setPosition(view.pandaX, view.pandaBottom).setFrame(view.pandaFrame).setFlipY(view.pandaUpsideDown);
     this.rock.tilePositionX = view.floorScroll;
     this.grass.tilePositionX = view.floorScroll;
     this.score.setText(view.score);

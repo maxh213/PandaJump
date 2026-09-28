@@ -24,6 +24,7 @@ interface View {
   readonly gameOver: boolean;
   readonly canRestart: boolean;
   readonly paused: boolean;
+  readonly pandaUpsideDown: boolean;
 }
 
 export interface Run {
@@ -124,10 +125,12 @@ const spawnIfDue = (state: State, random: Random): State =>
 
 const step = (state: State, ms: number, randoms: Randoms): State => {
   if (state.deathElapsed !== null) {
-    return { ...state, deathElapsed: state.deathElapsed + ms };
+    return { ...state, deathElapsed: state.deathElapsed + ms, panda: fall(state.panda, ms) };
   }
   const next = spawnIfDue(moveOn(state, ms, randoms), randoms.columns);
-  return hitsPanda(next.columns, currentDistance(next), next.panda.height) ? { ...next, deathElapsed: 0 } : next;
+  return hitsPanda(next.columns, currentDistance(next), next.panda.height)
+    ? { ...next, panda: { ...next.panda, speed: 0 }, deathElapsed: 0 }
+    : next;
 };
 
 const stepsOf = (ms: number): number[] =>
@@ -154,6 +157,7 @@ const viewOf = (state: State): View => ({
   gameOver: state.deathElapsed !== null,
   canRestart: canRestart(state),
   paused: state.paused,
+  pandaUpsideDown: state.deathElapsed !== null,
 });
 
 const act = (state: State, randoms: Randoms): State => {

@@ -28,7 +28,17 @@ export interface Sample {
   gameOverRuns: CenteredText;
   pauseTitle: CenteredText;
   pausePrompt: CenteredText;
-  panda: { x: number; bottom: number; width: number; height: number; frame: number; cutY: number; cutHeight: number; key: string };
+  panda: {
+    x: number;
+    bottom: number;
+    width: number;
+    height: number;
+    frame: number;
+    cutY: number;
+    cutHeight: number;
+    key: string;
+    flipY: boolean;
+  };
   rock: { y: number; scroll: number; key: string };
   grass: { y: number; scroll: number; key: string };
   boxes: { x: number; y: number; width: number; key: string }[];
@@ -58,6 +68,7 @@ export interface GameText {
 interface GameSprite {
   frame: { name: number; cutY: number; cutHeight: number };
   texture: { key: string };
+  flipY: boolean;
   getBounds: () => Bounds;
 }
 
@@ -160,6 +171,7 @@ export const installProbe = () => {
         cutY: panda.frame.cutY,
         cutHeight: panda.frame.cutHeight,
         key: panda.texture.key,
+        flipY: panda.flipY,
       },
       rock: { y: rock.y, scroll: rock.tilePositionX, key: rock.texture.key },
       grass: { y: grass.y, scroll: grass.tilePositionX, key: grass.texture.key },
