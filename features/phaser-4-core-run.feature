@@ -34,6 +34,9 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
     Scenario: The page has a favicon so the browser does not 404
       Then the page's <link rel="icon"> resolves with status 200
 
+    Scenario: The page has an apple-touch-icon so iOS shows the Panda when added to the home screen
+      Then the page's <link rel="apple-touch-icon"> resolves with status 200
+
     Scenario: Shared links show a real preview
       Then the page's <meta name="description"> has non-empty, game-specific text
       And the page's <meta property="og:title"> reads "Panda Jump"

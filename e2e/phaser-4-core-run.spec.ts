@@ -120,6 +120,14 @@ test.describe("Rule: The page keeps its content", () => {
     expect(response.status()).toBe(200);
   });
 
+  test("The page has an apple-touch-icon so iOS shows the Panda when added to the home screen", async ({ page }) => {
+    await page.goto("./");
+    const href = await page.locator('link[rel="apple-touch-icon"]').getAttribute("href");
+    if (!href) throw new Error("apple-touch-icon href is missing");
+    const response = await page.request.get(new URL(href, page.url()).toString());
+    expect(response.status()).toBe(200);
+  });
+
   test("Shared links show a real preview", async ({ page }) => {
     await page.goto("./");
     const description = await page.locator('meta[name="description"]').getAttribute("content");

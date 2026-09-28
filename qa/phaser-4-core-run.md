@@ -1,12 +1,13 @@
 # QA: Panda Jump on Phaser 4, slice 1
 
-Use a desktop browser with dev tools, and a phone or touch emulation for step 9. Heights are in px above the floor surface (y 426).
+Use a desktop browser with dev tools, and a phone or touch emulation for step 10. Heights are in px above the floor surface (y 426).
 
 1. Run `git ls-files main.js phaser.min.js` and `git diff master -- assets/`. **Expected:** both print nothing: the old game is gone and no asset changed.
 2. Run `npm ci` then `npm run dev` and open the URL it prints. **Expected:** the page title and heading read "Panda Jump"; below the 400×490 game the page reads "Check it out on Github" (link to https://github.com/maxh213/PandaJump) and "Controls: Click, tap or press Space to jump (you can double jump)".
 3. Open the Network tab and reload. **Expected:** the Lato font loads over `https://`; no request uses `http://`; nothing requests `main.js` or `phaser.min.js`; the console shows no errors. Find the request for the page's `<link rel="icon">` href. **Expected:** it resolves with status 200, not a 404.
 
 3a. View the page source (or inspect `<head>`). **Expected:** a `<meta name="description">` with non-empty, game-specific text; `<meta property="og:title">` reading "Panda Jump"; `<meta property="og:description">` with non-empty, game-specific text; `<meta property="og:image">` pointing at `assets/Panda.png`; `<meta property="og:url">` pointing at `https://maxh213.github.io/PandaJump/`. Paste the page URL into a chat app that shows link previews (e.g. Slack, Discord or iMessage). **Expected:** the preview shows the panda image and the description text instead of a blank card.
+3b. In the page source, find the `<link rel="apple-touch-icon">` href in `<head>` and open it directly in a new tab (or check it in the Network tab if the browser preloads it). **Expected:** the Panda image loads with status 200, not a 404. On an iPhone or iPad in Safari, open the dev server URL, tap Share then "Add to Home Screen". **Expected:** the preview and the resulting home screen icon show the Panda artwork, not a screenshot of the page.
 4. Look at the game without touching anything. **Expected:** light blue `#71c5cf` background; score "0" in white at the top left; the panda stands on the floor near the left (left edge at x 100) and plays a looping run animation.
 5. Pause the animation in dev tools or record the screen and step through a full run cycle. **Expected:** each of the 6 frames shows the whole panda with no sliver of another pose along its top or bottom edge.
 6. Watch the floor for 10 seconds. **Expected:** rock with grass on top scrolls left steadily; no blue gap, seam or flicker between tiles.
