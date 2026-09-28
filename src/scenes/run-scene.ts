@@ -20,7 +20,9 @@ const GAME_OVER_Y = 190;
 const GAME_OVER_SCORE_Y = 250;
 const GAME_OVER_BEST_Y = 280;
 const GAME_OVER_PROMPT_Y = 320;
+const GAME_OVER_SHARE_Y = 360;
 const BEST_COLORS: Record<"true" | "false", string> = { true: "#ffd700", false: "#ffffff" };
+const shareSupported = typeof navigator.share === "function";
 
 export class RunScene extends Phaser.Scene {
   private readonly run: Run;
@@ -36,6 +38,7 @@ export class RunScene extends Phaser.Scene {
   private gameOverScore!: Phaser.GameObjects.Text;
   private gameOverBest!: Phaser.GameObjects.Text;
   private gameOverPrompt!: Phaser.GameObjects.Text;
+  private gameOverShare!: Phaser.GameObjects.Text;
 
   constructor(run: Run, timeScale: number) {
     super("run");
@@ -75,6 +78,7 @@ export class RunScene extends Phaser.Scene {
       .setName("best");
     this.createGameOverTexts();
     this.input.on("pointerdown", this.jump);
+    this.input.on("gameobjectdown", this.shareScore);
     [this.input.keyboard]
       .filter((keyboard) => keyboard !== null)
       .forEach((keyboard) => {
@@ -92,6 +96,15 @@ export class RunScene extends Phaser.Scene {
     this.run.jump();
   };
 
+  private readonly shareScore = (
+    _pointer: Phaser.Input.Pointer,
+    _gameObject: Phaser.GameObjects.GameObject,
+    event: { stopPropagation: () => void },
+  ): void => {
+    event.stopPropagation();
+    navigator.share({ text: `I scored ${this.run.view().score} on Panda Jump!`, url: window.location.href }).catch(() => undefined);
+  };
+
   private centeredText(y: number, text: string, fontSize: string): Phaser.GameObjects.Text {
     return this.add.text(CENTER_X, y, text, { fontFamily: "Arial", fontSize, color: "#ffffff" }).setOrigin(0.5);
   }
@@ -103,6 +116,9 @@ export class RunScene extends Phaser.Scene {
     this.gameOverPrompt = this.centeredText(GAME_OVER_PROMPT_Y, "Tap or press Space to play again", "20px").setName(
       "gameOverPrompt",
     );
+    this.gameOverShare = this.centeredText(GAME_OVER_SHARE_Y, "Share score", "20px")
+      .setName("gameOverShare")
+      .setInteractive();
   }
 
   private addFloorStrip(y: number, texture: string): Phaser.GameObjects.TileSprite {
@@ -125,6 +141,7 @@ export class RunScene extends Phaser.Scene {
     this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.score}`);
     this.gameOverBest.setVisible(view.gameOver).setText(`Best: ${view.best}`);
     this.gameOverPrompt.setVisible(view.canRestart);
+    this.gameOverShare.setVisible([view.canRestart, shareSupported].every(Boolean));
     this.boxes.getChildren().forEach((box) => {
       this.boxes.killAndHide(box);
     });
