@@ -7,8 +7,9 @@ Feature: Panda Jump turns the sky to sunset at score 20 and to night at score 40
   "The ramped schedule" is as defined in features/difficulty-ramp.feature: the random source
   picks 1 box and no second column for every column, and I press Space 788 ms after each column
   spawns rather than 1200 ms, since a jump timed for the flat 200 px/s schedule lands too late
-  once the difficulty ramp has sped columns up. Column n is cleared at 1500 x n + 1820 ms and the
-  score reads n from that moment.
+  once the difficulty ramp has sped columns up. Columns spawn 1500 ms apart until the score reaches
+  20 and then closer together, as features/difficulty-ramp.feature describes; the score reads n the
+  moment column n is cleared.
   "The sky" means both `window.pandaJump.run.view().sky` and the main camera's background colour,
   which always match: "#71c5cf" (day) below a score of 20, "#f4a261" (sunset) from 20 to 39, and
   "#2b2d42" (night) from 40 upward.

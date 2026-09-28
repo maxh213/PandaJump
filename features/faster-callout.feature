@@ -7,8 +7,9 @@ Feature: Panda Jump shows a brief "Faster!" callout each time the game speeds up
   "The ramped schedule" is as defined in features/difficulty-ramp.feature: the random source
   picks 1 box and no second column for every column, and I press Space 788 ms after each column
   spawns rather than 1200 ms, since once the ramp has sped columns up a jump timed for the flat
-  200 px/s schedule lands too late. Column n is cleared at 1500 x n + 1820 ms and the score reads
-  n from that moment.
+  200 px/s schedule lands too late. Columns spawn 1500 ms apart until the score reaches 20 and then
+  closer together, as features/difficulty-ramp.feature describes; the score reads n the moment
+  column n is cleared.
   "The callout" means centred text reading "Faster!" in gold (#ffd700) 24px Arial at (200, 120).
 
   Background:

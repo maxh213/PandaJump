@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { TILE_SIZE } from "../src/rules/index.ts";
-import { advance, openGame, play, sample } from "./probe.ts";
+import { advance, columnClearTime, openGame, play, sample, spawnLog, spawnTimeOf } from "./probe.ts";
 
 const CLEAR_BUFFER = 20;
 const WINDOW_MS = 100;
@@ -15,9 +15,9 @@ const randomThrough = (column: number): number[] =>
 const JUMP_OFFSET = 788;
 
 const jumpsThrough = (column: number): number[] =>
-  Array.from({ length: column }, (_, index) => 1500 * (index + 1) + JUMP_OFFSET);
+  Array.from({ length: column }, (_, index) => spawnTimeOf(index + 1) + JUMP_OFFSET);
 
-const scoreReadAt = (column: number): number => 1500 * column + 1820 + CLEAR_BUFFER;
+const scoreReadAt = (column: number): number => columnClearTime(column) + CLEAR_BUFFER;
 
 const playThroughColumn = async (page: Page, column: number): Promise<void> => {
   await openGame(page, randomThrough(column));
@@ -30,7 +30,7 @@ const speedOverWindow = async (page: Page): Promise<{ columnPxPerSecond: number;
   const beforeScroll = before.rock.scroll;
   await advance(page, WINDOW_MS);
   const after = await sample(page);
-  const afterX = Math.max(...after.boxes.map((box) => box.x));
+  const afterX = Math.max(...after.boxes.map((box) => box.x).filter((x) => x <= beforeX));
   const afterScroll = after.rock.scroll;
   const columnDistance = beforeX - afterX;
   const floorDistance = ((afterScroll - beforeScroll) % TILE_SIZE + TILE_SIZE) % TILE_SIZE;
@@ -95,5 +95,63 @@ test.describe("Rule: The floor and the columns never desync", () => {
     expect((await sample(page)).score.text).toBe("45");
     const speed = await speedOverWindow(page);
     expect(speed.floorPxPerSecond).toBeCloseTo(speed.columnPxPerSecond);
+  });
+});
+
+const GAP_STEPS: readonly (readonly [number, number])[] = [
+  [60, 1250],
+  [50, 1300],
+  [40, 1350],
+  [30, 1400],
+  [20, 1450],
+  [0, 1500],
+];
+
+const expectedGap = (score: number): number => {
+  const step = GAP_STEPS.find(([from]) => score >= from);
+  if (step === undefined) throw new Error("no gap step");
+  return step[1];
+};
+
+const spawnGaps = async (page: Page, column: number) => {
+  await openGame(page, randomThrough(column));
+  const spawns = await spawnLog(page, jumpsThrough(column), spawnTimeOf(column) + 1);
+  return {
+    firstAt: spawns[0]?.time,
+    gaps: spawns.slice(0, -1).map((spawn, index) => ({
+      score: spawn.score,
+      gap: (spawns[index + 1]?.time ?? 0) - spawn.time,
+    })),
+  };
+};
+
+test.describe("Rule: The gap between column spawns shrinks as the score climbs and never drops below 1250 ms", () => {
+  test("The gap is 1500 ms below score 20 and 1450 ms once the score reaches 20", async ({ page }) => {
+    test.setTimeout(120_000);
+    const { firstAt, gaps } = await spawnGaps(page, 25);
+    expect(firstAt).toBe(1500);
+    expect(gaps.filter(({ score }) => score < 20).every(({ gap }) => gap === 1500)).toBe(true);
+    expect(gaps.filter(({ score }) => score >= 20).map(({ gap }) => gap)).toContain(1450);
+    expect(gaps.every(({ score, gap }) => gap === expectedGap(score))).toBe(true);
+  });
+
+  test("The gap keeps shrinking in 50 ms steps every 10 points down to 1250 ms", async ({ page }) => {
+    test.setTimeout(120_000);
+    const { gaps } = await spawnGaps(page, 70);
+    expect(new Set(gaps.map(({ gap }) => gap))).toEqual(new Set([1500, 1450, 1400, 1350, 1300, 1250]));
+    expect(gaps.every(({ score, gap }) => gap === expectedGap(score))).toBe(true);
+    expect(Math.min(...gaps.map(({ gap }) => gap))).toBe(1250);
+  });
+
+  test("Loading the page twice with the same random values gives the same column positions", async ({ page }) => {
+    test.setTimeout(120_000);
+    const columns = async () => {
+      await openGame(page, randomThrough(25));
+      const samples = await play(page, jumpsThrough(25), spawnTimeOf(25) + 1);
+      return samples.map((entry) => ({ time: entry.time, boxes: entry.boxes.map((box) => ({ x: box.x, y: box.y })) }));
+    };
+    const first = await columns();
+    const second = await columns();
+    expect(second).toEqual(first);
   });
 });

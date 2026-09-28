@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, hidePage, oneBox, openGame, play, sample, untilRestart } from "./probe.ts";
+import { advance, columnClearTime, hidePage, oneBox, openGame, play, sample, spawnTimeOf, untilRestart } from "./probe.ts";
 import type { Sample } from "./probe.ts";
 
 const EXTRA_COLUMNS = 3;
@@ -12,9 +12,9 @@ const POLL_STEP = 1;
 const rampedRandom = (column: number): number[] => Array.from({ length: column + EXTRA_COLUMNS }, () => oneBox).flat();
 
 const jumpTimesFor = (from: number, to: number): number[] =>
-  Array.from({ length: to - from + 1 }, (_, index) => 1500 * (from + index) + JUMP_OFFSET);
+  Array.from({ length: to - from + 1 }, (_, index) => spawnTimeOf(from + index) + JUMP_OFFSET);
 
-const scoreReadAt = (column: number): number => 1500 * column + 1820 + CLEAR_BUFFER;
+const scoreReadAt = (column: number): number => columnClearTime(column) + CLEAR_BUFFER;
 
 const playThroughColumn = async (page: Page, column: number): Promise<void> => {
   await openGame(page, rampedRandom(column));
@@ -32,7 +32,7 @@ const waitForScore = async (page: Page, target: string): Promise<Sample> => {
 
 const playToTheInstantScoreReaches = async (page: Page, column: number): Promise<Sample> => {
   await openGame(page, rampedRandom(column));
-  await play(page, jumpTimesFor(1, column), 1500 * column + JUST_BEFORE_CLEAR);
+  await play(page, jumpTimesFor(1, column), spawnTimeOf(column) + JUST_BEFORE_CLEAR);
   return waitForScore(page, String(column));
 };
 

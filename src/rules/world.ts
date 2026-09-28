@@ -15,3 +15,13 @@ export const speedForScore = (score: number): number => {
   const steps = Math.floor((score - RAMP_START_SCORE) / RAMP_STEP_SCORE) + 1;
   return Math.min(SCROLL_PX_PER_MS + steps * RAMP_STEP_PX_PER_MS, RAMP_MAX_PX_PER_MS);
 };
+
+const SPAWN_GAP_BASE_MS = 1500;
+const SPAWN_GAP_STEP_MS = 50;
+const SPAWN_GAP_MIN_MS = 1250;
+
+export const spawnGapForScore = (score: number): number => {
+  if (score < RAMP_START_SCORE) return SPAWN_GAP_BASE_MS;
+  const steps = Math.floor((score - RAMP_START_SCORE) / RAMP_STEP_SCORE) + 1;
+  return Math.max(SPAWN_GAP_BASE_MS - steps * SPAWN_GAP_STEP_MS, SPAWN_GAP_MIN_MS);
+};

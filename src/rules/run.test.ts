@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { createRun } from "./index.ts";
 import type { Run } from "./index.ts";
+import { spawnGapForScore, speedForScore } from "./world.ts";
 
 const oneBoxEach = () => {
   let draws = 0;
@@ -341,16 +342,47 @@ test("the floor and columns speed up once the score passes 20", () => {
   expect(((after - before) + 64) % 64).toBeCloseTo(22);
 });
 
-const rampedJumpAt = (column: number): number => 1500 * column + 788;
+const COLUMN_CLEAR_DISTANCE = 364;
+
+const clearTimeFor = (spawn: number, clears: readonly number[]): number => {
+  let time = spawn;
+  let cleared = clears.filter((clear) => clear <= spawn).length;
+  let remaining = COLUMN_CLEAR_DISTANCE;
+  for (;;) {
+    const speed = speedForScore(cleared);
+    const change = clears[cleared] ?? Infinity;
+    if (speed * (change - time) >= remaining) return time + remaining / speed;
+    remaining -= speed * (change - time);
+    time = change;
+    cleared += 1;
+  }
+};
+
+const spawnTimesFor = (count: number): number[] => {
+  const spawns: number[] = [];
+  const clears: number[] = [];
+  let spawn = spawnGapForScore(0);
+  for (let column = 1; column <= count; column += 1) {
+    spawns.push(spawn);
+    clears.push(clearTimeFor(spawn, clears));
+    spawn += spawnGapForScore(clears.filter((clear) => clear <= spawn).length);
+  }
+  return spawns;
+};
+
+const spawnTimes = spawnTimesFor(80);
+
+const rampedJumpAt = (column: number): number => (spawnTimes[column - 1] ?? 0) + 788;
 
 const advanceToColumn = (run: Run, from: number, to: number): void => {
   for (let column = from; column <= to; column += 1) {
     run.advance(rampedJumpAt(column) - run.view().time);
     run.jump();
   }
-  while (run.view().score !== String(to)) {
+  while (run.view().score !== String(to) && !run.view().gameOver) {
     run.advance(1);
   }
+  expect(run.view().gameOver).toBe(false);
 };
 
 test("speedUp is visible for exactly 800ms of game time from the instant the score first reaches the ramp threshold of 20", () => {

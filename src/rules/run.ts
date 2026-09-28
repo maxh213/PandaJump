@@ -1,7 +1,6 @@
 import { nextBest } from "./best.ts";
 import type { BestStore } from "./best.ts";
 import {
-  SPAWN_EVERY,
   bestColumnMarker,
   boxesOf,
   countCleared,
@@ -17,7 +16,7 @@ import type { Medal } from "./medal.ts";
 import { fall, jump, standingPanda } from "./panda.ts";
 import type { Panda } from "./panda.ts";
 import { skyFor } from "./sky.ts";
-import { FLOOR_Y, PANDA_X, TILE_SIZE, speedForScore } from "./world.ts";
+import { FLOOR_Y, PANDA_X, TILE_SIZE, spawnGapForScore, speedForScore } from "./world.ts";
 
 interface View {
   readonly time: number;
@@ -118,7 +117,7 @@ const freshState = ({ restarts, best, hintPending }: Carried, randoms: Randoms):
   startingBest: best,
   calloutStart: null,
   speedUpStart: null,
-  nextSpawn: SPAWN_EVERY,
+  nextSpawn: spawnGapForScore(0),
   panda: standingPanda,
   columns: NO_COLUMNS,
   clouds: initialClouds(randoms.clouds),
@@ -184,7 +183,7 @@ const spawnIfDue = (state: State, random: Random): State =>
     : {
         ...state,
         columns: [...state.columns, ...spawnColumns(distanceAt(state, state.nextSpawn), state.score, random)],
-        nextSpawn: state.nextSpawn + SPAWN_EVERY,
+        nextSpawn: state.nextSpawn + spawnGapForScore(state.score),
       };
 
 const step = (state: State, ms: number, randoms: Randoms): State => {

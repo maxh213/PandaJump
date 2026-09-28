@@ -407,8 +407,47 @@ export const twoBoxesAndSecond = [0.75, 0, 0];
 export const standardRandom = (exceptions: Record<number, number[]> = {}) =>
   Array.from({ length: 40 }, (_, index) => exceptions[index + 1] ?? oneBox).flat();
 
+const SCHEDULED_COLUMNS = 80;
+const COLUMN_TRAVEL_PX = 364;
+
+const pxPerMsAt = (score: number): number => (score < 20 ? 0.2 : Math.min(0.2 + (Math.floor((score - 20) / 10) + 1) * 0.02, 0.3));
+
+const gapAt = (score: number): number => (score < 20 ? 1500 : Math.max(1500 - (Math.floor((score - 20) / 10) + 1) * 50, 1250));
+
+const clearTimeOf = (spawn: number, clears: readonly number[]): number => {
+  let time = spawn;
+  let cleared = clears.filter((clear) => clear <= spawn).length;
+  let remaining = COLUMN_TRAVEL_PX;
+  for (;;) {
+    const speed = pxPerMsAt(cleared);
+    const change = clears[cleared] ?? Infinity;
+    if (speed * (change - time) >= remaining) return time + remaining / speed;
+    remaining -= speed * (change - time);
+    time = change;
+    cleared += 1;
+  }
+};
+
+const buildSchedule = (): { spawns: number[]; clears: number[] } => {
+  const spawns: number[] = [];
+  const clears: number[] = [];
+  let spawn = gapAt(0);
+  for (let column = 1; column <= SCHEDULED_COLUMNS; column += 1) {
+    spawns.push(spawn);
+    clears.push(clearTimeOf(spawn, clears));
+    spawn += gapAt(clears.filter((clear) => clear <= spawn).length);
+  }
+  return { spawns, clears };
+};
+
+const schedule = buildSchedule();
+
+export const spawnTimeOf = (column: number): number => at(schedule.spawns, column - 1);
+
+export const columnClearTime = (column: number): number => Math.ceil(at(schedule.clears, column - 1));
+
 export const standardJumps = (until: number) =>
-  Array.from({ length: 40 }, (_, index) => 1500 * (index + 1) + 1200).filter((time) => time <= until);
+  Array.from({ length: 40 }, (_, index) => spawnTimeOf(index + 1) + 1200).filter((time) => time <= until);
 
 export const at = <T>(items: readonly T[], index: number): T => {
   const item = items.at(index);
@@ -418,3 +457,32 @@ export const at = <T>(items: readonly T[], index: number): T => {
 
 export const first = <T>(items: readonly T[]): T => at(items, 0);
 export const last = <T>(items: readonly T[]): T => at(items, -1);
+
+export interface SpawnRecord {
+  time: number;
+  score: number;
+}
+
+export const spawnLog = (page: Page, jumps: number[], until: number): Promise<SpawnRecord[]> =>
+  page.evaluate(
+    ({ jumpTimes, end }) => {
+      const handle = window.pandaJump;
+      if (!handle) throw new Error("PandaJump has not started");
+      const spawns: { time: number; score: number }[] = [];
+      const pending = [...jumpTimes];
+      let front = -Infinity;
+      while (handle.run.view().time < end) {
+        handle.run.advance(1);
+        const view = handle.run.view();
+        const now = Math.max(-Infinity, ...view.boxes.map((box) => box.x));
+        if (now > front) spawns.push({ time: view.time, score: Number(view.score) });
+        front = now;
+        if (pending[0] !== undefined && view.time >= pending[0]) {
+          pending.shift();
+          handle.run.jump();
+        }
+      }
+      return spawns;
+    },
+    { jumpTimes: jumps, end: until },
+  );

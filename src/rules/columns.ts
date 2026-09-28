@@ -33,8 +33,6 @@ const TEXTURE_THRESHOLDS: readonly (readonly [number, BoxTexture])[] = [
   [0.8, "snow_06.png"],
 ];
 
-export const SPAWN_EVERY = 1500;
-
 const columnX = (column: Column, distance: number): number =>
   CANVAS_WIDTH + column.offset - (distance - column.spawnDistance);
 
