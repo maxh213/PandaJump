@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, oneBox, openGame, pressSpace, untilGameOver, untilRestart } from "./probe.ts";
+import { advance, advanceTo, oneBox, openGame, pressSpace, startRun, untilGameOver, untilRestart } from "./probe.ts";
 
 declare global {
   interface Window {
@@ -32,6 +32,7 @@ test.describe("Rule: A supporting device vibrates exactly once, on the frame the
   test("The device vibrates once the moment the panda touches a column", async ({ page }) => {
     await stubVibrate(page);
     await openGame(page, oneBox);
+    await startRun(page);
     const { after } = await untilGameOver(page);
     expect(after.gameOver).toBe(true);
     expect(await vibrateCalls(page)).toEqual([100]);
@@ -40,6 +41,7 @@ test.describe("Rule: A supporting device vibrates exactly once, on the frame the
   test("navigator.vibrate is not called again while the game over screen stays up", async ({ page }) => {
     await stubVibrate(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await advance(page, 3000);
     expect(await vibrateCalls(page)).toEqual([100]);
@@ -48,6 +50,7 @@ test.describe("Rule: A supporting device vibrates exactly once, on the frame the
   test("A run that never dies never vibrates", async ({ page }) => {
     await stubVibrate(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await advanceTo(page, 2700);
     await pressSpace(page);
     await advanceTo(page, 3340);
@@ -57,6 +60,7 @@ test.describe("Rule: A supporting device vibrates exactly once, on the frame the
   test("Restarting and dying again vibrates once more, for the new death", async ({ page }) => {
     await stubVibrate(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await untilRestart(page);
     expect(await vibrateCalls(page)).toEqual([100]);
     const { after } = await untilGameOver(page);
@@ -71,6 +75,7 @@ test.describe("Rule: A device without the Vibration API is unaffected", () => {
     page.on("pageerror", (error) => errors.push(error.message));
     await removeVibrate(page);
     await openGame(page, oneBox);
+    await startRun(page);
     const { after } = await untilGameOver(page);
     expect(after.gameOver).toBe(true);
     expect(errors).toEqual([]);
