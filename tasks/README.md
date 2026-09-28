@@ -54,5 +54,6 @@ All of the above have shipped, along with these slices that had no task file wri
 - Showing the live score in the browser tab title once a run is under way
 - Locking the installed PWA to portrait orientation to match the game's fixed portrait canvas
 - Making the iOS standalone status bar black to match the page's solid-black theme
+- Popping the top-left score number to 1.3x size the instant a column is cleared, easing back to its normal size over the next 150ms, so a cleared column is easy to notice mid-jump with no sound
 
 Sound is not planned: CLAUDE.md's rules say the repository has no audio assets.

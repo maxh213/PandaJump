@@ -18,7 +18,7 @@ export interface Sample {
   time: number;
   restarts: number;
   gameOver: boolean;
-  score: { text: string; x: number; y: number; color: string; fontSize: string };
+  score: { text: string; x: number; y: number; color: string; fontSize: string; scale: number };
   best: { text: string; x: number; y: number; color: string; fontSize: string };
   gameOverTitle: CenteredText;
   gameOverMedal: CenteredText;
@@ -63,6 +63,7 @@ export interface GameText {
   originX: number;
   originY: number;
   visible: boolean;
+  scale: number;
   getBounds: () => Bounds;
 }
 
@@ -153,7 +154,14 @@ export const installProbe = () => {
       time: view.time,
       restarts: view.restarts,
       gameOver: view.gameOver,
-      score: { text: score.text, x: score.x, y: score.y, color: score.style.color, fontSize: score.style.fontSize },
+      score: {
+        text: score.text,
+        x: score.x,
+        y: score.y,
+        color: score.style.color,
+        fontSize: score.style.fontSize,
+        scale: score.scale,
+      },
       best: { text: best.text, x: best.x, y: best.y, color: best.style.color, fontSize: best.style.fontSize },
       gameOverTitle: centeredText("gameOverTitle"),
       gameOverMedal: centeredText("gameOverMedal"),

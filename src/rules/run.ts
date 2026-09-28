@@ -14,6 +14,7 @@ interface View {
   readonly time: number;
   readonly restarts: number;
   readonly score: string;
+  readonly scoreScale: number;
   readonly best: string;
   readonly newBest: boolean;
   readonly overtookBest: boolean;
@@ -49,6 +50,7 @@ interface State {
   readonly rampDistance: number;
   readonly restarts: number;
   readonly score: number;
+  readonly scorePopStart: number | null;
   readonly best: number;
   readonly calloutStart: number | null;
   readonly nextSpawn: number;
@@ -66,6 +68,8 @@ const FRAMES_PER_MS = 15 / 1000;
 const NO_COLUMNS: readonly Column[] = [];
 const RESTART_FREEZE_MS = 500;
 const CALLOUT_DURATION_MS = 600;
+const SCORE_POP_PEAK = 1.3;
+const SCORE_POP_DURATION_MS = 150;
 
 const freshState = (restarts: number, best: number, randoms: Randoms): State => ({
   time: 0,
@@ -73,6 +77,7 @@ const freshState = (restarts: number, best: number, randoms: Randoms): State => 
   rampDistance: 0,
   restarts,
   score: 0,
+  scorePopStart: null,
   best,
   calloutStart: null,
   nextSpawn: SPAWN_EVERY,
@@ -105,12 +110,14 @@ const moveOn = (state: State, ms: number, randoms: Randoms): State => {
   const score = state.score + countCleared(state.columns, distance);
   const best = nextBest(state.best, score);
   const calloutStart = state.calloutStart === null && best > state.best ? time : state.calloutStart;
+  const scorePopStart = score > state.score ? time : state.scorePopStart;
   return {
     ...state,
     time,
     ...nextRamp(state, { time, distance, score }),
     panda: fall(state.panda, ms),
     score,
+    scorePopStart,
     best,
     calloutStart,
     columns: moveColumns(state.columns, distance),
@@ -145,10 +152,19 @@ const advanceState = (state: State, ms: number, randoms: Randoms): State =>
 
 const canRestart = (state: State): boolean => state.deathElapsed !== null && state.deathElapsed >= RESTART_FREEZE_MS;
 
+const scoreScaleOf = (state: State): number => {
+  if (state.scorePopStart === null) return 1;
+  const elapsed = state.time - state.scorePopStart;
+  return elapsed >= SCORE_POP_DURATION_MS
+    ? 1
+    : SCORE_POP_PEAK - (SCORE_POP_PEAK - 1) * (elapsed / SCORE_POP_DURATION_MS);
+};
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
   score: String(state.score),
+  scoreScale: scoreScaleOf(state),
   best: String(state.best),
   newBest: state.calloutStart !== null && state.time - state.calloutStart < CALLOUT_DURATION_MS,
   overtookBest: state.calloutStart !== null,

@@ -36,6 +36,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     time: 0,
     restarts: 0,
     score: "0",
+    scoreScale: 1,
     best: "0",
     newBest: false,
     overtookBest: false,
@@ -170,6 +171,66 @@ test("clearing a column scores once when its right edge passes the panda", () =>
   expect(run.view()).toMatchObject({ score: "1", restarts: 0 });
   run.advance(900);
   expect(run.view().score).toBe("1");
+});
+
+test("scoreScale starts at 1, pops to 1.3 the instant the score increases, then falls linearly back to 1 over 150ms", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  expect(run.view().scoreScale).toBe(1);
+  run.advance(2700);
+  run.jump();
+  run.advance(600);
+  expect(run.view()).toMatchObject({ score: "0", scoreScale: 1 });
+  while (run.view().score === "0") {
+    run.advance(10);
+  }
+  expect(run.view().scoreScale).toBe(1.3);
+  const poppedAt = run.view().time;
+  let elapsed = poppedAt;
+  const advanceTo = (time: number) => {
+    run.advance(time - elapsed);
+    elapsed = time;
+  };
+  advanceTo(poppedAt + 75);
+  expect(run.view().scoreScale).toBeCloseTo(1.15, 2);
+  advanceTo(poppedAt + 149);
+  expect(run.view().scoreScale).toBeGreaterThan(1);
+  advanceTo(poppedAt + 150);
+  expect(run.view().scoreScale).toBe(1);
+  advanceTo(poppedAt + 1000);
+  expect(run.view().scoreScale).toBe(1);
+});
+
+test("scoring a further column pops the scale back to 1.3, even once the previous pop has already settled", () => {
+  const run = createRun(repeatingOneBox(), oneBoxEach(), noStore);
+  let elapsed = 0;
+  const advanceTo = (time: number) => {
+    run.advance(time - elapsed);
+    elapsed = time;
+  };
+  advanceTo(1500 + 1200);
+  run.jump();
+  advanceTo(1500 + 1820);
+  expect(run.view()).toMatchObject({ score: "1", scoreScale: 1.3 });
+  advanceTo(1500 + 1820 + 150);
+  expect(run.view().scoreScale).toBe(1);
+  advanceTo(3000 + 1200);
+  run.jump();
+  advanceTo(3000 + 1820);
+  expect(run.view()).toMatchObject({ score: "2", scoreScale: 1.3 });
+});
+
+test("restarting after death resets the score pop to scale 1", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2700);
+  run.jump();
+  run.advance(640);
+  expect(run.view()).toMatchObject({ score: "1" });
+  expect(run.view().scoreScale).toBeGreaterThan(1);
+  run.advance(1040);
+  expect(run.view()).toMatchObject({ restarts: 0, score: "1", gameOver: true });
+  run.advance(600);
+  run.jump();
+  expect(run.view()).toMatchObject({ restarts: 1, score: "0", scoreScale: 1 });
 });
 
 test("a run starts with the best loaded from the store", () => {
