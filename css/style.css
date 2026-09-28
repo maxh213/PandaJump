@@ -2,11 +2,13 @@
 
 html {
 	background: black;
+	overscroll-behavior-y: contain;
 }
 
 body {
 	background: black;
 	margin: 0;
+	overscroll-behavior-y: contain;
 }
 
 h1 {
