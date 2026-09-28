@@ -101,7 +101,7 @@ test("the first jump leaves ready without making the panda jump, and starts the 
   run.jump();
   expect(run.view()).toMatchObject({ ready: false, time: 0, pandaBottom: 426 });
   run.advance(1500);
-  expect(run.view().boxes).toEqual([{ x: 400, y: 362, texture: "ice_06.png" }]);
+  expect(run.view().boxes).toEqual([{ x: 400, y: 362, texture: "ice_06.png", hit: false }]);
 });
 
 test("restarting from the game-over screen stays instant and does not return to ready", () => {
@@ -804,7 +804,7 @@ test("a panda that dies already on the floor stays at pandaBottom 426", () => {
 });
 
 test("dying against the front of a double column marks only its boxes as hit", () => {
-  const run = createRun(doubleColumnRandom(), oneBoxEach(), noStore);
+  const run = createStartedRun(doubleColumnRandom(), oneBoxEach(), noStore);
   advanceToColumn(run, 1, 15);
   expect(run.view().score).toBe("15");
   let steps = 0;
