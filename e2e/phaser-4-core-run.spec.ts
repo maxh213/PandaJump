@@ -205,6 +205,23 @@ test.describe("Rule: The page keeps its content", () => {
     await expect(page.locator('link[rel="preconnect"][href="https://fonts.googleapis.com"]')).toHaveCount(1);
     await expect(page.locator('link[rel="preconnect"][href="https://fonts.gstatic.com"]')).toHaveAttribute("crossorigin", "");
   });
+
+  test("The page requests the Google Fonts stylesheet without waiting for style.css to finish loading", async ({ page }) => {
+    const events: string[] = [];
+    await page.route("https://fonts.googleapis.com/**", (route) => {
+      events.push("font-request");
+      return route.fulfill({ status: 200, body: "" });
+    });
+    await page.route(/\/css\/style\.css$/, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      events.push("style-response");
+      return route.continue();
+    });
+    await page.goto("./");
+    await page.waitForLoadState("networkidle");
+    expect(events.indexOf("font-request")).toBeGreaterThanOrEqual(0);
+    expect(events.indexOf("font-request")).toBeLessThan(events.indexOf("style-response"));
+  });
 });
 
 test.describe("Rule: The production build", () => {
