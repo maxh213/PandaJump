@@ -13,6 +13,7 @@ interface CenteredText {
   originY: number;
   visible: boolean;
   bounds: Bounds;
+  depth: number;
 }
 
 export interface Sample {
@@ -43,12 +44,15 @@ export interface Sample {
     cutHeight: number;
     key: string;
     flipY: boolean;
+    depth: number;
   };
   rock: { y: number; scroll: number; key: string };
   grass: { y: number; scroll: number; key: string };
-  boxes: { x: number; y: number; width: number; key: string }[];
+  boxes: { x: number; y: number; width: number; key: string; depth: number }[];
   clouds: { x: number; y: number; depth: number; key: string }[];
+  deathFlash: { x: number; y: number; width: number; height: number; alpha: number; color: string; depth: number };
   viewClouds: View["clouds"];
+  viewDeathFlash: View["deathFlash"];
 }
 
 interface Bounds {
@@ -68,6 +72,7 @@ export interface GameText {
   originY: number;
   visible: boolean;
   scale: number;
+  depth: number;
   getBounds: () => Bounds;
 }
 
@@ -75,7 +80,18 @@ interface GameSprite {
   frame: { name: number; cutY: number; cutHeight: number };
   texture: { key: string };
   flipY: boolean;
+  depth: number;
   getBounds: () => Bounds;
+}
+
+interface GameRectangle {
+  x: number;
+  y: number;
+  displayWidth: number;
+  displayHeight: number;
+  alpha: number;
+  fillColor: number;
+  depth: number;
 }
 
 interface GameTileSprite {
@@ -145,6 +161,7 @@ export const installProbe = () => {
       originY: text.originY,
       visible: text.visible,
       bounds: { x: rect.x, y: rect.y, width: rect.width, height: rect.height, bottom: rect.bottom },
+      depth: text.depth,
     };
   };
   const sample = (): Sample => {
@@ -155,6 +172,7 @@ export const installProbe = () => {
     const best = named("best") as GameText;
     const rock = named("rock") as GameTileSprite;
     const grass = named("grass") as GameTileSprite;
+    const deathFlash = named("deathFlash") as GameRectangle;
     const bounds = panda.getBounds();
     return {
       time: view.time,
@@ -191,16 +209,27 @@ export const installProbe = () => {
         cutHeight: panda.frame.cutHeight,
         key: panda.texture.key,
         flipY: panda.flipY,
+        depth: panda.depth,
       },
       rock: { y: rock.y, scroll: rock.tilePositionX, key: rock.texture.key },
       grass: { y: grass.y, scroll: grass.tilePositionX, key: grass.texture.key },
       boxes: scene.children.list
         .filter((child) => child.visible && child.type === "Image" && child.name === "box")
-        .map((child) => ({ x: child.x, y: child.y, width: child.displayWidth, key: child.texture.key })),
+        .map((child) => ({ x: child.x, y: child.y, width: child.displayWidth, key: child.texture.key, depth: child.depth })),
       clouds: scene.children.list
         .filter((child) => child.visible && child.type === "Image" && child.name === "cloud")
         .map((child) => ({ x: child.x, y: child.y, depth: child.depth, key: child.texture.key })),
+      deathFlash: {
+        x: deathFlash.x,
+        y: deathFlash.y,
+        width: deathFlash.displayWidth,
+        height: deathFlash.displayHeight,
+        alpha: deathFlash.alpha,
+        color: `#${deathFlash.fillColor.toString(16).padStart(6, "0")}`,
+        depth: deathFlash.depth,
+      },
       viewClouds: view.clouds,
+      viewDeathFlash: view.deathFlash,
     };
   };
   const advance = (ms: number): Sample[] => {

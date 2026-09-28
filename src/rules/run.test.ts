@@ -58,6 +58,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     paused: false,
     pandaUpsideDown: false,
     bestMarker: null,
+    deathFlash: 0,
   });
 });
 
@@ -95,11 +96,28 @@ test("a column spawns every 1500 ms at the right edge", () => {
 test("touching a column freezes the run and shows game over instead of restarting at once", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
+  run.advance(200);
   const frozen = run.view();
-  expect(frozen).toMatchObject({ restarts: 0, score: "0", gameOver: true, canRestart: false });
+  expect(frozen).toMatchObject({ restarts: 0, score: "0", gameOver: true, canRestart: false, deathFlash: 0 });
   expect(frozen.boxes).not.toEqual([]);
   run.advance(10);
   expect(run.view()).toEqual(frozen);
+});
+
+test("deathFlash is 0 through a live run, jumps to 0.6 the instant the panda dies and fades to 0 by 200ms", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2870);
+  expect(run.view().deathFlash).toBe(0);
+  run.advance(6);
+  const death = run.view();
+  expect(death.gameOver).toBe(true);
+  expect(death.deathFlash).toBeCloseTo(0.6, 1);
+  run.advance(100);
+  expect(run.view().deathFlash).toBeCloseTo(0.3, 1);
+  run.advance(100);
+  expect(run.view().deathFlash).toBe(0);
+  run.advance(800);
+  expect(run.view().deathFlash).toBe(0);
 });
 
 test("no click, tap or Space input restarts the run during the first 500ms after death, and canRestart stays false", () => {
@@ -109,7 +127,7 @@ test("no click, tap or Space input restarts the run during the first 500ms after
   run.advance(499);
   expect(run.view()).toMatchObject({ gameOver: true, canRestart: false });
   run.jump();
-  expect(run.view()).toMatchObject({ ...frozen, restarts: 0, gameOver: true, canRestart: false });
+  expect(run.view()).toMatchObject({ ...frozen, restarts: 0, gameOver: true, canRestart: false, deathFlash: 0 });
 });
 
 test("canRestart becomes true once 500ms have passed since death, before any input arrives", () => {
@@ -124,7 +142,15 @@ test("a click, tap or Space input after 500ms starts a fresh run at score 0 and 
   run.advance(2880);
   run.advance(500);
   run.jump();
-  expect(run.view()).toMatchObject({ restarts: 1, time: 0, boxes: [], score: "0", gameOver: false, canRestart: false });
+  expect(run.view()).toMatchObject({
+    restarts: 1,
+    time: 0,
+    boxes: [],
+    score: "0",
+    gameOver: false,
+    canRestart: false,
+    deathFlash: 0,
+  });
 });
 
 test("the restarts counter increments by exactly 1 on every restart", () => {

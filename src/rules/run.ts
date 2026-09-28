@@ -31,6 +31,7 @@ interface View {
   readonly paused: boolean;
   readonly pandaUpsideDown: boolean;
   readonly bestMarker: { x: number; y: number } | null;
+  readonly deathFlash: number;
 }
 
 export interface Run {
@@ -75,6 +76,8 @@ const CALLOUT_DURATION_MS = 600;
 const SCORE_POP_PEAK = 1.3;
 const SCORE_POP_DURATION_MS = 150;
 const SPEED_UP_DURATION_MS = 800;
+const DEATH_FLASH_PEAK = 0.6;
+const DEATH_FLASH_DURATION_MS = 200;
 
 const freshState = (restarts: number, best: number, randoms: Randoms): State => ({
   time: 0,
@@ -187,6 +190,9 @@ const liveBestMarker = (state: State): { x: number; y: number } | null =>
     ? bestColumnMarker(state.columns, currentDistance(state), { score: state.score, best: state.startingBest })
     : null;
 
+const deathFlashOf = (deathElapsed: number | null): number =>
+  deathElapsed === null ? 0 : Math.max(0, DEATH_FLASH_PEAK * (1 - deathElapsed / DEATH_FLASH_DURATION_MS));
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
@@ -208,6 +214,7 @@ const viewOf = (state: State): View => ({
   paused: state.paused,
   pandaUpsideDown: state.deathElapsed !== null,
   bestMarker: liveBestMarker(state),
+  deathFlash: deathFlashOf(state.deathElapsed),
 });
 
 const act = (state: State, randoms: Randoms): State => {

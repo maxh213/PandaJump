@@ -9,7 +9,7 @@ import rockUrl from "../../assets/rock_06.png?no-inline";
 import grassUrl from "../../assets/top_grass_01.png?no-inline";
 import cloud02Url from "../../assets/cloud_02.png?no-inline";
 import cloud05Url from "../../assets/cloud_05.png?no-inline";
-import { CANVAS_WIDTH, FLOOR_Y, TILE_SIZE } from "../rules/index.ts";
+import { CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, TILE_SIZE } from "../rules/index.ts";
 import type { Box, Cloud, Medal, Run } from "../rules/index.ts";
 
 const GRASS_Y = 392;
@@ -40,6 +40,9 @@ const MEDAL_COLORS: Record<Medal, string> = {
   Gold: "#ffd700",
   Platinum: "#e5e4e2",
 };
+const DEATH_FLASH_DEPTH = 1;
+const GAME_OVER_DEPTH = 2;
+const DEATH_FLASH_COLOR = 0xffffff;
 const shareSupported = typeof navigator.share === "function";
 const PAGE_TITLE = "Panda Jump";
 const clipboardSupported = typeof (navigator as { clipboard?: Clipboard }).clipboard?.writeText === "function";
@@ -55,6 +58,7 @@ export class RunScene extends Phaser.Scene {
   private score!: Phaser.GameObjects.Text;
   private best!: Phaser.GameObjects.Text;
   private speedUp!: Phaser.GameObjects.Text;
+  private deathFlash!: Phaser.GameObjects.Rectangle;
   private gameOverTitle!: Phaser.GameObjects.Text;
   private gameOverMedal!: Phaser.GameObjects.Text;
   private gameOverScore!: Phaser.GameObjects.Text;
@@ -107,6 +111,12 @@ export class RunScene extends Phaser.Scene {
       .text(CENTER_X, SPEED_UP_Y, "Faster!", { fontFamily: "Arial", fontSize: "24px", color: "#ffd700" })
       .setOrigin(0.5)
       .setName("speedUp");
+    this.deathFlash = this.add
+      .rectangle(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT, DEATH_FLASH_COLOR)
+      .setOrigin(0, 0)
+      .setDepth(DEATH_FLASH_DEPTH)
+      .setAlpha(0)
+      .setName("deathFlash");
     this.createGameOverTexts();
     this.createPauseTexts();
     this.bestMarker = this.add
@@ -182,7 +192,10 @@ export class RunScene extends Phaser.Scene {
   };
 
   private centeredText(y: number, text: string, fontSize: string): Phaser.GameObjects.Text {
-    return this.add.text(CENTER_X, y, text, { fontFamily: "Arial", fontSize, color: "#ffffff" }).setOrigin(0.5);
+    return this.add
+      .text(CENTER_X, y, text, { fontFamily: "Arial", fontSize, color: "#ffffff" })
+      .setOrigin(0.5)
+      .setDepth(GAME_OVER_DEPTH);
   }
 
   private createGameOverTexts(): void {
@@ -239,6 +252,7 @@ export class RunScene extends Phaser.Scene {
     document.title = titles[String(view.score === "0") as "true" | "false"];
     this.best.setText(`Best: ${view.best}`).setColor(BEST_COLORS[String(view.newBest) as "true" | "false"]);
     this.speedUp.setVisible(view.speedUp);
+    this.deathFlash.setAlpha(view.deathFlash);
     this.gameOverTitle.setVisible(view.gameOver);
     this.gameOverMedal
       .setVisible([view.gameOver, view.medal !== "none"].every(Boolean))
