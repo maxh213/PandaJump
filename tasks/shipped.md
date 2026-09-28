@@ -63,3 +63,4 @@ add a line merge cleanly instead of conflicting.
 - The game-over "Score: N" line counts up from 0 to the final score over the 500ms restart freeze, while the top-left score, tab title, medal and shared text show the final score at once
 - A few small white stars scattered across the night sky once the score reaches 40, kept on the game-over screen and cleared on restart
 - A small sand-coloured dust puff at the panda's feet for 200 ms whenever it lands from a jump
+- A ready screen on page load that waits for the first tap, click, Space or Up Arrow press before the first run starts, without that input making the panda jump; restarting after game over stays instant
