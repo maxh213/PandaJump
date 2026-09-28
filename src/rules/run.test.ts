@@ -673,6 +673,13 @@ test("a jump pressed after the countdown ends jumps as normal", () => {
   expect(run.view().pandaBottom).toBeCloseTo(426 - 168.2);
 });
 
+test("pause is ignored while the run is still ready, so the ready screen never shows both prompts", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  expect(run.view().ready).toBe(true);
+  run.pause();
+  expect(run.view()).toMatchObject({ ready: true, paused: false });
+});
+
 test("pause is ignored while the game-over screen is shown", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
@@ -684,14 +691,14 @@ test("pause is ignored while the game-over screen is shown", () => {
 });
 
 test("pauseOrResume pauses a live run", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pauseOrResume();
   expect(run.view()).toMatchObject({ paused: true, gameOver: false });
 });
 
 test("pauseOrResume resumes a paused run without making the panda jump", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pauseOrResume();
   run.pauseOrResume();
@@ -699,7 +706,7 @@ test("pauseOrResume resumes a paused run without making the panda jump", () => {
 });
 
 test("pauseOrResume is ignored while the game-over screen is shown", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
   expect(run.view()).toMatchObject({ gameOver: true, paused: false });
   run.pauseOrResume();
