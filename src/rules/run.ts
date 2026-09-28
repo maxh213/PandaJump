@@ -78,18 +78,27 @@ const distanceAt = (state: State, time: number): number =>
 
 const currentDistance = (state: State): number => distanceAt(state, state.time);
 
+interface Advance {
+  readonly time: number;
+  readonly distance: number;
+  readonly score: number;
+}
+
+const nextRamp = (state: State, advance: Advance): Pick<State, "rampTime" | "rampDistance"> =>
+  speedForScore(advance.score) !== speedForScore(state.score)
+    ? { rampTime: advance.time, rampDistance: advance.distance }
+    : { rampTime: state.rampTime, rampDistance: state.rampDistance };
+
 const moveOn = (state: State, ms: number, randoms: Randoms): State => {
   const time = state.time + ms;
   const distance = distanceAt(state, time);
   const score = state.score + countCleared(state.columns, distance);
-  const rampChanged = speedForScore(score) !== speedForScore(state.score);
   const best = nextBest(state.best, score);
   const calloutStart = state.calloutStart === null && best > state.best ? time : state.calloutStart;
   return {
     ...state,
     time,
-    rampTime: rampChanged ? time : state.rampTime,
-    rampDistance: rampChanged ? distance : state.rampDistance,
+    ...nextRamp(state, { time, distance, score }),
     panda: fall(state.panda, ms),
     score,
     best,
