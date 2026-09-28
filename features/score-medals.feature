@@ -70,8 +70,9 @@ Feature: Panda Jump awards a medal on the game-over screen
     Scenario: The disc is hidden whenever the medal is hidden
       Given I play the standard schedule through column 10
       Then the disc is not visible while the run is live
-      When the panda touches the next column, the game freezes
-      And I press P
+      When I press P while the run is live
       Then the disc is not visible while paused
+      When I press P again
+      Then the disc is not visible during the resume countdown
       When I restart and die again without scoring
       Then the disc is not visible on the score 0 game-over screen

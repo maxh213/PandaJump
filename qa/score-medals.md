@@ -12,5 +12,5 @@ Use a desktop browser with dev tools.
 8. While a run is live (before any death), watch the screen closely. **Expected:** no medal text is ever shown during play, even once your live score has passed 10.
 9. From a game over screen showing a medal, tap or press Space to restart, then immediately let the panda die again without scoring. **Expected:** the new game over screen shows no medal text, since this run's score is 0 — the previous run's medal does not carry over.
 10. On each medal game over from steps 4 to 7, look left of the medal name. **Expected:** a small round disc with a thin black outline sits beside the name, filled bronze, silver, gold or platinum to match the name's colour, vertically level with the medal line.
-11. With no medal (score 0 to 9), during a live run, while paused, and after restarting from a medal game over. **Expected:** no disc is visible anywhere.
+11. With no medal (score 0 to 9), during a live run, while paused, during the 3, 2, 1 resume countdown, and after restarting from a medal game over. **Expected:** no disc is visible anywhere.
 12. Run `npx playwright test`. **Expected:** every scenario in `features/phaser-4-core-run.feature` and `features/score-medals.feature` has a passing test.

@@ -144,4 +144,14 @@ test.describe("Rule: The game-over medal has a coloured disc beside its name", (
     expect(paused.pauseTitle.visible).toBe(true);
     expect(paused.gameOverMedalBadge.visible).toBe(false);
   });
+
+  test("The disc is hidden during the resume countdown", async ({ page }) => {
+    await openGame(page, oneBox);
+    await playThroughColumn(page, 10);
+    await page.keyboard.press("p");
+    await page.keyboard.press("p");
+    const counting = await sample(page);
+    expect(counting.countdownText.visible).toBe(true);
+    expect(counting.gameOverMedalBadge.visible).toBe(false);
+  });
 });
