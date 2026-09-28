@@ -785,6 +785,19 @@ test("a third jump in the air, with the air jump already used, does not create o
   expect(run.view().airPuff).toEqual(beforeThirdTap);
 });
 
+test("airPuff clears immediately on death instead of freezing mid-fade", () => {
+  const run = createRun(twoBoxColumns(), oneBoxEach(), noStore);
+  run.advance(2600);
+  run.jump();
+  run.advance(200);
+  const bottomAtAirJump = run.view().pandaBottom;
+  run.jump();
+  expect(run.view().airPuff).toEqual({ x: 112.5, y: bottomAtAirJump, alpha: 1 });
+  run.advance(80);
+  expect(run.view().gameOver).toBe(true);
+  expect(run.view().airPuff).toBeNull();
+});
+
 test("time, score, columns, clouds and floor scroll stay frozen while the panda falls after a mid-air death", () => {
   const run = createRun(twoBoxColumns(), oneBoxEach(), noStore);
   run.advance(2300);
