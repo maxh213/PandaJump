@@ -11,6 +11,7 @@ import {
   sample,
   standardJumps,
   standardRandom,
+  startRun,
   untilGameOver,
   untilRestart,
 } from "./probe.ts";
@@ -31,12 +32,14 @@ const airJump = async (page: Page) => {
 test.describe("Rule: The hint shows to a first-time player on a live run", () => {
   test("The hint is visible at the start of the run", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     const start = await sample(page);
     expect(start.doubleJumpHint).toMatchObject({ ...HINT, visible: true, originX: 0.5, originY: 0.5 });
   });
 
   test("A floor jump does not hide the hint", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pressSpace(page);
     await advance(page, 100);
     expect((await sample(page)).doubleJumpHint.visible).toBe(true);
@@ -46,6 +49,7 @@ test.describe("Rule: The hint shows to a first-time player on a live run", () =>
 test.describe("Rule: The hint disappears at the first air jump and stays hidden for the page session", () => {
   test("The hint hides the moment I jump again in mid-air, and stays hidden after I die and restart", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pressSpace(page);
     await advance(page, 100);
     await pressSpace(page);
@@ -59,6 +63,7 @@ test.describe("Rule: The hint disappears at the first air jump and stays hidden 
 test.describe("Rule: The hint hides once the score reaches 3 and returns at score 0 of the next run", () => {
   test("The hint hides at score 3 and shows again after a restart", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await play(page, standardJumps(5900), 6000);
     const atTwo = await sample(page);
     expect(atTwo.score.text).toBe("2");
@@ -76,6 +81,7 @@ test.describe("Rule: The hint hides once the score reaches 3 and returns at scor
 test.describe("Rule: The hint hides on the game-over screen, the Paused screen and the resume countdown", () => {
   test("The hint hides on the Paused screen and during the countdown", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await hidePage(page);
     expect((await sample(page)).doubleJumpHint.visible).toBe(false);
     await pressSpace(page);
@@ -90,6 +96,7 @@ test.describe("Rule: The hint hides on the game-over screen, the Paused screen a
 
   test("The hint hides on the game-over screen", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     const { after } = await untilGameOver(page);
     expect(after.gameOverTitle.visible).toBe(true);
     expect(after.doubleJumpHint.visible).toBe(false);
@@ -100,6 +107,7 @@ test.describe("Rule: A player with a stored best never sees the hint, and a relo
   test("With a stored best of 1 the hint never appears", async ({ page }) => {
     await seedBest(page, 1);
     await openGame(page, standardRandom());
+    await startRun(page);
     expect((await sample(page)).doubleJumpHint.visible).toBe(false);
     await advance(page, 100);
     expect((await sample(page)).doubleJumpHint.visible).toBe(false);
@@ -107,9 +115,11 @@ test.describe("Rule: A player with a stored best never sees the hint, and a relo
 
   test("Reloading with no stored best shows the hint again after an air jump", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await airJump(page);
     expect((await sample(page)).doubleJumpHint.visible).toBe(false);
     await reload(page);
+    await startRun(page);
     expect((await sample(page)).doubleJumpHint.visible).toBe(true);
   });
 });

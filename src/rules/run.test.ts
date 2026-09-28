@@ -83,7 +83,7 @@ test("a run starts ready, with the panda on the floor, score 0 and no boxes", ()
     deathFlash: 0,
     pandaAngle: 0,
     airPuff: null,
-    doubleJumpHint: true,
+    doubleJumpHint: false,
     pandaShadow: { x: 112.5, y: 426, scale: 1 },
     landingPuff: null,
   });
@@ -949,7 +949,7 @@ test("time, score, columns, clouds and floor scroll stay frozen while the panda 
   });
 });
 
-const freshRun = (best = 0): Run => createRun(standardColumns(), standardColumns(), { load: () => best, save: () => undefined });
+const freshRun = (best = 0): Run => createStartedRun(standardColumns(), standardColumns(), { load: () => best, save: () => undefined });
 
 const playToScore = (run: Run, columns: number, from = 1): void => {
   Array.from({ length: columns - from + 1 }, (_, index) => 1500 * (from + index) + 1200).forEach((jumpAt) => {
