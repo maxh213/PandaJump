@@ -62,6 +62,11 @@ const PAGE_TITLE = "Panda Jump";
 const clipboardSupported = typeof (navigator as { clipboard?: Clipboard }).clipboard?.writeText === "function";
 const COUNTDOWN_LABELS: Record<"3" | "2" | "1" | "null", string> = { "3": "3", "2": "2", "1": "1", null: "" };
 const hasValue = <T>(value: T | null): value is T => value !== null;
+const DEATH_VIBRATION_MS = 100;
+
+interface NavigatorWithVibrate {
+  vibrate?: (pattern: number) => boolean;
+}
 
 export class RunScene extends Phaser.Scene {
   private readonly run: Run;
@@ -88,6 +93,7 @@ export class RunScene extends Phaser.Scene {
   private gameOverCopy!: Phaser.GameObjects.Text;
   private bestMarker!: Phaser.GameObjects.Text;
   private countdownText!: Phaser.GameObjects.Text;
+  private wasGameOver = false;
 
   constructor(run: Run, timeScale: number) {
     super("run");
@@ -294,6 +300,7 @@ export class RunScene extends Phaser.Scene {
     this.drawBestMarker(view.bestMarker);
     const countdownKey = String(view.countdown) as "3" | "2" | "1" | "null";
     this.countdownText.setVisible(view.countdown !== null).setText(COUNTDOWN_LABELS[countdownKey]);
+    this.vibrateOnDeath(view.gameOver);
     this.refreshGroup(this.boxes, view.boxes, (box) => {
       this.showBox(box);
     });
@@ -348,6 +355,24 @@ export class RunScene extends Phaser.Scene {
         .setVisible(true);
     });
   }
+  private readonly vibrateOnDeath = (gameOver: boolean): void => {
+    [gameOver]
+      .filter((current) => current)
+      .filter(() => !this.wasGameOver)
+      .forEach(() => {
+        this.vibrate();
+      });
+    this.wasGameOver = gameOver;
+  };
+
+  private readonly vibrate = (): void => {
+    const vibrate = (navigator as NavigatorWithVibrate).vibrate;
+    [vibrate]
+      .filter((fn) => fn !== undefined)
+      .forEach((fn) => {
+        fn.call(navigator, DEATH_VIBRATION_MS);
+      });
+  };
 
   private showBox(box: Box): void {
     const image = this.boxes.get(box.x, box.y) as Phaser.GameObjects.Image;
