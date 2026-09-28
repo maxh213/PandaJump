@@ -16,6 +16,7 @@ import { medalFor } from "./medal.ts";
 import type { Medal } from "./medal.ts";
 import { fall, jump, standingPanda } from "./panda.ts";
 import type { Panda } from "./panda.ts";
+import { skyFor } from "./sky.ts";
 import { FLOOR_Y, PANDA_X, TILE_SIZE, speedForScore } from "./world.ts";
 
 interface View {
@@ -28,6 +29,7 @@ interface View {
   readonly overtookBest: boolean;
   readonly speedUp: boolean;
   readonly medal: Medal;
+  readonly sky: string;
   readonly pandaX: number;
   readonly pandaBottom: number;
   readonly pandaFrame: number;
@@ -262,6 +264,7 @@ const viewOf = (state: State): View => ({
   overtookBest: state.calloutStart !== null,
   speedUp: isSpeedUp(state),
   medal: medalFor(state.score),
+  sky: skyFor(state.score),
   pandaX: PANDA_X,
   pandaBottom: FLOOR_Y - state.panda.height,
   pandaFrame: FIRST_RUN_FRAME + (Math.floor(state.time * FRAMES_PER_MS) % RUN_FRAMES),

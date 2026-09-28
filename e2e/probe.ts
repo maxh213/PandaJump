@@ -57,6 +57,8 @@ export interface Sample {
   viewDeathFlash: View["deathFlash"];
   airPuff: { x: number; y: number; alpha: number; visible: boolean };
   viewAirPuff: View["airPuff"];
+  sky: string;
+  cameraSky: string;
 }
 
 interface Bounds {
@@ -130,6 +132,7 @@ interface GameScene {
     getByName: (name: string) => unknown;
     list: readonly GameNode[];
   };
+  cameras: { main: { backgroundColor: { color: number } } };
 }
 
 interface RunHandle {
@@ -255,6 +258,8 @@ export const installProbe = () => {
       viewDeathFlash: view.deathFlash,
       airPuff: { x: airPuff.x, y: airPuff.y, alpha: airPuff.alpha, visible: airPuff.visible },
       viewAirPuff: view.airPuff,
+      sky: view.sky,
+      cameraSky: `#${scene.cameras.main.backgroundColor.color.toString(16).padStart(6, "0")}`,
     };
   };
   const advance = (ms: number): Sample[] => {

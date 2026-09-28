@@ -276,6 +276,7 @@ export class RunScene extends Phaser.Scene {
 
   private draw(): void {
     const view = this.run.view();
+    this.cameras.main.setBackgroundColor(view.sky);
     this.drawPanda(view);
     this.drawAirPuff(view.airPuff);
     this.rock.tilePositionX = view.floorScroll;
