@@ -48,10 +48,10 @@ test.describe("Rule: Stars appear the instant the score reaches 40", () => {
 
 test.describe("Rule: The stars are the same on every run and every page load", () => {
   test("Different random values give the same star positions", async ({ page }) => {
-    test.setTimeout(240_000);
+    test.setTimeout(120_000);
     await playThroughColumn(page, 40);
     const first = positions(await sample(page));
-    await playThroughColumn(page, 40, [0.75, 0.5, 0]);
+    await playThroughColumn(page, 40, [0.25, 0.5, 0.9]);
     const second = positions(await sample(page));
     expect(first).toHaveLength(STARS);
     expect(second).toEqual(first);
