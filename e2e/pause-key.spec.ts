@@ -17,11 +17,11 @@ test.describe("Rule: Pressing P or Escape during a live run pauses it and shows 
       const paused = await sample(page);
       expect(paused.pauseTitle).toMatchObject({ text: "Paused", x: 200, y: 190, color: "#ffffff", fontSize: "40px", visible: true });
       expect(paused.pausePrompt).toMatchObject({
-        text: "Tap or press Space to continue",
+        text: "Tap, press Space or the Up Arrow key to continue",
         x: 200,
         y: 320,
         color: "#ffffff",
-        fontSize: "20px",
+        fontSize: "16px",
         visible: true,
       });
     });
