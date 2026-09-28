@@ -360,7 +360,7 @@ test.describe("Rule: The panda runs on a scrolling floor", () => {
   test("The opening scene", async ({ page }) => {
     await openGame(page, oneBox);
     const start = await sample(page);
-    const row = first(await pixelRows(page, [150]));
+    const row = first(await pixelRows(page, [200]));
     expect(isBackground(at(row, 300))).toBe(true);
     expect(start.panda).toMatchObject({ x: 100, bottom: 426, width: 25, height: 26.25, key: "Panda.png" });
     expect(start.score).toEqual({ text: "0", x: 20, y: 20, color: "#ffffff", fontSize: "30px", scale: 1 });

@@ -51,3 +51,4 @@ add a line merge cleanly instead of conflicting.
 - An on-screen "II" pause button in the canvas's top-right corner for phone players, hidden while paused or on the game-over screen, that pauses the run on tap without also jumping
 - Changing the "Copy score" prompt to "Copied!" once the clipboard write resolves, reverting to "Copy score" on the next run
 - Every piece of canvas text outlined in black so it stays readable on the day, sunset and night skies
+- A "Tap again in mid-air to double jump" hint on the canvas for a player with no stored best, shown at scores 0 to 2 until their first air jump of the page session

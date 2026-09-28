@@ -45,6 +45,7 @@ interface View {
   readonly deathFlash: number;
   readonly pandaAngle: number;
   readonly airPuff: { x: number; y: number; alpha: number } | null;
+  readonly doubleJumpHint: boolean;
 }
 
 export interface Run {
@@ -81,6 +82,7 @@ interface State {
   readonly resumeElapsed: number | null;
   readonly airPuffStart: number | null;
   readonly airPuffBottom: number;
+  readonly hintPending: boolean;
 }
 
 const MAX_STEP = 10;
@@ -100,9 +102,12 @@ const PANDA_ANGLE_PER_SPEED = 20;
 const COUNTDOWN_MS = 1500;
 const COUNTDOWN_STEP_MS = 500;
 const AIR_PUFF_DURATION_MS = 250;
+const HINT_BELOW_SCORE = 3;
 const PANDA_CENTER_X = PANDA_X + 12.5;
 
-const freshState = (restarts: number, best: number, randoms: Randoms): State => ({
+type Carried = Pick<State, "restarts" | "best" | "hintPending">;
+
+const freshState = ({ restarts, best, hintPending }: Carried, randoms: Randoms): State => ({
   time: 0,
   rampTime: 0,
   rampDistance: 0,
@@ -123,6 +128,7 @@ const freshState = (restarts: number, best: number, randoms: Randoms): State => 
   resumeElapsed: null,
   airPuffStart: null,
   airPuffBottom: 0,
+  hintPending,
 });
 
 const distanceAt = (state: State, time: number): number =>
@@ -254,6 +260,9 @@ const airPuffOf = (state: State): View["airPuff"] => {
     : null;
 };
 
+const doubleJumpHintOf = (state: State): boolean =>
+  state.hintPending && isLive(state) && state.score < HINT_BELOW_SCORE;
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
@@ -280,6 +289,7 @@ const viewOf = (state: State): View => ({
   deathFlash: deathFlashOf(state.deathElapsed),
   pandaAngle: pandaAngleFor(state),
   airPuff: airPuffOf(state),
+  doubleJumpHint: doubleJumpHintOf(state),
 });
 
 const resume = (state: State): State => (state.resumeElapsed === null ? { ...state, resumeElapsed: 0 } : state);
@@ -289,15 +299,19 @@ const airPuffAfterJump = (state: State, panda: Panda): Pick<State, "airPuffStart
     ? { airPuffStart: state.time, airPuffBottom: FLOOR_Y - state.panda.height }
     : { airPuffStart: state.airPuffStart, airPuffBottom: state.airPuffBottom };
 
+const hintAfterJump = (state: State, panda: Panda): Pick<State, "hintPending"> => ({
+  hintPending: state.hintPending && !(state.panda.airJump && !panda.airJump),
+});
+
 const act = (state: State, randoms: Randoms): State => {
   if (state.paused) {
     return resume(state);
   }
   if (state.deathElapsed === null) {
     const panda = jump(state.panda);
-    return { ...state, panda, ...airPuffAfterJump(state, panda) };
+    return { ...state, panda, ...hintAfterJump(state, panda), ...airPuffAfterJump(state, panda) };
   }
-  return canRestart(state) ? freshState(state.restarts + 1, state.best, randoms) : state;
+  return canRestart(state) ? freshState({ restarts: state.restarts + 1, best: state.best, hintPending: state.hintPending }, randoms) : state;
 };
 
 const pausedState = (state: State): State =>
@@ -307,7 +321,8 @@ const togglePause = (state: State): State => (state.paused ? resume(state) : pau
 
 export const createRun = (random: Random, cloudRandom: Random, store: BestStore): Run => {
   const randoms: Randoms = { columns: random, clouds: cloudRandom };
-  let state = freshState(0, store.load(), randoms);
+  const loadedBest = store.load();
+  let state = freshState({ restarts: 0, best: loadedBest, hintPending: loadedBest === 0 }, randoms);
   return {
     jump: () => {
       state = act(state, randoms);

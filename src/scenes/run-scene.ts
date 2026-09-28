@@ -32,6 +32,7 @@ const PANDA_HALF_HEIGHT = (PANDA_FRAME_HEIGHT * PANDA_SCALE) / 2;
 const CLOUD_DEPTH = -1;
 const CENTER_X = CANVAS_WIDTH / 2;
 const SPEED_UP_Y = 120;
+const DOUBLE_JUMP_HINT_Y = 150;
 const GAME_OVER_Y = 190;
 const GAME_OVER_MEDAL_Y = 226;
 const GAME_OVER_SCORE_Y = 252;
@@ -95,6 +96,7 @@ export class RunScene extends Phaser.Scene {
   private pauseButton!: Phaser.GameObjects.Text;
   private gameOverCopy!: Phaser.GameObjects.Text;
   private bestMarker!: Phaser.GameObjects.Text;
+  private doubleJumpHint!: Phaser.GameObjects.Text;
   private countdownText!: Phaser.GameObjects.Text;
   private wasGameOver = false;
   private copied = false;
@@ -152,6 +154,7 @@ export class RunScene extends Phaser.Scene {
       .text(0, 0, "Best", { fontFamily: "Arial", fontSize: "16px", color: "#ffd700", ...OUTLINE })
       .setOrigin(0.5, 1)
       .setName("bestMarker");
+    this.doubleJumpHint = this.hintText();
     this.countdownText = this.centeredText(GAME_OVER_Y, "", "40px").setName("countdownText");
     this.wireInput();
     this.draw();
@@ -262,6 +265,17 @@ export class RunScene extends Phaser.Scene {
       .setDepth(GAME_OVER_DEPTH);
   }
 
+  private hintText(): Phaser.GameObjects.Text {
+    return this.add
+      .text(CENTER_X, DOUBLE_JUMP_HINT_Y, "Tap again in mid-air to double jump", {
+        fontFamily: "Arial",
+        fontSize: "16px",
+        color: "#ffffff",
+      })
+      .setOrigin(0.5)
+      .setName("doubleJumpHint");
+  }
+
   private createGameOverTexts(): void {
     this.gameOverTitle = this.centeredText(GAME_OVER_Y, "Game over", "40px").setName("gameOverTitle");
     this.gameOverMedal = this.centeredText(GAME_OVER_MEDAL_Y, "", "16px").setName("gameOverMedal");
@@ -331,6 +345,7 @@ export class RunScene extends Phaser.Scene {
     document.title = titles[String(view.score === "0") as "true" | "false"];
     this.best.setText(`Best: ${view.best}`).setColor(BEST_COLORS[String(view.newBest) as "true" | "false"]);
     this.speedUp.setVisible(view.speedUp);
+    this.doubleJumpHint.setVisible(view.doubleJumpHint);
     this.deathFlash.setAlpha(view.deathFlash);
     this.drawGameOver(view);
     this.pauseTitle.setVisible(view.paused);

@@ -73,6 +73,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     deathFlash: 0,
     pandaAngle: 0,
     airPuff: null,
+    doubleJumpHint: true,
   });
 });
 
@@ -816,4 +817,92 @@ test("time, score, columns, clouds and floor scroll stay frozen while the panda 
     clouds: diedAt.clouds,
     floorScroll: diedAt.floorScroll,
   });
+});
+
+const freshRun = (best = 0): Run => createRun(standardColumns(), standardColumns(), { load: () => best, save: () => undefined });
+
+const playToScore = (run: Run, columns: number, from = 1): void => {
+  Array.from({ length: columns - from + 1 }, (_, index) => 1500 * (from + index) + 1200).forEach((jumpAt) => {
+    run.advance(jumpAt - run.view().time);
+    run.jump();
+  });
+  run.advance(1500 * columns + 1840 - run.view().time);
+};
+
+const dieAndRestart = (run: Run): void => {
+  while (!run.view().gameOver) run.advance(16);
+  run.advance(500);
+  run.jump();
+};
+
+test("doubleJumpHint is true on a live run with no stored best, and a floor jump does not hide it", () => {
+  const run = freshRun();
+  expect(run.view().doubleJumpHint).toBe(true);
+  run.jump();
+  run.advance(100);
+  expect(run.view().doubleJumpHint).toBe(true);
+});
+
+test("doubleJumpHint hides the moment the first air jump is made and stays hidden through a restart", () => {
+  const run = freshRun();
+  run.jump();
+  run.advance(100);
+  run.jump();
+  expect(run.view().doubleJumpHint).toBe(false);
+  dieAndRestart(run);
+  expect(run.view()).toMatchObject({ restarts: 1, score: "0", doubleJumpHint: false });
+});
+
+test("a jump in mid-air with the air jump already spent leaves the flag as it was", () => {
+  const run = freshRun();
+  run.jump();
+  run.advance(100);
+  run.jump();
+  run.jump();
+  expect(run.view().doubleJumpHint).toBe(false);
+});
+
+test("doubleJumpHint hides at score 3 and shows again at score 0 of the next run", () => {
+  const run = freshRun();
+  playToScore(run, 2);
+  expect(run.view()).toMatchObject({ score: "2", doubleJumpHint: true });
+  playToScore(run, 3, 3);
+  expect(run.view()).toMatchObject({ score: "3", doubleJumpHint: false });
+  dieAndRestart(run);
+  expect(run.view()).toMatchObject({ restarts: 1, score: "0", doubleJumpHint: true });
+});
+
+test("doubleJumpHint is hidden on the game-over screen, the Paused screen and the resume countdown", () => {
+  const run = freshRun();
+  run.pause();
+  expect(run.view()).toMatchObject({ paused: true, doubleJumpHint: false });
+  run.jump();
+  expect(run.view()).toMatchObject({ countdown: 3, doubleJumpHint: false });
+  run.advance(1500);
+  expect(run.view().doubleJumpHint).toBe(true);
+  while (!run.view().gameOver) run.advance(16);
+  expect(run.view().doubleJumpHint).toBe(false);
+});
+
+test("doubleJumpHint never shows when a best of 1 or more was stored at page load, even at score 0", () => {
+  const run = freshRun(1);
+  expect(run.view().doubleJumpHint).toBe(false);
+  run.advance(100);
+  expect(run.view().doubleJumpHint).toBe(false);
+});
+
+test("doubleJumpHint stays visible on a restart after the score set a best this session, until an air jump", () => {
+  const run = freshRun();
+  playToScore(run, 1);
+  dieAndRestart(run);
+  expect(run.view()).toMatchObject({ best: "1", score: "0", doubleJumpHint: true });
+});
+
+test("a new page session with no stored best shows the hint again", () => {
+  const first = freshRun();
+  first.jump();
+  first.advance(100);
+  first.jump();
+  expect(first.view().doubleJumpHint).toBe(false);
+  expect(freshRun().view().doubleJumpHint).toBe(true);
 });

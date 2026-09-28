@@ -23,6 +23,7 @@ export interface Sample {
   score: { text: string; x: number; y: number; color: string; fontSize: string; scale: number };
   best: { text: string; x: number; y: number; color: string; fontSize: string };
   speedUp: CenteredText;
+  doubleJumpHint: CenteredText;
   gameOverTitle: CenteredText;
   gameOverMedal: CenteredText;
   gameOverScore: CenteredText;
@@ -206,6 +207,7 @@ export const installProbe = () => {
       },
       best: { text: best.text, x: best.x, y: best.y, color: best.style.color, fontSize: best.style.fontSize },
       speedUp: centeredText("speedUp"),
+      doubleJumpHint: centeredText("doubleJumpHint"),
       gameOverTitle: centeredText("gameOverTitle"),
       gameOverMedal: centeredText("gameOverMedal"),
       gameOverScore: centeredText("gameOverScore"),
