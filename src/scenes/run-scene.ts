@@ -116,9 +116,11 @@ export class RunScene extends Phaser.Scene {
     this.gameOverTitle = this.centeredText(GAME_OVER_Y, "Game over", "40px").setName("gameOverTitle");
     this.gameOverScore = this.centeredText(GAME_OVER_SCORE_Y, "", "20px").setName("gameOverScore");
     this.gameOverBest = this.centeredText(GAME_OVER_BEST_Y, "", "20px").setName("gameOverBest");
-    this.gameOverPrompt = this.centeredText(GAME_OVER_PROMPT_Y, "Tap or press Space to play again", "20px").setName(
-      "gameOverPrompt",
-    );
+    this.gameOverPrompt = this.centeredText(
+      GAME_OVER_PROMPT_Y,
+      "Tap, press Space or the Up Arrow key to play again",
+      "20px",
+    ).setName("gameOverPrompt");
     this.gameOverShare = this.centeredText(GAME_OVER_SHARE_Y, "Share score", "20px")
       .setName("gameOverShare")
       .setInteractive();

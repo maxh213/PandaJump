@@ -125,17 +125,27 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
         | press Space    |
         | press Up Arrow |
 
-    Scenario: A double jump adds a smaller boost
-      When I press Space at 0 ms
-      And I press Space again at 580 ms
+    Scenario Outline: A double jump adds a smaller boost
+      When I <action> at 0 ms
+      And I <action> again at 580 ms
       Then the panda peaks 199 px above the floor
 
-    Scenario: A third jump in the air is ignored
-      When I press Space at 0 ms
-      And I press Space again at 580 ms
-      And I press Space a third time at 680 ms
+      Examples:
+        | action         |
+        | press Space    |
+        | press Up Arrow |
+
+    Scenario Outline: A third jump in the air is ignored
+      When I <action> at 0 ms
+      And I <action> again at 580 ms
+      And I <action> a third time at 680 ms
       Then the panda still peaks 199 px above the floor
       And the panda lands back on the floor at about 1460 ms
+
+      Examples:
+        | action         |
+        | press Space    |
+        | press Up Arrow |
 
     Scenario: Landing gives both jumps back
       Given I pressed Space at 0 ms and 580 ms and the panda landed at about 1460 ms
@@ -237,7 +247,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       When 499 ms pass
       Then the page still does not invite a tap, click or Space press to restart
       When 1 more ms passes
-      Then the page reads "Tap or press Space to play again" under the Score and Best lines, in white 20px Arial
+      Then the page reads "Tap, press Space or the Up Arrow key to play again" under the Score and Best lines, in white 20px Arial
 
     Scenario: Landing on top of a box also freezes the run
       Given the random source picks 2 boxes for the first column

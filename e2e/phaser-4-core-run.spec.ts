@@ -18,6 +18,7 @@ import {
   openGame,
   pixelRows,
   play,
+  press,
   pressSpace,
   sample,
   settle,
@@ -442,21 +443,23 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
     }
   });
 
-  test("A double jump adds a smaller boost", async ({ page }) => {
-    await openGame(page, oneBox);
-    await pressSpace(page);
-    const samples = await play(page, [580], 1300);
-    expect(Math.abs(heightOf(peakOf(samples)) - 199)).toBeLessThanOrEqual(3);
-  });
+  for (const key of ["Space", "ArrowUp"] as const) {
+    test(`A double jump adds a smaller boost: press ${key}`, async ({ page }) => {
+      await openGame(page, oneBox);
+      await press(page, key);
+      const samples = await play(page, [580], 1300, key);
+      expect(Math.abs(heightOf(peakOf(samples)) - 199)).toBeLessThanOrEqual(3);
+    });
 
-  test("A third jump in the air is ignored", async ({ page }) => {
-    await openGame(page, oneBox);
-    await pressSpace(page);
-    const samples = await play(page, [580, 680], 1600);
-    const peak = peakOf(samples);
-    expect(Math.abs(heightOf(peak) - 199)).toBeLessThanOrEqual(3);
-    expect(Math.abs(landingAfter(samples, peak.time).time - 1460)).toBeLessThanOrEqual(16);
-  });
+    test(`A third jump in the air is ignored: press ${key}`, async ({ page }) => {
+      await openGame(page, oneBox);
+      await press(page, key);
+      const samples = await play(page, [580, 680], 1600, key);
+      const peak = peakOf(samples);
+      expect(Math.abs(heightOf(peak) - 199)).toBeLessThanOrEqual(3);
+      expect(Math.abs(landingAfter(samples, peak.time).time - 1460)).toBeLessThanOrEqual(16);
+    });
+  }
 
   test("Landing gives both jumps back", async ({ page }) => {
     await openGame(page, oneBox);
@@ -633,7 +636,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     expect(stillFrozen.gameOverPrompt.visible).toBe(false);
     const ready = last(await advance(page, 1));
     expect(ready.gameOverPrompt).toMatchObject({
-      text: "Tap or press Space to play again",
+      text: "Tap, press Space or the Up Arrow key to play again",
       visible: true,
       color: "#ffffff",
       fontSize: "20px",

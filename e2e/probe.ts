@@ -226,16 +226,18 @@ export const untilRestart = (page: Page, limit = 30_000): Promise<{ before: Samp
 export const settle = (page: Page) =>
   page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 
-export const pressSpace = async (page: Page) => {
-  await page.keyboard.press("Space");
+export const press = async (page: Page, key: string) => {
+  await page.keyboard.press(key);
   await settle(page);
 };
 
-export const play = async (page: Page, jumps: number[], until: number): Promise<Sample[]> => {
+export const pressSpace = (page: Page) => press(page, "Space");
+
+export const play = async (page: Page, jumps: number[], until: number, key = "Space"): Promise<Sample[]> => {
   const samples: Sample[] = [];
   for (const jump of jumps) {
     samples.push(...(await advanceTo(page, jump)));
-    await pressSpace(page);
+    await press(page, key);
   }
   samples.push(...(await advanceTo(page, until)));
   return samples;
