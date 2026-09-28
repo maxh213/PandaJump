@@ -46,7 +46,7 @@ All of the above have shipped, along with these slices that had no task file wri
 - Containing vertical overscroll on `html` and `body` so a drag near the top of the page can't trigger the browser's pull-to-refresh reload
 - A "Share score" prompt on the game-over screen that uses the browser's Web Share API to share the run's score and the page URL
 - A difficulty ramp that steps the floor and column speed up from 200 px/s to a 300 px/s cap as the score climbs past 20, so a long run feels harder than the first few columns
-- Holding a run paused with a "Paused" screen the instant the tab is hidden, until the player taps or presses Space to continue
+- Holding a run paused with a "Paused" screen the instant the tab is hidden, until the player taps or presses Space, which starts a 1500ms 3-2-1 countdown, frozen like the pause itself, before the run continues moving
 - A generated service worker that precaches the built app shell so the installed PWA opens and plays offline, with its cache name tied to the build output so a redeploy replaces it on the next visit
 - Letting a panda that dies in mid-air keep falling under gravity until it lands, flipped upside down for the whole game-over screen, instead of freezing upright where it was hit
 - A bronze, silver, gold or platinum medal drawn as text on the game-over screen for a final score of 10, 20, 30 or 40 and above

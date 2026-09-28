@@ -43,7 +43,7 @@ test.describe("Rule: Hiding then showing the tab during a live run pauses it and
   });
 });
 
-test.describe("Rule: Resuming a paused run does not make the panda jump, and the run then continues normally", () => {
+test.describe("Rule: Resuming a paused run counts down 3, 2, 1 before the run continues", () => {
   const controls: Record<string, (page: Page) => Promise<void>> = {
     "press Space": (page) => pressSpace(page),
     "click the canvas": (page) => page.locator("#game_div canvas").click({ position: { x: 200, y: 200 } }),
@@ -54,14 +54,36 @@ test.describe("Rule: Resuming a paused run does not make the panda jump, and the
     test.describe(action, () => {
       test.use({ hasTouch: action === "tap the canvas" });
 
-      test(`Each control resumes the run without a jump: ${action}`, async ({ page }) => {
+      test(`Each control starts a countdown without a jump: ${action}`, async ({ page }) => {
         await openGame(page, standardRandom());
         await pauseAt(page, 1000);
         await act(page);
+        const started = await sample(page);
+        expect(started.countdownText).toMatchObject({
+          text: "3",
+          x: 200,
+          y: 190,
+          color: "#ffffff",
+          fontSize: "40px",
+          visible: true,
+        });
+        expect(started.pauseTitle.visible).toBe(false);
+        expect(started.pausePrompt.visible).toBe(false);
+        expect(started.panda.bottom).toBe(426);
+        expect(started.time).toBe(1000);
+
+        await advance(page, 500);
+        expect((await sample(page)).countdownText).toMatchObject({ text: "2", visible: true });
+
+        await advance(page, 500);
+        expect((await sample(page)).countdownText).toMatchObject({ text: "1", visible: true });
+
+        await advance(page, 500);
         const resumed = await sample(page);
-        expect(resumed.pauseTitle.visible).toBe(false);
-        expect(resumed.pausePrompt.visible).toBe(false);
+        expect(resumed.countdownText.visible).toBe(false);
+        expect(resumed.time).toBe(1000);
         expect(resumed.panda.bottom).toBe(426);
+
         await advanceTo(page, 1499);
         expect((await sample(page)).boxes).toEqual([]);
         await advanceTo(page, 1500);
@@ -73,6 +95,39 @@ test.describe("Rule: Resuming a paused run does not make the panda jump, and the
       });
     });
   }
+
+  test("A jump pressed during the countdown neither jumps nor restarts the countdown", async ({ page }) => {
+    await openGame(page, standardRandom());
+    await pauseAt(page, 1000);
+    await pressSpace(page);
+    await advance(page, 500);
+    expect((await sample(page)).countdownText.text).toBe("2");
+
+    await pressSpace(page);
+    const stillTwo = await sample(page);
+    expect(stillTwo.countdownText.text).toBe("2");
+    expect(stillTwo.panda.bottom).toBe(426);
+
+    await advance(page, 500);
+    expect((await sample(page)).countdownText.text).toBe("1");
+  });
+
+  test("A panda paused mid-air is still at the same height when the countdown ends", async ({ page }) => {
+    await openGame(page, standardRandom());
+    await pressSpace(page);
+    await advance(page, 300);
+    const midAir = await sample(page);
+    expect(midAir.panda.bottom).toBeLessThan(426);
+
+    await hidePage(page);
+    await showPage(page);
+    await pressSpace(page);
+    await advance(page, 1499);
+    expect((await sample(page)).panda.bottom).toBe(midAir.panda.bottom);
+
+    await advance(page, 1);
+    expect((await sample(page)).panda.bottom).toBe(midAir.panda.bottom);
+  });
 });
 
 test.describe("Rule: Pausing has no effect on the game-over screen", () => {

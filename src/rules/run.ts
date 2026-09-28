@@ -37,6 +37,7 @@ interface View {
   readonly gameOver: boolean;
   readonly canRestart: boolean;
   readonly paused: boolean;
+  readonly countdown: number | null;
   readonly pandaUpsideDown: boolean;
   readonly bestMarker: { x: number; y: number } | null;
   readonly deathFlash: number;
@@ -74,6 +75,7 @@ interface State {
   readonly deathElapsed: number | null;
   readonly hitColumn: Column | null;
   readonly paused: boolean;
+  readonly resumeElapsed: number | null;
 }
 
 const MAX_STEP = 10;
@@ -90,6 +92,8 @@ const DEATH_FLASH_PEAK = 0.6;
 const DEATH_FLASH_DURATION_MS = 200;
 const MAX_PANDA_ANGLE = 25;
 const PANDA_ANGLE_PER_SPEED = 20;
+const COUNTDOWN_MS = 1500;
+const COUNTDOWN_STEP_MS = 500;
 
 const freshState = (restarts: number, best: number, randoms: Randoms): State => ({
   time: 0,
@@ -109,6 +113,7 @@ const freshState = (restarts: number, best: number, randoms: Randoms): State => 
   deathElapsed: null,
   hitColumn: null,
   paused: false,
+  resumeElapsed: null,
 });
 
 const distanceAt = (state: State, time: number): number =>
@@ -213,6 +218,25 @@ const pandaAngleFor = (state: State): number => {
   return Math.max(-MAX_PANDA_ANGLE, Math.min(MAX_PANDA_ANGLE, raw)) + 0;
 };
 
+const countdownDigit = (elapsed: number): number => 3 - Math.min(2, Math.floor(elapsed / COUNTDOWN_STEP_MS));
+
+interface Ticked {
+  readonly state: State;
+  readonly worldMs: number;
+}
+
+const tickCountdown = (state: State, elapsed: number, ms: number): Ticked => {
+  const total = elapsed + ms;
+  return total < COUNTDOWN_MS
+    ? { state: { ...state, resumeElapsed: total }, worldMs: 0 }
+    : { state: { ...state, paused: false, resumeElapsed: null }, worldMs: total - COUNTDOWN_MS };
+};
+
+const stepAdvance = (state: State, ms: number, randoms: Randoms): State => {
+  const ticked = state.resumeElapsed === null ? { state, worldMs: ms } : tickCountdown(state, state.resumeElapsed, ms);
+  return advanceState(ticked.state, ticked.worldMs, randoms);
+};
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
@@ -231,16 +255,19 @@ const viewOf = (state: State): View => ({
   clouds: cloudsOf(state.clouds, state.time),
   gameOver: state.deathElapsed !== null,
   canRestart: canRestart(state),
-  paused: state.paused,
+  paused: state.paused && state.resumeElapsed === null,
+  countdown: state.resumeElapsed === null ? null : countdownDigit(state.resumeElapsed),
   pandaUpsideDown: state.deathElapsed !== null,
   bestMarker: liveBestMarker(state),
   deathFlash: deathFlashOf(state.deathElapsed),
   pandaAngle: pandaAngleFor(state),
 });
 
+const resume = (state: State): State => (state.resumeElapsed === null ? { ...state, resumeElapsed: 0 } : state);
+
 const act = (state: State, randoms: Randoms): State => {
   if (state.paused) {
-    return { ...state, paused: false };
+    return resume(state);
   }
   if (state.deathElapsed === null) {
     return { ...state, panda: jump(state.panda) };
@@ -248,9 +275,10 @@ const act = (state: State, randoms: Randoms): State => {
   return canRestart(state) ? freshState(state.restarts + 1, state.best, randoms) : state;
 };
 
-const pausedState = (state: State): State => (state.deathElapsed === null ? { ...state, paused: true } : state);
+const pausedState = (state: State): State =>
+  state.deathElapsed === null ? { ...state, paused: true, resumeElapsed: null } : state;
 
-const togglePause = (state: State): State => (state.paused ? { ...state, paused: false } : pausedState(state));
+const togglePause = (state: State): State => (state.paused ? resume(state) : pausedState(state));
 
 export const createRun = (random: Random, cloudRandom: Random, store: BestStore): Run => {
   const randoms: Randoms = { columns: random, clouds: cloudRandom };
@@ -266,8 +294,8 @@ export const createRun = (random: Random, cloudRandom: Random, store: BestStore)
       state = togglePause(state);
     },
     advance: (ms) => {
-      if (state.paused) return;
-      const next = advanceState(state, ms, randoms);
+      if (state.paused && state.resumeElapsed === null) return;
+      const next = stepAdvance(state, ms, randoms);
       if (next.best !== state.best) {
         store.save(next.best);
       }

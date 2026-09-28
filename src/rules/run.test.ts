@@ -66,6 +66,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     gameOver: false,
     canRestart: false,
     paused: false,
+    countdown: null,
     pandaUpsideDown: false,
     bestMarker: null,
     deathFlash: 0,
@@ -462,19 +463,65 @@ test("advance does not move time, the panda, the columns, the clouds or the floo
   expect(run.view()).toEqual(frozen);
 });
 
-test("the next jump resumes a paused run without making the panda jump", () => {
+test("the resume control starts a 1500 ms countdown instead of resuming at once", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pause();
   run.jump();
-  expect(run.view()).toMatchObject({ paused: false, pandaBottom: 426 });
+  expect(run.view()).toMatchObject({ paused: false, countdown: 3, pandaBottom: 426 });
 });
 
-test("the input after resuming a paused run jumps as normal", () => {
+test("the countdown shows 2 after 500 ms, 1 after 1000 ms and ends after 1500 ms", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pause();
   run.jump();
+  run.advance(500);
+  expect(run.view().countdown).toBe(2);
+  run.advance(500);
+  expect(run.view().countdown).toBe(1);
+  run.advance(500);
+  expect(run.view()).toMatchObject({ countdown: null, paused: false });
+});
+
+test("the world does not move during the countdown and advances normally once it ends", () => {
+  const run = createRun(standardColumns(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pause();
+  run.jump();
+  const frozen = run.view();
+  run.advance(1499);
+  expect(run.view()).toMatchObject({
+    time: frozen.time,
+    pandaBottom: frozen.pandaBottom,
+    boxes: frozen.boxes,
+    clouds: frozen.clouds,
+  });
+  run.advance(1);
+  expect(run.view()).toMatchObject({ countdown: null, time: 1000 });
+  run.advance(500);
+  expect(run.view().time).toBe(1500);
+});
+
+test("a jump pressed during the countdown neither jumps nor restarts the countdown", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pause();
+  run.jump();
+  run.advance(500);
+  expect(run.view().countdown).toBe(2);
+  run.jump();
+  expect(run.view()).toMatchObject({ countdown: 2, paused: false, pandaBottom: 426 });
+  run.advance(500);
+  expect(run.view().countdown).toBe(1);
+});
+
+test("a jump pressed after the countdown ends jumps as normal", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pause();
+  run.jump();
+  run.advance(1500);
   run.jump();
   run.advance(580);
   expect(run.view().pandaBottom).toBeCloseTo(426 - 168.2);

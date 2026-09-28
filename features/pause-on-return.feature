@@ -33,14 +33,24 @@ Feature: Panda Jump holds a run paused after the player leaves the tab
       And the panda still stands on the floor
       And the floor has scrolled no further than it had at 1000 ms
 
-  Rule: Resuming a paused run does not make the panda jump, and the run then continues normally
+  Rule: Resuming a paused run counts down 3, 2, 1 before the run continues moving
 
-    Scenario Outline: Each control resumes the run without a jump
+    Scenario Outline: Each control starts a 1500 ms countdown without making the panda jump
       When 1000 ms pass
       And the page becomes hidden
       And the page becomes visible again
       And I <action>
       Then both pause texts are gone
+      And the page reads "3" centred in white 40px at (200, 190)
+      And the panda is still on the floor
+      And the game time is still 1000 ms
+      When 500 ms pass
+      Then the page reads "2" centred in white 40px at (200, 190)
+      When 500 ms pass
+      Then the page reads "1" centred in white 40px at (200, 190)
+      When 500 ms pass
+      Then the page shows no countdown digit
+      And the game time is still 1000 ms
       And the panda is still on the floor
       When the game time reaches 1500 ms
       Then the first column has spawned
@@ -52,6 +62,27 @@ Feature: Panda Jump holds a run paused after the player leaves the tab
         | press Space      |
         | click the canvas |
         | tap the canvas   |
+
+    Scenario: A jump pressed during the countdown neither jumps nor restarts the countdown
+      When 1000 ms pass
+      And the page becomes hidden
+      And the page becomes visible again
+      And I press Space
+      And 500 ms pass
+      Then the page reads "2" centred in white 40px at (200, 190)
+      When I press Space
+      Then the page still reads "2" centred in white 40px at (200, 190)
+      And the panda is still on the floor
+      When 500 ms pass
+      Then the page reads "1" centred in white 40px at (200, 190)
+
+    Scenario: A panda paused mid-air stays at the same height for the whole countdown
+      When I press Space
+      And 300 ms pass
+      And the page becomes hidden
+      And the page becomes visible again
+      And I press Space
+      Then the panda's height stays the same while 1500 ms pass
 
   Rule: Pausing has no effect on the game-over screen
 

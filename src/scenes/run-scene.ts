@@ -59,6 +59,7 @@ const DEATH_FLASH_COLOR = 0xffffff;
 const shareSupported = typeof navigator.share === "function";
 const PAGE_TITLE = "Panda Jump";
 const clipboardSupported = typeof (navigator as { clipboard?: Clipboard }).clipboard?.writeText === "function";
+const COUNTDOWN_LABELS: Record<"3" | "2" | "1" | "null", string> = { "3": "3", "2": "2", "1": "1", null: "" };
 
 export class RunScene extends Phaser.Scene {
   private readonly run: Run;
@@ -83,6 +84,7 @@ export class RunScene extends Phaser.Scene {
   private pausePrompt!: Phaser.GameObjects.Text;
   private gameOverCopy!: Phaser.GameObjects.Text;
   private bestMarker!: Phaser.GameObjects.Text;
+  private countdownText!: Phaser.GameObjects.Text;
 
   constructor(run: Run, timeScale: number) {
     super("run");
@@ -136,6 +138,7 @@ export class RunScene extends Phaser.Scene {
       .text(0, 0, "Best", { fontFamily: "Arial", fontSize: "16px", color: "#ffd700" })
       .setOrigin(0.5, 1)
       .setName("bestMarker");
+    this.countdownText = this.centeredText(GAME_OVER_Y, "", "40px").setName("countdownText");
     this.wireInput();
     this.draw();
   }
@@ -296,6 +299,8 @@ export class RunScene extends Phaser.Scene {
     this.pausePrompt.setVisible(view.paused);
     this.gameOverCopy.setVisible([view.canRestart, !shareSupported, clipboardSupported].every(Boolean));
     this.drawBestMarker(view.bestMarker);
+    const countdownKey = String(view.countdown) as "3" | "2" | "1" | "null";
+    this.countdownText.setVisible(view.countdown !== null).setText(COUNTDOWN_LABELS[countdownKey]);
     this.refreshGroup(this.boxes, view.boxes, (box) => {
       this.showBox(box);
     });
