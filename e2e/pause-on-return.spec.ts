@@ -101,6 +101,7 @@ test.describe("Rule: Resuming a paused run counts down 3, 2, 1 before the run co
 
   test("A jump pressed during the countdown neither jumps nor restarts the countdown", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pauseAt(page, 1000);
     await pressSpace(page);
     await advance(page, 500);
@@ -117,6 +118,7 @@ test.describe("Rule: Resuming a paused run counts down 3, 2, 1 before the run co
 
   test("A panda paused mid-air is still at the same height when the countdown ends", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pressSpace(page);
     await advance(page, 300);
     const midAir = await sample(page);

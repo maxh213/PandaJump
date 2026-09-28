@@ -369,18 +369,22 @@ const jumpLive = (state: State): State => {
   return { ...state, panda, bufferedAt, ...hintAfterJump(state, panda), ...airPuffAfterJump(state, panda) };
 };
 
+const frozenAct = (state: State): State | null => {
+  if (state.ready) return { ...state, ready: false };
+  if (state.paused) return resume(state);
+  return null;
+};
+
 const act = (state: State, randoms: Randoms): State => {
-  if (state.ready) {
-    return { ...state, ready: false };
-  }
-  if (state.paused) {
-    return resume(state);
-  }
+  const frozen = frozenAct(state);
+  if (frozen !== null) return frozen;
   if (state.deathElapsed === null) {
     return jumpLive(state);
   }
   return canRestart(state) ? freshState({ restarts: state.restarts + 1, best: state.best, hintPending: state.hintPending }, randoms) : state;
 };
+
+const isFrozen = (state: State): boolean => state.ready || (state.paused && state.resumeElapsed === null);
 
 const pausedState = (state: State): State =>
   state.ready || state.deathElapsed !== null
@@ -407,8 +411,7 @@ export const createRun = (random: Random, cloudRandom: Random, store: BestStore)
       state = togglePause(state);
     },
     advance: (ms) => {
-      if (state.ready) return;
-      if (state.paused && state.resumeElapsed === null) return;
+      if (isFrozen(state)) return;
       const next = stepAdvance(state, ms, randoms);
       if (next.best !== state.best) {
         store.save(next.best);

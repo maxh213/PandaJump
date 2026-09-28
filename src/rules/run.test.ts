@@ -611,7 +611,7 @@ test("the countdown shows 2 after 500 ms, 1 after 1000 ms and ends after 1500 ms
 });
 
 test("the world does not move during the countdown and advances normally once it ends", () => {
-  const run = createRun(standardColumns(), oneBoxEach(), noStore);
+  const run = createStartedRun(standardColumns(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pause();
   run.jump();
@@ -630,7 +630,7 @@ test("the world does not move during the countdown and advances normally once it
 });
 
 test("a single advance() call that crosses the countdown boundary carries the leftover ms into world movement", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pause();
   run.jump();
@@ -639,7 +639,7 @@ test("a single advance() call that crosses the countdown boundary carries the le
 });
 
 test("a jump pressed during the countdown neither jumps nor restarts the countdown", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pause();
   run.jump();
@@ -652,7 +652,7 @@ test("a jump pressed during the countdown neither jumps nor restarts the countdo
 });
 
 test("pausing again during the countdown cancels it and shows Paused instead", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pause();
   run.jump();
@@ -663,7 +663,7 @@ test("pausing again during the countdown cancels it and shows Paused instead", (
 });
 
 test("a jump pressed after the countdown ends jumps as normal", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pause();
   run.jump();
