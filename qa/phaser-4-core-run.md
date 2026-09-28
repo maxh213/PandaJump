@@ -3,7 +3,7 @@
 Use a desktop browser with dev tools, and a phone or touch emulation for step 9. Heights are in px above the floor surface (y 426).
 
 1. Run `git ls-files main.js phaser.min.js` and `git diff master -- assets/`. **Expected:** both print nothing: the old game is gone and no asset changed.
-2. Run `npm ci` then `npm run dev` and open the URL it prints. **Expected:** the page title and heading read "Panda Jump"; below the 400×490 game the page reads "Check it out on Github" (link to https://github.com/maxh213/PandaJump) and "Controls: Click, tap or press Space or the Up Arrow key to jump (you can double jump); the first one starts the run without jumping. Press P or Escape to pause and resume.".
+2. Run `npm ci` then `npm run dev` and open the URL it prints. **Expected:** the page title and heading read "Panda Jump"; below the 400×490 game the page reads "Check it out on Github" (link to https://github.com/maxh213/PandaJump) and "Controls: Click, tap or press Space or the Up Arrow key to jump (you can double jump). Press P or Escape to pause and resume.".
 2a. In dev tools, inspect the `<html>` element (or run `document.documentElement.lang` in the console). **Expected:** it reads `lang="en"`.
 3. Open the Network tab and reload. **Expected:** the Lato font loads over `https://`; no request uses `http://`; nothing requests `main.js` or `phaser.min.js`; the console shows no errors. Find the request for the page's `<link rel="icon">` href. **Expected:** it resolves with status 200, not a 404, points at `icon.png` (not `assets/Panda.png`), and opening it directly shows a square single Panda pose, not the tall, squashed sprite sheet.
 
