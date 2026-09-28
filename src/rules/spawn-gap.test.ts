@@ -17,6 +17,8 @@ const CAPPED_DOUBLE_OFFSET = 590;
 interface Spawn {
   readonly time: number;
   readonly score: number;
+  readonly boxesAtFront: number;
+  readonly columnsAcross: number;
 }
 
 const columnRandom = (patternFor: (column: number) => number[]) => {
@@ -44,7 +46,10 @@ const newPilot = (run: Run, capped: number) => {
   const watchSpawns = (time: number, score: number): void => {
     const now = frontOf(run);
     if (now > front) {
-      spawns.push({ time, score });
+      const xs = run.view().boxes.map((box) => box.x);
+      const boxesAtFront = xs.filter((x) => x === now).length;
+      const columnsAcross = new Set(xs.filter((x) => x >= now - 70)).size;
+      spawns.push({ time, score, boxesAtFront, columnsAcross });
       jumps.push(time + offsetFor(spawns.length, capped));
     }
     front = now;
@@ -96,19 +101,26 @@ test("the gap between column spawns follows the score at the moment each column 
 });
 
 test("a capped run of single 2-box columns, one floor jump per column, clears 10 columns in a row", () => {
-  const { run, jumpTimes } = fly(CAPPED_SINGLE_OFFSET, TWO_BOXES, 10);
+  const { run, spawns, jumpTimes } = fly(CAPPED_SINGLE_OFFSET, TWO_BOXES, 10);
   const view = run.view();
+  const capped = spawns.slice(LAST_ONE_BOX_COLUMN);
   expect(view.gameOver).toBe(false);
-  expect(Number(view.score)).toBeGreaterThanOrEqual(LAST_ONE_BOX_COLUMN + 6);
-  expect(jumpTimes.length).toBeGreaterThan(LAST_ONE_BOX_COLUMN + 10);
+  expect(capped.length).toBeGreaterThanOrEqual(10);
+  expect(capped.every((spawn) => spawn.boxesAtFront === 2 && spawn.columnsAcross === 1)).toBe(true);
+  expect(capped.every((spawn) => spawn.score >= 60)).toBe(true);
+  expect(Number(view.score)).toBeGreaterThanOrEqual(LAST_ONE_BOX_COLUMN + 10);
+  expect(jumpTimes.length - LAST_ONE_BOX_COLUMN).toBeLessThanOrEqual(capped.length);
 });
 
-test("a capped run of double columns clears 5 in a row with one floor jump per double column", () => {
-  const { run, spawns, jumpTimes } = fly(CAPPED_DOUBLE_OFFSET, DOUBLE_COLUMN, 5);
+test("a capped run of double columns clears 5 in a row with at most one floor jump per double column", () => {
+  const { run, spawns, jumpTimes } = fly(CAPPED_DOUBLE_OFFSET, DOUBLE_COLUMN, 8);
   const view = run.view();
+  const capped = spawns.slice(LAST_ONE_BOX_COLUMN);
+  const cleared = (Number(view.score) - LAST_ONE_BOX_COLUMN) / 2;
   expect(view.gameOver).toBe(false);
-  expect(Number(view.score)).toBeGreaterThanOrEqual(LAST_ONE_BOX_COLUMN + 1);
-  expect(jumpTimes.length).toBeLessThanOrEqual(spawns.length);
+  expect(capped.every((spawn) => spawn.boxesAtFront === 2 && spawn.columnsAcross === 2)).toBe(true);
+  expect(cleared).toBeGreaterThanOrEqual(5);
+  expect(jumpTimes.length - LAST_ONE_BOX_COLUMN).toBeLessThanOrEqual(capped.length);
 });
 
 test("two runs given the same random values place every column identically at the same game times", () => {
