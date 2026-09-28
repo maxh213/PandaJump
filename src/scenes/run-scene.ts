@@ -90,6 +90,7 @@ export class RunScene extends Phaser.Scene {
   private gameOverRuns!: Phaser.GameObjects.Text;
   private pauseTitle!: Phaser.GameObjects.Text;
   private pausePrompt!: Phaser.GameObjects.Text;
+  private pauseButton!: Phaser.GameObjects.Text;
   private gameOverCopy!: Phaser.GameObjects.Text;
   private bestMarker!: Phaser.GameObjects.Text;
   private countdownText!: Phaser.GameObjects.Text;
@@ -157,6 +158,7 @@ export class RunScene extends Phaser.Scene {
     this.input.on("pointerdown", this.jump);
     this.input.on("gameobjectdown", this.shareScore);
     this.input.on("gameobjectdown", this.copyScore);
+    this.input.on("gameobjectdown", this.tapPauseButton);
     [this.input.keyboard]
       .filter((keyboard) => keyboard !== null)
       .forEach((keyboard) => {
@@ -226,6 +228,19 @@ export class RunScene extends Phaser.Scene {
       });
   };
 
+  private readonly tapPauseButton = (
+    _pointer: Phaser.Input.Pointer,
+    gameObject: Phaser.GameObjects.GameObject,
+    event: { stopPropagation: () => void },
+  ): void => {
+    [gameObject]
+      .filter((target) => target === this.pauseButton)
+      .forEach(() => {
+        event.stopPropagation();
+        this.run.pause();
+      });
+  };
+
   private centeredText(y: number, text: string, fontSize: string): Phaser.GameObjects.Text {
     return this.add
       .text(CENTER_X, y, text, { fontFamily: "Arial", fontSize, color: "#ffffff" })
@@ -259,6 +274,11 @@ export class RunScene extends Phaser.Scene {
       "Tap, press Space or the Up Arrow key to continue",
       "16px",
     ).setName("pausePrompt");
+    this.pauseButton = this.add
+      .text(CANVAS_WIDTH - 20, 20, "II", { fontFamily: "Arial", fontSize: "24px", color: "#ffffff" })
+      .setOrigin(1, 0)
+      .setName("pauseButton")
+      .setInteractive();
   }
 
   private addFloorStrip(y: number, texture: string): Phaser.GameObjects.TileSprite {
@@ -301,6 +321,7 @@ export class RunScene extends Phaser.Scene {
     this.drawGameOver(view);
     this.pauseTitle.setVisible(view.paused);
     this.pausePrompt.setVisible(view.paused);
+    this.pauseButton.setVisible([!view.paused, !view.gameOver].every(Boolean));
     this.gameOverCopy.setVisible([view.canRestart, !shareSupported, clipboardSupported].every(Boolean));
     this.drawBestMarker(view.bestMarker);
     const countdownKey = String(view.countdown) as "3" | "2" | "1" | "null";

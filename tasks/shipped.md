@@ -48,3 +48,4 @@ add a line merge cleanly instead of conflicting.
 - A "Run N" attempt count on the game-over screen counting restarts for the current page session, starting at "Run 1" and never read from or written to any store
 - The Up Arrow key also jumps and restarts, like Space
 - Pausing a live run when the browser window loses focus (a window blur), not only when the tab is hidden, so switching to another application never costs a run
+- An on-screen "II" pause button in the canvas's top-right corner for phone players, hidden while paused or on the game-over screen, that pauses the run on tap without also jumping

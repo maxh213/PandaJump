@@ -32,6 +32,7 @@ export interface Sample {
   gameOverRuns: CenteredText;
   pauseTitle: CenteredText;
   pausePrompt: CenteredText;
+  pauseButton: CenteredText;
   gameOverCopy: CenteredText;
   bestMarker: CenteredText;
   countdownText: CenteredText;
@@ -214,6 +215,7 @@ export const installProbe = () => {
       gameOverRuns: centeredText("gameOverRuns"),
       pauseTitle: centeredText("pauseTitle"),
       pausePrompt: centeredText("pausePrompt"),
+      pauseButton: centeredText("pauseButton"),
       gameOverCopy: centeredText("gameOverCopy"),
       bestMarker: centeredText("bestMarker"),
       countdownText: centeredText("countdownText"),
