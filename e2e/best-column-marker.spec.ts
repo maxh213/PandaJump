@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advanceTo, columnsAt, openGame, oneBox, play, sample, untilGameOver } from "./probe.ts";
+import { advanceTo, columnsAt, openGame, oneBox, play, sample, startRun, untilGameOver } from "./probe.ts";
 
 const seedBest = (page: Page, value: number) =>
   page.addInitScript((seeded) => {
@@ -11,6 +11,7 @@ test.describe("Rule: The marker sits over the column whose clearing would beat t
   test("No marker shows before that column has spawned", async ({ page }) => {
     await seedBest(page, 1);
     await openGame(page, oneBox);
+    await startRun(page);
     await advanceTo(page, 1600);
     expect((await sample(page)).bestMarker.visible).toBe(false);
   });
@@ -18,6 +19,7 @@ test.describe("Rule: The marker sits over the column whose clearing would beat t
   test("The marker appears over that column once it spawns, and moves left with it", async ({ page }) => {
     await seedBest(page, 1);
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700], 3100);
     const marked = await sample(page);
     const column = columnsAt(marked).find((entry) => entry.x === 380);
@@ -43,6 +45,7 @@ test.describe("Rule: The marker disappears once the run overtakes the stored bes
   test("Clearing the marked column takes the score past the stored best and hides the marker", async ({ page }) => {
     await seedBest(page, 1);
     await openGame(page, oneBox);
+    await startRun(page);
     await play(page, [2700, 4200], 4900);
     expect((await sample(page)).score.text).toBe("2");
     expect((await sample(page)).bestMarker.visible).toBe(false);
@@ -54,6 +57,7 @@ test.describe("Rule: With no stored best, the marker never appears", () => {
     page,
   }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await advanceTo(page, 1600);
     expect((await sample(page)).bestMarker.visible).toBe(false);
     const { after: diedAt } = await untilGameOver(page);

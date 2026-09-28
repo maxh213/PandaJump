@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, oneBox, openGame, sample, settle, untilGameOver } from "./probe.ts";
+import { advance, oneBox, openGame, sample, settle, startRun, untilGameOver } from "./probe.ts";
 
 interface CapturedShare {
   text?: string;
@@ -33,6 +33,7 @@ const mockSupportedShare = async (page: Page): Promise<CapturedShare[]> => {
 test.describe("Rule: The flash is invisible while the run is live", () => {
   test("The flash stays fully transparent during ordinary play", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const last = (await advance(page, 1000)).at(-1);
     expect(last?.deathFlash.alpha).toBe(0);
     expect(last?.viewDeathFlash).toBe(0);
@@ -42,6 +43,7 @@ test.describe("Rule: The flash is invisible while the run is live", () => {
 test.describe("Rule: The flash jumps to its peak opacity the instant the panda dies", () => {
   test("Running into a column snaps the flash to 0.6 the moment gameOver first becomes true", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const { after } = await untilGameOver(page);
     expect(after.gameOver).toBe(true);
     expect(Math.abs(after.time - 2875)).toBeLessThanOrEqual(16);
@@ -53,6 +55,7 @@ test.describe("Rule: The flash jumps to its peak opacity the instant the panda d
 test.describe("Rule: The flash fades out in a straight line over 200ms and then stays gone", () => {
   test("The flash is half faded at 100ms after death and fully gone by 200ms and 1000ms", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     const at100 = (await advance(page, 100)).at(-1);
     expect(at100?.deathFlash.alpha).toBeCloseTo(0.3, 1);
@@ -68,6 +71,7 @@ test.describe("Rule: The flash covers the whole canvas, is white, and never gets
     page,
   }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const { after } = await untilGameOver(page);
     expect(after.boxes.length).toBeGreaterThan(0);
     expect(after.deathFlash).toMatchObject({ x: 0, y: 0, width: 400, height: 490, color: "#ffffff" });
@@ -85,6 +89,7 @@ test.describe("Rule: Restart and Share score keep working exactly as before, and
   }) => {
     const calls = await mockSupportedShare(page);
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     await advance(page, 500);
     await page.locator("#game_div canvas").click({ position: { x: 200, y: 200 } });
