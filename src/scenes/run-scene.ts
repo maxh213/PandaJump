@@ -123,6 +123,11 @@ export class RunScene extends Phaser.Scene {
       .text(0, 0, "Best", { fontFamily: "Arial", fontSize: "16px", color: "#ffd700" })
       .setOrigin(0.5, 1)
       .setName("bestMarker");
+    this.wireInput();
+    this.draw();
+  }
+
+  private wireInput(): void {
     this.input.on("pointerdown", this.jump);
     this.input.on("gameobjectdown", this.shareScore);
     this.input.on("gameobjectdown", this.copyScore);
@@ -133,7 +138,6 @@ export class RunScene extends Phaser.Scene {
         this.listenForPauseKeys(keyboard);
       });
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
-    this.draw();
   }
 
   override update(_time: number, delta: number): void {
