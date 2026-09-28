@@ -85,7 +85,7 @@ export class RunScene extends Phaser.Scene {
     [this.input.keyboard]
       .filter((keyboard) => keyboard !== null)
       .forEach((keyboard) => {
-        this.listenForSpace(keyboard);
+        this.listenForJumpKeys(keyboard);
       });
     this.draw();
   }
@@ -129,9 +129,10 @@ export class RunScene extends Phaser.Scene {
     return this.add.tileSprite(0, y, CANVAS_WIDTH, TILE_SIZE, texture).setOrigin(0, 0);
   }
 
-  private listenForSpace(keyboard: Phaser.Input.Keyboard.KeyboardPlugin): void {
-    keyboard.addCapture("SPACE");
+  private listenForJumpKeys(keyboard: Phaser.Input.Keyboard.KeyboardPlugin): void {
+    keyboard.addCapture(["SPACE", "UP"]);
     keyboard.on("keydown-SPACE", this.jump);
+    keyboard.on("keydown-UP", this.jump);
   }
 
   private draw(): void {

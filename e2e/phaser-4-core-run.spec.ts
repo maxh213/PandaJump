@@ -111,7 +111,9 @@ test.describe("Rule: The page keeps its content", () => {
     expect(await canvas.boundingBox()).toMatchObject({ width: 400, height: 490 });
     await expect(page.locator("p").nth(0)).toHaveText("Check it out on Github");
     await expect(page.getByRole("link", { name: "Github" })).toHaveAttribute("href", "https://github.com/maxh213/PandaJump");
-    await expect(page.locator("p").nth(1)).toHaveText("Controls: Click, tap or press Space to jump (you can double jump)");
+    await expect(page.locator("p").nth(1)).toHaveText(
+      "Controls: Click, tap or press Space or the Up Arrow key to jump (you can double jump)",
+    );
   });
 
   test("The page declares its language for accessibility and search tools", async ({ page }) => {
@@ -394,6 +396,7 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
     "click the canvas": (page) => page.locator("#game_div canvas").click({ position: { x: 200, y: 200 } }),
     "tap the canvas": (page) => page.locator("#game_div canvas").tap({ position: { x: 200, y: 200 } }),
     "press Space": (page) => page.keyboard.press("Space"),
+    "press Up Arrow": (page) => page.keyboard.press("ArrowUp"),
   };
 
   test.describe("Each control makes the panda jump", () => {
@@ -416,20 +419,27 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
     }
   });
 
-  test.describe("Pressing Space does not scroll the page", () => {
+  test.describe("Pressing Space or Up Arrow does not scroll the page", () => {
     test.use({ viewport: { width: 800, height: 500 } });
 
-    test("Pressing Space does not scroll the page", async ({ page }) => {
-      await openGame(page, oneBox);
-      expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeGreaterThan(500);
-      await page.evaluate(() => {
-        window.scrollTo(0, 0);
+    for (const [action, act] of Object.entries(controls)) {
+      if (action !== "press Space" && action !== "press Up Arrow") {
+        continue;
+      }
+
+      test(`Pressing Space or Up Arrow does not scroll the page: ${action}`, async ({ page }) => {
+        await openGame(page, oneBox);
+        expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeGreaterThan(500);
+        await page.evaluate(() => {
+          window.scrollTo(0, 0);
+        });
+        await act(page);
+        await settle(page);
+        const samples = await advance(page, 100);
+        expect(heightOf(last(samples))).toBeGreaterThan(0);
+        expect(await page.evaluate(() => window.scrollY)).toBe(0);
       });
-      await pressSpace(page);
-      const samples = await advance(page, 100);
-      expect(heightOf(last(samples))).toBeGreaterThan(0);
-      expect(await page.evaluate(() => window.scrollY)).toBe(0);
-    });
+    }
   });
 
   test("A double jump adds a smaller boost", async ({ page }) => {
@@ -585,6 +595,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     "click the canvas": (page) => page.locator("#game_div canvas").click({ position: { x: 200, y: 200 } }),
     "tap the canvas": (page) => page.locator("#game_div canvas").tap({ position: { x: 200, y: 200 } }),
     "press Space": (page) => page.keyboard.press("Space"),
+    "press Up Arrow": (page) => page.keyboard.press("ArrowUp"),
   };
 
   test("Running into a column freezes the run and shows a game over screen", async ({ page }) => {

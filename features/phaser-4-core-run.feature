@@ -24,7 +24,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And the heading reads "Panda Jump"
       And a 400 by 490 canvas is shown inside "#game_div"
       And the page reads "Check it out on Github" with "Github" linking to "https://github.com/maxh213/PandaJump"
-      And the page reads "Controls: Click, tap or press Space to jump (you can double jump)"
+      And the page reads "Controls: Click, tap or press Space or the Up Arrow key to jump (you can double jump)"
 
     Scenario: The page declares its language for accessibility and search tools
       Then the page's <html> element has lang="en"
@@ -110,14 +110,20 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
         | click the canvas |
         | tap the canvas   |
         | press Space      |
+        | press Up Arrow   |
 
-    Scenario: Pressing Space does not scroll the page
+    Scenario Outline: Pressing Space or Up Arrow does not scroll the page
       Given the browser viewport is 800 by 500 px
       And the page is taller than the viewport, so it can scroll
       And the page is scrolled to the top
-      When I press Space
+      When I <action>
       Then the panda leaves the floor
       And the page is still scrolled to the top
+
+      Examples:
+        | action         |
+        | press Space    |
+        | press Up Arrow |
 
     Scenario: A double jump adds a smaller boost
       When I press Space at 0 ms
@@ -264,6 +270,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
         | click the canvas |
         | tap the canvas   |
         | press Space      |
+        | press Up Arrow   |
 
     Scenario Outline: Each control restarts the run once 500ms have passed
       Given the random source picks 1 box for the first column
@@ -282,6 +289,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
         | click the canvas |
         | tap the canvas   |
         | press Space      |
+        | press Up Arrow   |
 
     Scenario: Nothing from the old run survives a restart
       Given the random source picks 1 box and no second column for every column
