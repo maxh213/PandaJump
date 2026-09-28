@@ -71,6 +71,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     bestMarker: null,
     deathFlash: 0,
     pandaAngle: 0,
+    airPuff: null,
   });
 });
 
@@ -752,6 +753,36 @@ test("pandaAngle is 0 during game over even though the panda is still falling", 
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
   expect(run.view()).toMatchObject({ gameOver: true, pandaAngle: 0 });
+});
+
+test("no airPuff appears after a single floor jump", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  expect(run.view().airPuff).toBeNull();
+});
+
+test("an air jump shows a puff at the panda's centre and its bottom at that moment, fading from alpha 1 to null over 250ms", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  run.advance(580);
+  const bottomAtAirJump = run.view().pandaBottom;
+  run.jump();
+  expect(run.view().airPuff).toEqual({ x: 112.5, y: bottomAtAirJump, alpha: 1 });
+  run.advance(125);
+  expect(run.view().airPuff?.alpha).toBeCloseTo(0.5);
+  run.advance(125);
+  expect(run.view().airPuff).toBeNull();
+});
+
+test("a third jump in the air, with the air jump already used, does not create or extend a puff", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  run.advance(580);
+  run.jump();
+  run.advance(100);
+  const beforeThirdTap = run.view().airPuff;
+  run.jump();
+  expect(run.view().airPuff).toEqual(beforeThirdTap);
 });
 
 test("time, score, columns, clouds and floor scroll stay frozen while the panda falls after a mid-air death", () => {

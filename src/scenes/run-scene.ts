@@ -22,6 +22,7 @@ const TINT_ACTIONS: Record<"true" | "false", (image: Phaser.GameObjects.Image) =
   },
 };
 const GRASS_Y = 392;
+const AIR_PUFF_RADIUS = 8;
 const PANDA_SCALE = 1.25;
 const PANDA_FRAME_WIDTH = 20;
 const PANDA_FRAME_HEIGHT = 21;
@@ -60,11 +61,13 @@ const shareSupported = typeof navigator.share === "function";
 const PAGE_TITLE = "Panda Jump";
 const clipboardSupported = typeof (navigator as { clipboard?: Clipboard }).clipboard?.writeText === "function";
 const COUNTDOWN_LABELS: Record<"3" | "2" | "1" | "null", string> = { "3": "3", "2": "2", "1": "1", null: "" };
+const hasValue = <T>(value: T | null): value is T => value !== null;
 
 export class RunScene extends Phaser.Scene {
   private readonly run: Run;
   private readonly timeScale: number;
   private panda!: Phaser.GameObjects.Sprite;
+  private airPuff!: Phaser.GameObjects.Graphics;
   private boxes!: Phaser.GameObjects.Group;
   private clouds!: Phaser.GameObjects.Group;
   private rock!: Phaser.GameObjects.TileSprite;
@@ -112,6 +115,7 @@ export class RunScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5)
       .setScale(PANDA_SCALE)
       .setName("panda");
+    this.airPuff = this.add.graphics().setName("airPuff");
     this.boxes = this.add.group({ classType: Phaser.GameObjects.Image, defaultKey: "dirt_06.png", name: "boxes" });
     this.rock = this.addFloorStrip(FLOOR_Y, "rock_06.png").setName("rock");
     this.grass = this.addFloorStrip(GRASS_Y, "top_grass_01.png").setName("grass");
@@ -273,6 +277,7 @@ export class RunScene extends Phaser.Scene {
   private draw(): void {
     const view = this.run.view();
     this.drawPanda(view);
+    this.drawAirPuff(view.airPuff);
     this.rock.tilePositionX = view.floorScroll;
     this.grass.tilePositionX = view.floorScroll;
     this.score.setText(view.score).setScale(view.scoreScale);
@@ -329,6 +334,18 @@ export class RunScene extends Phaser.Scene {
     this.gameOverPrompt.setVisible(view.canRestart);
     this.gameOverShare.setVisible([view.canRestart, shareSupported].every(Boolean));
     this.gameOverRuns.setVisible(view.gameOver).setText(`Run ${String(view.restarts + 1)}`);
+  }
+
+  private drawAirPuff(airPuff: { x: number; y: number; alpha: number } | null): void {
+    this.airPuff.clear().setVisible(false);
+    [airPuff].filter(hasValue).forEach((puff) => {
+      this.airPuff
+        .fillStyle(0xffffff, 1)
+        .fillCircle(0, 0, AIR_PUFF_RADIUS)
+        .setPosition(puff.x, puff.y)
+        .setAlpha(puff.alpha)
+        .setVisible(true);
+    });
   }
 
   private showBox(box: Box): void {

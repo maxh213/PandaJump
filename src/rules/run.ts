@@ -42,6 +42,7 @@ interface View {
   readonly bestMarker: { x: number; y: number } | null;
   readonly deathFlash: number;
   readonly pandaAngle: number;
+  readonly airPuff: { x: number; y: number; alpha: number } | null;
 }
 
 export interface Run {
@@ -76,6 +77,8 @@ interface State {
   readonly hitColumn: Column | null;
   readonly paused: boolean;
   readonly resumeElapsed: number | null;
+  readonly airPuffStart: number | null;
+  readonly airPuffBottom: number;
 }
 
 const MAX_STEP = 10;
@@ -94,6 +97,8 @@ const MAX_PANDA_ANGLE = 25;
 const PANDA_ANGLE_PER_SPEED = 20;
 const COUNTDOWN_MS = 1500;
 const COUNTDOWN_STEP_MS = 500;
+const AIR_PUFF_DURATION_MS = 250;
+const PANDA_CENTER_X = PANDA_X + 12.5;
 
 const freshState = (restarts: number, best: number, randoms: Randoms): State => ({
   time: 0,
@@ -114,6 +119,8 @@ const freshState = (restarts: number, best: number, randoms: Randoms): State => 
   hitColumn: null,
   paused: false,
   resumeElapsed: null,
+  airPuffStart: null,
+  airPuffBottom: 0,
 });
 
 const distanceAt = (state: State, time: number): number =>
@@ -237,6 +244,14 @@ const stepAdvance = (state: State, ms: number, randoms: Randoms): State => {
   return advanceState(ticked.state, ticked.worldMs, randoms);
 };
 
+const airPuffOf = (state: State): View["airPuff"] => {
+  if (state.airPuffStart === null || state.deathElapsed !== null) return null;
+  const elapsed = state.time - state.airPuffStart;
+  return elapsed < AIR_PUFF_DURATION_MS
+    ? { x: PANDA_CENTER_X, y: state.airPuffBottom, alpha: 1 - elapsed / AIR_PUFF_DURATION_MS }
+    : null;
+};
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
@@ -261,16 +276,23 @@ const viewOf = (state: State): View => ({
   bestMarker: liveBestMarker(state),
   deathFlash: deathFlashOf(state.deathElapsed),
   pandaAngle: pandaAngleFor(state),
+  airPuff: airPuffOf(state),
 });
 
 const resume = (state: State): State => (state.resumeElapsed === null ? { ...state, resumeElapsed: 0 } : state);
+
+const airPuffAfterJump = (state: State, panda: Panda): Pick<State, "airPuffStart" | "airPuffBottom"> =>
+  state.panda.airJump && !panda.airJump
+    ? { airPuffStart: state.time, airPuffBottom: FLOOR_Y - state.panda.height }
+    : { airPuffStart: state.airPuffStart, airPuffBottom: state.airPuffBottom };
 
 const act = (state: State, randoms: Randoms): State => {
   if (state.paused) {
     return resume(state);
   }
   if (state.deathElapsed === null) {
-    return { ...state, panda: jump(state.panda) };
+    const panda = jump(state.panda);
+    return { ...state, panda, ...airPuffAfterJump(state, panda) };
   }
   return canRestart(state) ? freshState(state.restarts + 1, state.best, randoms) : state;
 };

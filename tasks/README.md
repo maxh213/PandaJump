@@ -60,5 +60,6 @@ All of the above have shipped, along with these slices that had no task file wri
 - A gold "Best" label floating above whichever on-screen column would beat the stored best if cleared, tracking that column left as it scrolls and disappearing once the run's score passes the stored best, dies or pauses
 - Tilting the panda's nose up while it rises and nose down while it falls, clamped to 25 degrees either way and levelling out at 0 degrees during game over so the existing upside-down flip still reads clearly
 - Tinting the column that killed the panda red (0xff6666) on the game-over screen, so a double-column death shows which box to watch next time
+- A small white puff drawn under the panda's feet for 250ms, fading out, the instant a double jump fires, so a second tap in the air is never a silently dropped input
 
 Sound is not planned: CLAUDE.md's rules say the repository has no audio assets.

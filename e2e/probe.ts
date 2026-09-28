@@ -55,6 +55,8 @@ export interface Sample {
   deathFlash: { x: number; y: number; width: number; height: number; alpha: number; color: string; depth: number };
   viewClouds: View["clouds"];
   viewDeathFlash: View["deathFlash"];
+  airPuff: { x: number; y: number; alpha: number; visible: boolean };
+  viewAirPuff: View["airPuff"];
 }
 
 interface Bounds {
@@ -101,6 +103,13 @@ interface GameTileSprite {
   y: number;
   tilePositionX: number;
   texture: { key: string };
+}
+
+interface GameGraphics {
+  x: number;
+  y: number;
+  alpha: number;
+  visible: boolean;
 }
 
 interface GameNode {
@@ -177,6 +186,7 @@ export const installProbe = () => {
     const rock = named("rock") as GameTileSprite;
     const grass = named("grass") as GameTileSprite;
     const deathFlash = named("deathFlash") as GameRectangle;
+    const airPuff = named("airPuff") as GameGraphics;
     const bounds = panda.getBounds();
     return {
       time: view.time,
@@ -243,6 +253,8 @@ export const installProbe = () => {
       },
       viewClouds: view.clouds,
       viewDeathFlash: view.deathFlash,
+      airPuff: { x: airPuff.x, y: airPuff.y, alpha: airPuff.alpha, visible: airPuff.visible },
+      viewAirPuff: view.airPuff,
     };
   };
   const advance = (ms: number): Sample[] => {
