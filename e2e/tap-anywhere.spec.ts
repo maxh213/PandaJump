@@ -22,7 +22,7 @@ test.describe("Rule: A click outside the canvas does what a click on the canvas 
   for (const [target, click] of Object.entries(targets)) {
     test(`Clicking the ${target} makes a standing panda jump`, async ({ page }) => {
       await openGame(page, oneBox);
-    await startRun(page);
+      await startRun(page);
       await click(page);
       await settle(page);
       const samples = await advance(page, 100);
