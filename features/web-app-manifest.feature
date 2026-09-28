@@ -26,7 +26,10 @@ Feature: Panda Jump advertises itself with a web app manifest
       And the manifest's "display" is "standalone"
       And the manifest's "background_color" and "theme_color" are both "#000000"
 
-  Rule: The manifest's icon points at the real Panda image
+  Rule: The manifest's icon is a single square Panda icon, not the raw sprite sheet
 
-    Scenario: The manifest's icon URL resolves to the Panda.png asset
-      Then the manifest's icon URL responds with 200 and image content
+    Scenario: The manifest's icon URL resolves to a square image matching its declared sizes
+      Then the manifest's icon does not point at "assets/Panda.png"
+      And the manifest's icon URL responds with 200 and image content
+      And the icon image's width equals its height
+      And the manifest's "sizes" field matches the icon's actual width and height

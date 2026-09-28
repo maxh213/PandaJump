@@ -33,6 +33,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
 
     Scenario: The page has a favicon so the browser does not 404
       Then the page's <link rel="icon"> resolves with status 200
+      And the favicon image's width equals its height
 
     Scenario: The page has an apple-touch-icon so iOS shows the Panda when added to the home screen
       Then the page's <link rel="apple-touch-icon"> resolves with status 200
@@ -49,10 +50,11 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       When "dist/" is served by a static file server under the path "/PandaJump/"
       Then the game canvas is shown and the panda is running
       And every image in "assets/" that the game uses loads with status 200
-      And the page's <link rel="icon"> resolves with status 200
+      And the page's <link rel="icon"> resolves with status 200 and its width equals its height
       And the page's <meta property="og:image"> resolves with status 200
       And the page's <link rel="apple-touch-icon"> resolves with status 200
       And the manifest's icon URL and start_url resolve with status 200
+      And the manifest's icon image's width equals its height
 
   Rule: The panda runs on a scrolling floor
 

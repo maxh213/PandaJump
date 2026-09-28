@@ -8,7 +8,7 @@ interface Manifest {
   display: string;
   background_color: string;
   theme_color: string;
-  icons: { src: string }[];
+  icons: { src: string; sizes: string }[];
 }
 
 const manifestHref = (page: Page) =>
@@ -46,15 +46,24 @@ test.describe("Rule: The manifest describes Panda Jump as an installable, standa
   });
 });
 
-test.describe("Rule: The manifest's icon points at the real Panda image", () => {
-  test("The manifest's icon URL resolves to the Panda.png asset", async ({ page }) => {
+test.describe("Rule: The manifest's icon is a single square Panda icon, not the raw sprite sheet", () => {
+  test("The manifest's icon URL resolves to a square image matching its declared sizes", async ({ page }) => {
     await page.goto("./");
     const { url, manifest } = await fetchManifest(page);
     const icon = manifest.icons[0];
     if (!icon) throw new Error("manifest has no icons");
+    expect(icon.src).not.toBe("assets/Panda.png");
     const iconUrl = new URL(icon.src, url).toString();
     const response = await page.request.get(iconUrl);
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toContain("image/");
+    const { width, height } = await page.evaluate(async (imageUrl) => {
+      const image = new Image();
+      image.src = imageUrl;
+      await image.decode();
+      return { width: image.naturalWidth, height: image.naturalHeight };
+    }, iconUrl);
+    expect(width).toBe(height);
+    expect(icon.sizes).toBe(`${String(width)}x${String(height)}`);
   });
 });

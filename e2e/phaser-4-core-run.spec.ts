@@ -58,6 +58,14 @@ const landingAfter = (samples: Sample[], time: number): Sample => {
   return landing;
 };
 
+const squareDimensions = (page: Page, url: string) =>
+  page.evaluate(async (imageUrl) => {
+    const image = new Image();
+    image.src = imageUrl;
+    await image.decode();
+    return { width: image.naturalWidth, height: image.naturalHeight };
+  }, url);
+
 const scoreNow = async (page: Page) => (await sample(page)).score.text;
 
 const scoreAt = async (page: Page, time: number) => {
@@ -116,8 +124,11 @@ test.describe("Rule: The page keeps its content", () => {
     await page.goto("./");
     const href = await page.locator('link[rel="icon"]').getAttribute("href");
     if (!href) throw new Error("favicon href is missing");
-    const response = await page.request.get(new URL(href, page.url()).toString());
+    const iconUrl = new URL(href, page.url()).toString();
+    const response = await page.request.get(iconUrl);
     expect(response.status()).toBe(200);
+    const { width, height } = await squareDimensions(page, iconUrl);
+    expect(width).toBe(height);
   });
 
   test("The page has an apple-touch-icon so iOS shows the Panda when added to the home screen", async ({ page }) => {
@@ -220,8 +231,11 @@ test.describe("Rule: The production build", () => {
     await page.goto(`${host}/PandaJump/`);
     const href = await page.locator('link[rel="icon"]').getAttribute("href");
     if (!href) throw new Error("favicon href is missing");
-    const response = await page.request.get(new URL(href, page.url()).toString());
+    const iconUrl = new URL(href, page.url()).toString();
+    const response = await page.request.get(iconUrl);
     expect(response.status()).toBe(200);
+    const { width, height } = await squareDimensions(page, iconUrl);
+    expect(width).toBe(height);
   });
 
   test("The shared preview image resolves from the production build's path prefix", async ({ page }) => {
@@ -250,9 +264,12 @@ test.describe("Rule: The production build", () => {
     const manifest = (await response.json()) as { start_url: string; icons: { src: string }[] };
     const icon = manifest.icons[0];
     if (!icon) throw new Error("manifest has no icons");
-    const iconResponse = await page.request.get(new URL(icon.src, manifestUrl).toString());
+    const iconUrl = new URL(icon.src, manifestUrl).toString();
+    const iconResponse = await page.request.get(iconUrl);
     expect(iconResponse.status()).toBe(200);
     expect(iconResponse.headers()["content-type"]).toContain("image/");
+    const { width, height } = await squareDimensions(page, iconUrl);
+    expect(width).toBe(height);
     const startResponse = await page.request.get(new URL(manifest.start_url, manifestUrl).toString());
     expect(startResponse.status()).toBe(200);
   });
