@@ -22,6 +22,7 @@ interface View {
   readonly time: number;
   readonly restarts: number;
   readonly score: string;
+  readonly gameOverScore: string;
   readonly scoreScale: number;
   readonly best: string;
   readonly newBest: boolean;
@@ -289,10 +290,16 @@ const pandaShadowOf = (state: State): View["pandaShadow"] => ({
   scale: 1 - (0.5 * Math.min(state.panda.height, SHADOW_PEAK_HEIGHT)) / SHADOW_PEAK_HEIGHT,
 });
 
+const gameOverScoreOf = (state: State): string =>
+  state.deathElapsed === null || state.deathElapsed >= RESTART_FREEZE_MS
+    ? String(state.score)
+    : String(Math.floor((state.score * state.deathElapsed) / RESTART_FREEZE_MS));
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
   score: String(state.score),
+  gameOverScore: gameOverScoreOf(state),
   scoreScale: scoreScaleOf(state),
   best: String(state.best),
   newBest: state.calloutStart !== null && state.time - state.calloutStart < CALLOUT_DURATION_MS,

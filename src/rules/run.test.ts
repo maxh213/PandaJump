@@ -48,6 +48,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     time: 0,
     restarts: 0,
     score: "0",
+    gameOverScore: "0",
     scoreScale: 1,
     best: "0",
     newBest: false,
@@ -1089,4 +1090,46 @@ test("the panda shadow shrinks from 1 towards 0.5 as the panda rises and stays a
   run.jump();
   run.advance(100);
   expect(run.view().pandaShadow.scale).toBe(0.5);
+});
+
+const runDiedAtScore = (columns: number): Run => {
+  const run = createRun(standardColumns(), standardColumns(), noStore);
+  for (let column = 1; column <= columns; column += 1) {
+    run.advance(1500 * column + 1200 - run.view().time);
+    run.jump();
+  }
+  while (!run.view().gameOver) run.advance(16);
+  return run;
+};
+
+test("gameOverScore counts up from 0 to the final score over the 500 ms restart freeze", () => {
+  const run = runDiedAtScore(12);
+  expect(run.view()).toMatchObject({ score: "12", gameOverScore: "0" });
+  run.advance(250);
+  expect(run.view()).toMatchObject({ score: "12", gameOverScore: "6" });
+  run.advance(250);
+  expect(run.view().gameOverScore).toBe("12");
+  run.advance(300);
+  expect(run.view().gameOverScore).toBe("12");
+});
+
+test("gameOverScore equals the score while the run is live", () => {
+  const run = createRun(standardColumns(), standardColumns(), noStore);
+  for (let column = 1; column <= 5; column += 1) {
+    run.advance(1500 * column + 1200 - run.view().time);
+    run.jump();
+  }
+  run.advance(1500 * 5 + 1820 - run.view().time);
+  expect(run.view()).toMatchObject({ gameOver: false, score: "5", gameOverScore: "5" });
+});
+
+test("gameOverScore stays 0 for a run that died with score 0", () => {
+  const run = runDiedAtScore(0);
+  expect(run.view().gameOverScore).toBe("0");
+  run.advance(250);
+  expect(run.view().gameOverScore).toBe("0");
+  run.advance(250);
+  expect(run.view().gameOverScore).toBe("0");
+  run.advance(300);
+  expect(run.view().gameOverScore).toBe("0");
 });

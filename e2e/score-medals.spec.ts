@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { oneBox, openGame, play, sample, standardJumps, untilGameOver, untilRestart } from "./probe.ts";
+import { advance, last, oneBox, openGame, play, sample, standardJumps, untilGameOver, untilRestart } from "./probe.ts";
 import type { GameText, Sample } from "./probe.ts";
 
 const jumpTimeFor = (column: number): number => 1500 * column + 1200;
@@ -49,7 +49,7 @@ test.describe("Rule: No medal shows below a score of 10", () => {
     await openGame(page, oneBox);
     await playThroughColumn(page, 9);
     const { after: diedAt } = await untilGameOver(page);
-    expect(diedAt.gameOverScore.text).toBe("Score: 9");
+    expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 9");
     expect(diedAt.gameOverMedal.visible).toBe(false);
     expect(diedAt.gameOverMedalBadge.visible).toBe(false);
   });
@@ -60,7 +60,7 @@ test.describe("Rule: The game-over screen shows the medal that matches the final
     await openGame(page, oneBox);
     await playThroughColumn(page, 10);
     const { after: diedAt } = await untilGameOver(page);
-    expect(diedAt.gameOverScore.text).toBe("Score: 10");
+    expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 10");
     expect(diedAt.gameOverMedal).toMatchObject({
       text: "Bronze medal",
       x: 200,
@@ -82,7 +82,7 @@ test.describe("Rule: The game-over screen shows the medal that matches the final
     await openGame(page, oneBox);
     await playThroughColumn(page, 20);
     const { after: diedAt } = await untilGameOver(page);
-    expect(diedAt.gameOverScore.text).toBe("Score: 20");
+    expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 20");
     expect(diedAt.gameOverMedal).toMatchObject({
       text: "Silver medal",
       x: 200,

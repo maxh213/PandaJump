@@ -429,7 +429,7 @@ export class RunScene extends Phaser.Scene {
       .setText(MEDAL_LABELS[view.medal])
       .setColor(MEDAL_COLORS[view.medal]);
     this.drawMedalBadge(view.gameOver, view.medal);
-    this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.score}`);
+    this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.gameOverScore}`);
     const overtookBest = String(view.overtookBest) as "true" | "false";
     this.gameOverBest
       .setVisible(view.gameOver)

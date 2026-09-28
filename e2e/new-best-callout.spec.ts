@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advanceTo, oneBox, openGame, play, sample, untilGameOver, untilRestart } from "./probe.ts";
+import { advance, advanceTo, last, oneBox, openGame, play, sample, untilGameOver, untilRestart } from "./probe.ts";
 
 const seedBest = (page: Page, value: number) =>
   page.addInitScript((seeded) => {
@@ -77,7 +77,7 @@ test.describe("Rule: The game-over screen marks a run that overtook the stored b
     await play(page, [2700], 3340);
     expect((await sample(page)).score.text).toBe("1");
     const { after: diedAt } = await untilGameOver(page);
-    expect(diedAt.gameOverScore.text).toBe("Score: 1");
+    expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 1");
     expect(diedAt.gameOverBest).toMatchObject({ text: "New best: 1", color: "#ffd700" });
   });
 
@@ -86,7 +86,7 @@ test.describe("Rule: The game-over screen marks a run that overtook the stored b
     await openGame(page, oneBox);
     await play(page, [2700, 4200, 5700], 7300);
     const { after: diedAt } = await untilGameOver(page);
-    expect(diedAt.gameOverScore.text).toBe("Score: 3");
+    expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 3");
     expect(diedAt.gameOverBest).toMatchObject({ text: "Best: 5", color: "#ffffff" });
   });
 
@@ -95,7 +95,7 @@ test.describe("Rule: The game-over screen marks a run that overtook the stored b
     await openGame(page, oneBox);
     await play(page, [2700], 3340);
     const { after: diedAt } = await untilGameOver(page);
-    expect(diedAt.gameOverScore.text).toBe("Score: 1");
+    expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 1");
     expect(diedAt.gameOverBest).toMatchObject({ text: "Best: 1", color: "#ffffff" });
   });
 

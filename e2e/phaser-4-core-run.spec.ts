@@ -701,7 +701,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     const { after: diedAt } = await untilGameOver(page);
     expect(Math.abs(diedAt.time - 7375)).toBeLessThanOrEqual(16);
     expect(diedAt.score.text).toBe("3");
-    expect(diedAt.gameOverScore.text).toBe("Score: 3");
+    expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 3");
     expect(diedAt.gameOverBest).toMatchObject({ text: "New best: 3", color: "#ffd700" });
     const restart = await untilRestart(page);
     expect(restart.after.restarts).toBe(1);
