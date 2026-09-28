@@ -189,11 +189,16 @@ const spawnIfDue = (state: State, random: Random): State =>
         nextSpawn: state.nextSpawn + spawnGapForScore(state.score),
       };
 
-const reboundIfBuffered = (before: Panda, state: State): State => {
-  if (state.bufferedAt === null || before.height === 0 || state.panda.height > 0) return state;
-  const pressedInTime = state.time - state.bufferedAt <= JUMP_BUFFER_MS;
-  return { ...state, panda: pressedInTime ? jump(state.panda) : state.panda, bufferedAt: null };
-};
+const landedFrom = (before: Panda, state: State): boolean => before.height > 0 && state.panda.height === 0;
+
+const settleBuffer = (state: State, bufferedAt: number): State => ({
+  ...state,
+  panda: state.time - bufferedAt <= JUMP_BUFFER_MS ? jump(state.panda) : state.panda,
+  bufferedAt: null,
+});
+
+const reboundIfBuffered = (before: Panda, state: State): State =>
+  state.bufferedAt !== null && landedFrom(before, state) ? settleBuffer(state, state.bufferedAt) : state;
 
 const step = (state: State, ms: number, randoms: Randoms): State => {
   if (state.deathElapsed !== null) {
@@ -311,14 +316,18 @@ const hintAfterJump = (state: State, panda: Panda): Pick<State, "hintPending"> =
   hintPending: state.hintPending && !(state.panda.airJump && !panda.airJump),
 });
 
+const jumpLive = (state: State): State => {
+  const panda = jump(state.panda);
+  const bufferedAt = panda === state.panda ? state.time : state.bufferedAt;
+  return { ...state, panda, bufferedAt, ...hintAfterJump(state, panda), ...airPuffAfterJump(state, panda) };
+};
+
 const act = (state: State, randoms: Randoms): State => {
   if (state.paused) {
     return resume(state);
   }
   if (state.deathElapsed === null) {
-    const panda = jump(state.panda);
-    const bufferedAt = panda === state.panda ? state.time : state.bufferedAt;
-    return { ...state, panda, bufferedAt, ...hintAfterJump(state, panda), ...airPuffAfterJump(state, panda) };
+    return jumpLive(state);
   }
   return canRestart(state) ? freshState({ restarts: state.restarts + 1, best: state.best, hintPending: state.hintPending }, randoms) : state;
 };
