@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { columnClearTime, oneBox, openGame, play, sample, spawnTimeOf, untilRestart } from "./probe.ts";
+import { columnClearTime, oneBox, openGame, play, sample, spawnTimeOf, startRun, untilRestart } from "./probe.ts";
 import type { Sample } from "./probe.ts";
 
 const EXTRA_COLUMNS = 3;
@@ -16,6 +16,7 @@ const scoreReadAt = (column: number): number => columnClearTime(column) + CLEAR_
 
 const playThroughColumn = async (page: Page, column: number): Promise<void> => {
   await openGame(page, rampedRandom(column));
+  await startRun(page);
   await play(page, jumpTimesFor(1, column), scoreReadAt(column));
 };
 
@@ -27,6 +28,7 @@ const expectSky = (state: Sample, sky: string): void => {
 test.describe("Rule: The sky is day-blue below a score of 20", () => {
   test("The sky is day-blue the moment a run starts", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     expectSky(await sample(page), "#71c5cf");
   });
 
@@ -71,6 +73,7 @@ test.describe("Rule: A new run always starts back at day, even after a night-tim
   test("The sky resets to day after a restart following a death at score 40 or more", async ({ page }) => {
     test.setTimeout(120_000);
     await openGame(page, rampedRandom(40));
+    await startRun(page);
     await play(page, jumpTimesFor(1, 40), scoreReadAt(40));
     expectSky(await sample(page), "#2b2d42");
     const restart = await untilRestart(page);
