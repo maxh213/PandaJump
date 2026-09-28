@@ -189,6 +189,12 @@ test.describe("Rule: The page keeps its content", () => {
     const twitterImageUrl = new URL(twitterImageDevPath, page.url()).toString();
     await expectRecognisablePanda(page, twitterImageUrl);
   });
+
+  test("The page preconnects to the Google Fonts origins so the font loads sooner", async ({ page }) => {
+    await page.goto("./");
+    await expect(page.locator('link[rel="preconnect"][href="https://fonts.googleapis.com"]')).toHaveCount(1);
+    await expect(page.locator('link[rel="preconnect"][href="https://fonts.gstatic.com"]')).toHaveAttribute("crossorigin", "");
+  });
 });
 
 test.describe("Rule: The production build", () => {
