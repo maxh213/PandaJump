@@ -24,7 +24,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And the heading reads "Panda Jump"
       And a 400 by 490 canvas is shown inside "#game_div"
       And the page reads "Check it out on Github" with "Github" linking to "https://github.com/maxh213/PandaJump"
-      And the page reads "Controls: Click/touch to jump (you can double jump)"
+      And the page reads "Controls: Click, tap or press Space to jump (you can double jump)"
 
     Scenario: Nothing on the page loads over plain http
       Then the Lato font is requested from an "https://" URL

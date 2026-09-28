@@ -84,7 +84,7 @@ test.describe("Rule: The page keeps its content", () => {
     expect(await canvas.boundingBox()).toMatchObject({ width: 400, height: 490 });
     await expect(page.locator("p").nth(0)).toHaveText("Check it out on Github");
     await expect(page.getByRole("link", { name: "Github" })).toHaveAttribute("href", "https://github.com/maxh213/PandaJump");
-    await expect(page.locator("p").nth(1)).toHaveText("Controls: Click/touch to jump (you can double jump)");
+    await expect(page.locator("p").nth(1)).toHaveText("Controls: Click, tap or press Space to jump (you can double jump)");
   });
 
   test("Nothing on the page loads over plain http", async ({ page, baseURL }) => {

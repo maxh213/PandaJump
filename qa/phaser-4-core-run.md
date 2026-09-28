@@ -3,7 +3,7 @@
 Use a desktop browser with dev tools, and a phone or touch emulation for step 9. Heights are in px above the floor surface (y 426).
 
 1. Run `git ls-files main.js phaser.min.js` and `git diff master -- assets/`. **Expected:** both print nothing: the old game is gone and no asset changed.
-2. Run `npm ci` then `npm run dev` and open the URL it prints. **Expected:** the page title and heading read "Panda Jump"; below the 400×490 game the page reads "Check it out on Github" (link to https://github.com/maxh213/PandaJump) and "Controls: Click/touch to jump (you can double jump)".
+2. Run `npm ci` then `npm run dev` and open the URL it prints. **Expected:** the page title and heading read "Panda Jump"; below the 400×490 game the page reads "Check it out on Github" (link to https://github.com/maxh213/PandaJump) and "Controls: Click, tap or press Space to jump (you can double jump)".
 3. Open the Network tab and reload. **Expected:** the Lato font loads over `https://`; no request uses `http://`; nothing requests `main.js` or `phaser.min.js`; the console shows no errors.
 4. Look at the game without touching anything. **Expected:** light blue `#71c5cf` background; score "0" in white at the top left; the panda stands on the floor near the left (left edge at x 100) and plays a looping run animation.
 5. Pause the animation in dev tools or record the screen and step through a full run cycle. **Expected:** each of the 6 frames shows the whole panda with no sliver of another pose along its top or bottom edge.
