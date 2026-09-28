@@ -53,3 +53,4 @@ add a line merge cleanly instead of conflicting.
 - Every piece of canvas text outlined in black so it stays readable on the day, sunset and night skies
 - A "Tap again in mid-air to double jump" hint on the canvas for a player with no stored best, shown at scores 0 to 2 until their first air jump of the page session
 - A tap or click anywhere on the page outside the game canvas jumps, resumes and restarts like a canvas tap, except on the GitHub link
+- A white flash over the whole canvas the instant the panda hits a column, fading from 0.6 opacity to nothing over 200ms
