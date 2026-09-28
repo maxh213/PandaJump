@@ -1,0 +1,2 @@
+# tasks/shipped.md is an append-only list: keep both sides' lines on a merge.
+tasks/shipped.md merge=union
