@@ -6,11 +6,11 @@ export interface Star {
 const NIGHT_SCORE = 40;
 
 const NIGHT_STARS: readonly Star[] = [
-  { x: 24, y: 40 },
+  { x: 24, y: 90 },
   { x: 71, y: 132 },
   { x: 108, y: 18 },
   { x: 152, y: 96 },
-  { x: 189, y: 170 },
+  { x: 189, y: 140 },
   { x: 226, y: 52 },
   { x: 263, y: 128 },
   { x: 298, y: 24 },

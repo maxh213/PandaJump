@@ -14,7 +14,7 @@ test("twelve stars from a score of 40 and above", () => {
 
 test("the stars are the same fixed list every time", () => {
   expect(starsFor(40)).toEqual(starsFor(75));
-  expect(starsFor(40)[0]).toEqual({ x: 24, y: 40 });
+  expect(starsFor(40)[0]).toEqual({ x: 24, y: 90 });
 });
 
 test("every star sits in the top of the canvas, clear of the floor and columns", () => {
