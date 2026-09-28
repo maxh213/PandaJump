@@ -39,3 +39,14 @@ Feature: Panda Jump advertises itself with a web app manifest
     Scenario: The manifest's icon keeps every panda pixel inside the maskable safe zone
       Then the manifest's icon is marked "maskable"
       And every non-transparent pixel in the icon image lies within the adaptive-icon safe zone
+
+  Rule: The manifest includes a full-bleed 512x512 icon for full install-prompt eligibility
+
+    Scenario: The manifest's any-purpose icon resolves to a 512x512-or-larger image matching its declared sizes
+      Then the manifest has an icon marked "any" or with no purpose
+      And that icon's URL responds with 200 and image content
+      And the manifest's "sizes" field for that icon matches its actual width and height
+      And that icon is at least 512x512
+
+    Scenario: The any-purpose icon's artwork extends past the maskable safe zone, unlike the maskable icon
+      Then some non-transparent pixel in the any-purpose icon image lies outside the adaptive-icon safe zone

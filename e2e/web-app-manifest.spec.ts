@@ -43,6 +43,14 @@ const countSafeZoneViolations = (page: Page, url: string, inset: number) =>
     { imageUrl: url, safeInset: inset },
   );
 
+const imageDimensions = (page: Page, url: string) =>
+  page.evaluate(async (imageUrl) => {
+    const image = new Image();
+    image.src = imageUrl;
+    await image.decode();
+    return { width: image.naturalWidth, height: image.naturalHeight };
+  }, url);
+
 const manifestHref = (page: Page) =>
   page.evaluate(() => document.querySelector('link[rel="manifest"]')?.getAttribute("href") ?? "");
 
@@ -89,14 +97,40 @@ test.describe("Rule: The manifest's icon is a single square Panda icon, not the 
     const response = await page.request.get(iconUrl);
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toContain("image/");
-    const { width, height } = await page.evaluate(async (imageUrl) => {
-      const image = new Image();
-      image.src = imageUrl;
-      await image.decode();
-      return { width: image.naturalWidth, height: image.naturalHeight };
-    }, iconUrl);
+    const { width, height } = await imageDimensions(page, iconUrl);
     expect(width).toBe(height);
     expect(icon.sizes).toBe(`${String(width)}x${String(height)}`);
+  });
+});
+
+test.describe("Rule: The manifest includes a full-bleed 512x512 icon for full install-prompt eligibility", () => {
+  test("The manifest's any-purpose icon resolves to a 512x512-or-larger image matching its declared sizes", async ({
+    page,
+  }) => {
+    await page.goto("./");
+    const { url, manifest } = await fetchManifest(page);
+    const icon = manifest.icons.find((candidate) => candidate.purpose === "any" || !candidate.purpose);
+    if (!icon) throw new Error("manifest has no any-purpose icon");
+    const iconUrl = new URL(icon.src, url).toString();
+    const response = await page.request.get(iconUrl);
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toContain("image/");
+    const { width, height } = await imageDimensions(page, iconUrl);
+    expect(icon.sizes).toBe(`${String(width)}x${String(height)}`);
+    expect(width).toBeGreaterThanOrEqual(512);
+    expect(height).toBeGreaterThanOrEqual(512);
+  });
+
+  test("The any-purpose icon's artwork extends past the maskable safe zone, unlike the maskable icon", async ({
+    page,
+  }) => {
+    await page.goto("./");
+    const { url, manifest } = await fetchManifest(page);
+    const icon = manifest.icons.find((candidate) => candidate.purpose === "any" || !candidate.purpose);
+    if (!icon) throw new Error("manifest has no any-purpose icon");
+    const iconUrl = new URL(icon.src, url).toString();
+    const violations = await countSafeZoneViolations(page, iconUrl, MASKABLE_SAFE_ZONE_INSET);
+    expect(violations).toBeGreaterThan(0);
   });
 });
 
