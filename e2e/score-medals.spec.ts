@@ -1,6 +1,17 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, last, oneBox, openGame, play, sample, standardJumps, untilGameOver, untilRestart } from "./probe.ts";
+import {
+  advance,
+  last,
+  oneBox,
+  openGame,
+  play,
+  sample,
+  standardJumps,
+  startRun,
+  untilGameOver,
+  untilRestart,
+} from "./probe.ts";
 import type { GameText, Sample } from "./probe.ts";
 
 const jumpTimeFor = (column: number): number => 1500 * column + 1200;
@@ -39,6 +50,7 @@ const expectBadge = (after: Sample, fill: string): void => {
 test.describe("Rule: No medal shows below a score of 10", () => {
   test("A run that dies at score 0 shows no medal", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const { after: diedAt } = await untilGameOver(page);
     expect(diedAt.gameOverScore.text).toBe("Score: 0");
     expect(diedAt.gameOverMedal.visible).toBe(false);
@@ -47,6 +59,7 @@ test.describe("Rule: No medal shows below a score of 10", () => {
 
   test("A run that dies at score 9 shows no medal", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await playThroughColumn(page, 9);
     const { after: diedAt } = await untilGameOver(page);
     expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 9");
@@ -58,6 +71,7 @@ test.describe("Rule: No medal shows below a score of 10", () => {
 test.describe("Rule: The game-over screen shows the medal that matches the final score", () => {
   test("A run that dies at score 10 shows a bronze medal", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await playThroughColumn(page, 10);
     const { after: diedAt } = await untilGameOver(page);
     expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 10");
@@ -80,6 +94,7 @@ test.describe("Rule: The game-over screen shows the medal that matches the final
   test("A run that dies at score 20 shows a silver medal", async ({ page }) => {
     test.setTimeout(60_000);
     await openGame(page, oneBox);
+    await startRun(page);
     await playThroughColumn(page, 20);
     const { after: diedAt } = await untilGameOver(page);
     expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 20");
@@ -98,6 +113,7 @@ test.describe("Rule: The game-over screen shows the medal that matches the final
 test.describe("Rule: The medal only shows on a game-over screen for the run that earned it", () => {
   test("The medal is hidden while the run is live and disappears after restart", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await playThroughColumn(page, 10);
     const live = await sample(page);
     expect(live.gameOverMedal.visible).toBe(false);
