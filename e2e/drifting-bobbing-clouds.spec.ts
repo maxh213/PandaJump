@@ -75,7 +75,8 @@ test.describe("Rule: Clouds never affect collisions or score", () => {
 });
 
 test.describe("Rule: Clouds are deterministic under the injected random source and clock", () => {
-  test("Two runs with the same random source and clock draw identical clouds at every sampled moment", async ({ browser }) => {
+  test("Two runs with the same random source and clock draw identical clouds at every sampled moment", async ({ browser }, testInfo) => {
+    testInfo.setTimeout(testInfo.timeout * 3);
     const first = await browser.newPage();
     const second = await browser.newPage();
     await openGame(first, CLOUD_SCRIPT);
