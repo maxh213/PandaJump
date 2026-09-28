@@ -53,7 +53,7 @@ test.describe("Rule: Pressing P or Escape while paused resumes the run without a
       await advanceTo(page, 1499);
       expect((await sample(page)).boxes).toEqual([]);
       await advanceTo(page, 1500);
-      expect((await sample(page)).boxes).toEqual([{ x: 400, y: 362, width: 64, key: "dirt_06.png" }]);
+      expect((await sample(page)).boxes).toEqual([{ x: 400, y: 362, width: 64, key: "dirt_06.png", depth: 0 }]);
       await play(page, [2700], 3340);
       expect((await sample(page)).score.text).toBe("1");
     });
