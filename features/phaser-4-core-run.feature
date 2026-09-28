@@ -38,6 +38,10 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
     Scenario: The page has an apple-touch-icon so iOS shows the Panda when added to the home screen
       Then the page's <link rel="apple-touch-icon"> resolves with status 200
 
+    Scenario: The page asks iOS and Android to launch standalone when added to the home screen
+      Then the page's <meta name="mobile-web-app-capable"> has content "yes"
+      And the page's <meta name="apple-mobile-web-app-capable"> has content "yes"
+
     Scenario: Shared links show a real preview
       Then the page's <meta name="description"> has non-empty, game-specific text
       And the page's <meta property="og:title"> reads "Panda Jump"
@@ -53,6 +57,8 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And the page's <link rel="icon"> resolves with status 200 and its width equals its height
       And the page's <meta property="og:image"> resolves with status 200
       And the page's <link rel="apple-touch-icon"> resolves with status 200
+      And the page's <meta name="mobile-web-app-capable"> has content "yes"
+      And the page's <meta name="apple-mobile-web-app-capable"> has content "yes"
       And the manifest's icon URL and start_url resolve with status 200
       And the manifest's icon image's width equals its height
 

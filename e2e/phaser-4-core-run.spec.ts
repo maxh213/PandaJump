@@ -139,6 +139,14 @@ test.describe("Rule: The page keeps its content", () => {
     expect(response.status()).toBe(200);
   });
 
+  test("The page asks iOS and Android to launch standalone when added to the home screen", async ({ page }) => {
+    await page.goto("./");
+    const mobileWebAppCapable = await page.locator('meta[name="mobile-web-app-capable"]').getAttribute("content");
+    expect(mobileWebAppCapable).toBe("yes");
+    const appleMobileWebAppCapable = await page.locator('meta[name="apple-mobile-web-app-capable"]').getAttribute("content");
+    expect(appleMobileWebAppCapable).toBe("yes");
+  });
+
   test("Shared links show a real preview", async ({ page }) => {
     await page.goto("./");
     const description = await page.locator('meta[name="description"]').getAttribute("content");
@@ -252,6 +260,14 @@ test.describe("Rule: The production build", () => {
     if (!href) throw new Error("apple-touch-icon href is missing");
     const response = await page.request.get(new URL(href, page.url()).toString());
     expect(response.status()).toBe(200);
+  });
+
+  test("The standalone-launch meta tags resolve from the production build's path prefix", async ({ page }) => {
+    await page.goto(`${host}/PandaJump/`);
+    const mobileWebAppCapable = await page.locator('meta[name="mobile-web-app-capable"]').getAttribute("content");
+    expect(mobileWebAppCapable).toBe("yes");
+    const appleMobileWebAppCapable = await page.locator('meta[name="apple-mobile-web-app-capable"]').getAttribute("content");
+    expect(appleMobileWebAppCapable).toBe("yes");
   });
 
   test("The manifest's icon and start_url resolve from the production build's path prefix", async ({ page }) => {
