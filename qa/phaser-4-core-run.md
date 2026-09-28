@@ -1,6 +1,6 @@
 # QA: Panda Jump on Phaser 4, slice 1
 
-Use a desktop browser with dev tools, and a phone or touch emulation for step 10. Heights are in px above the floor surface (y 426).
+Use a desktop browser with dev tools, and a phone or touch emulation for step 9. Heights are in px above the floor surface (y 426).
 
 1. Run `git ls-files main.js phaser.min.js` and `git diff master -- assets/`. **Expected:** both print nothing: the old game is gone and no asset changed.
 2. Run `npm ci` then `npm run dev` and open the URL it prints. **Expected:** the page title and heading read "Panda Jump"; below the 400×490 game the page reads "Check it out on Github" (link to https://github.com/maxh213/PandaJump) and "Controls: Click, tap or press Space to jump (you can double jump)".
