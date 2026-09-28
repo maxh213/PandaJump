@@ -26,6 +26,9 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And the page reads "Check it out on Github" with "Github" linking to "https://github.com/maxh213/PandaJump"
       And the page reads "Controls: Click, tap or press Space to jump (you can double jump)"
 
+    Scenario: The page declares its language for accessibility and search tools
+      Then the page's <html> element has lang="en"
+
     Scenario: Nothing on the page loads over plain http
       Then the Lato font is requested from an "https://" URL
       And no request uses an "http://" URL

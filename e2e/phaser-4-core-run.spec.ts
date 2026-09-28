@@ -114,6 +114,11 @@ test.describe("Rule: The page keeps its content", () => {
     await expect(page.locator("p").nth(1)).toHaveText("Controls: Click, tap or press Space to jump (you can double jump)");
   });
 
+  test("The page declares its language for accessibility and search tools", async ({ page }) => {
+    await page.goto("./");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  });
+
   test("Nothing on the page loads over plain http", async ({ page, baseURL }) => {
     const requests: string[] = [];
     page.on("request", (request) => requests.push(request.url()));
