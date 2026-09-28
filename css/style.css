@@ -1,7 +1,12 @@
 @import url("https://fonts.googleapis.com/css?family=Lato:100,400");
 
+html {
+	background: black;
+}
+
 body {
 	background: black;
+	margin: 0;
 }
 
 h1 {
