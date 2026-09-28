@@ -139,6 +139,8 @@ test.describe("Rule: The page keeps its content", () => {
 });
 
 test.describe("Rule: The production build", () => {
+  test.describe.configure({ mode: "serial" });
+
   const types: Record<string, string> = {
     ".html": "text/html",
     ".js": "text/javascript",
