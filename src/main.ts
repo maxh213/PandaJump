@@ -41,7 +41,7 @@ window.addEventListener("resize", fitGameContainer);
 
 const options = readOptions(window.location.search, Math.random);
 const run = createRun(options.random, options.cloudRandom, bestStore);
-const game = startGame(run, options.timeScale);
+const game = startGame(run, options.timeScale, window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
 Object.assign(window, { pandaJump: { run, game } });
 

@@ -77,6 +77,7 @@ const COPY_LABELS: Record<"true" | "false", string> = { true: "Copied!", false: 
 export class RunScene extends Phaser.Scene {
   private readonly run: Run;
   private readonly timeScale: number;
+  private readonly reducedMotion: boolean;
   private panda!: Phaser.GameObjects.Sprite;
   private airPuff!: Phaser.GameObjects.Graphics;
   private boxes!: Phaser.GameObjects.Group;
@@ -105,8 +106,9 @@ export class RunScene extends Phaser.Scene {
   private wasGameOver = false;
   private copied = false;
 
-  constructor(run: Run, timeScale: number) {
+  constructor(run: Run, timeScale: number, reducedMotion: boolean) {
     super("run");
+    this.reducedMotion = reducedMotion;
     this.run = run;
     this.timeScale = timeScale;
   }
@@ -364,7 +366,7 @@ export class RunScene extends Phaser.Scene {
     this.best.setText(`Best: ${view.best}`).setColor(BEST_COLORS[String(view.newBest) as "true" | "false"]);
     this.speedUp.setVisible(view.speedUp);
     this.doubleJumpHint.setVisible(view.doubleJumpHint);
-    this.deathFlash.setAlpha(view.deathFlash);
+    this.deathFlash.setAlpha(view.deathFlash * Number(!this.reducedMotion));
     this.drawGameOver(view);
     this.pauseTitle.setVisible(view.paused);
     this.pausePrompt.setVisible(view.paused);

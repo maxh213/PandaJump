@@ -57,3 +57,4 @@ add a line merge cleanly instead of conflicting.
 - Columns spawn closer together as the score climbs (1450 ms at score 20 down to 1250 ms at score 60) so the difficulty ramp keeps long runs harder
 - A jump pressed up to 100ms before the panda lands is remembered and fires the moment it touches the floor, instead of being thrown away
 - A coloured medal disc drawn beside the medal name on the game-over screen, matching the medal's colour
+- The full-screen white death flash stays invisible for players whose device asks for reduced motion
