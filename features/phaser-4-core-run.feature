@@ -153,6 +153,12 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And I press Space again at 2180 ms
       Then the panda peaks 199 px above the floor at about 2430 ms
 
+    Scenario: Holding Space does not add a second jump from its auto-repeat
+      Given the random source picks 1 box for the first column
+      When I press Space at 0 ms and keep it held down
+      And the held key's operating system auto-repeat sends another keydown at 580 ms
+      Then the panda peaks 168 px above the floor, not 199 px
+
   Rule: Box columns come from the right
 
     Scenario Outline: A column of one or two boxes spawns every 1500 ms
@@ -300,6 +306,18 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
         | tap the canvas   |
         | press Space      |
         | press Up Arrow   |
+
+    Scenario: Holding Space through death does not auto-restart the run from its auto-repeat
+      Given the random source picks 1 box for the first column
+      When I press Space at 0 ms and keep it held down, and do not press it again
+      Then the panda touches the column at about 2875 ms
+      When the held key's auto-repeat sends further keydowns at 500, 520 and 600 ms after death
+      Then the run has not restarted
+      And the page still reads "Game over"
+      And the page reads "Tap, press Space or the Up Arrow key to play again"
+      When I release Space and press it again
+      Then the run restarts
+      And the score reads "0"
 
     Scenario: Nothing from the old run survives a restart
       Given the random source picks 1 box and no second column for every column

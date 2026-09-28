@@ -131,6 +131,14 @@ export class RunScene extends Phaser.Scene {
     });
   };
 
+  private readonly jumpUnlessRepeating = (event: KeyboardEvent): void => {
+    [event]
+      .filter((keyEvent) => !keyEvent.repeat)
+      .forEach(() => {
+        this.jump();
+      });
+  };
+
   private readonly shareScore = (
     _pointer: Phaser.Input.Pointer,
     _gameObject: Phaser.GameObjects.GameObject,
@@ -173,8 +181,8 @@ export class RunScene extends Phaser.Scene {
 
   private listenForJumpKeys(keyboard: Phaser.Input.Keyboard.KeyboardPlugin): void {
     keyboard.addCapture(["SPACE", "UP"]);
-    keyboard.on("keydown-SPACE", this.jump);
-    keyboard.on("keydown-UP", this.jump);
+    keyboard.on("keydown-SPACE", this.jumpUnlessRepeating);
+    keyboard.on("keydown-UP", this.jumpUnlessRepeating);
   }
 
   private listenForPauseKeys(keyboard: Phaser.Input.Keyboard.KeyboardPlugin): void {

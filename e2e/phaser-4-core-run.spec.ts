@@ -22,6 +22,8 @@ import {
   pressSpace,
   sample,
   settle,
+  spaceDown,
+  spaceUp,
   standardJumps,
   standardRandom,
   twoBoxes,
@@ -488,6 +490,17 @@ test.describe("Rule: The panda jumps once from the floor and once more in the ai
     expect(Math.abs(heightOf(peak) - 199)).toBeLessThanOrEqual(3);
     expect(Math.abs(peak.time - 2430)).toBeLessThanOrEqual(16);
   });
+
+  test("Holding Space does not add a second jump from its auto-repeat", async ({ page }) => {
+    await openGame(page, oneBox);
+    await spaceDown(page);
+    const early = await advance(page, 580);
+    await spaceDown(page);
+    const later = await advance(page, 700);
+    const peak = peakOf([...early, ...later]);
+    expect(heightOf(peak)).toBeCloseTo(168, -0.5);
+    await spaceUp(page);
+  });
 });
 
 test.describe("Rule: Box columns come from the right", () => {
@@ -730,6 +743,31 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
         });
       });
     }
+  });
+
+  test("Holding Space through death does not auto-restart the run, but releasing and pressing it again does", async ({ page }) => {
+    await openGame(page, oneBox);
+    await spaceDown(page);
+    const { after: diedAt } = await untilGameOver(page);
+    expect(diedAt.restarts).toBe(0);
+    await advance(page, 500);
+    await spaceDown(page);
+    await advance(page, 20);
+    await spaceDown(page);
+    await advance(page, 80);
+    await spaceDown(page);
+    const stillFrozen = await sample(page);
+    expect(stillFrozen.restarts).toBe(0);
+    expect(stillFrozen.gameOverTitle.visible).toBe(true);
+    expect(stillFrozen.gameOverPrompt).toMatchObject({
+      text: "Tap, press Space or the Up Arrow key to play again",
+      visible: true,
+    });
+    await spaceUp(page);
+    await pressSpace(page);
+    const restarted = await sample(page);
+    expect(restarted.restarts).toBe(1);
+    expect(restarted.score.text).toBe("0");
   });
 
   test("Nothing from the old run survives a restart", async ({ page }) => {

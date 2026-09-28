@@ -275,6 +275,16 @@ export const showPage = async (page: Page) => {
   await settle(page);
 };
 
+export const spaceDown = async (page: Page) => {
+  await page.keyboard.down("Space");
+  await settle(page);
+};
+
+export const spaceUp = async (page: Page) => {
+  await page.keyboard.up("Space");
+  await settle(page);
+};
+
 export const play = async (page: Page, jumps: number[], until: number, key = "Space"): Promise<Sample[]> => {
   const samples: Sample[] = [];
   for (const jump of jumps) {
