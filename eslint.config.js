@@ -29,6 +29,12 @@ export default tseslint.config(
     },
   },
   {
+    files: ["src/rules/**/*.ts"],
+    rules: {
+      "no-restricted-globals": ["error", "window", "document", "localStorage", "navigator"],
+    },
+  },
+  {
     files: ["e2e/**/*.ts", "playwright.config.ts"],
     extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
     languageOptions: {
