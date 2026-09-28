@@ -1,6 +1,18 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, last, oneBox, openGame, play, press, sample, twoBoxes, untilGameOver, untilRestart } from "./probe.ts";
+import {
+  advance,
+  last,
+  oneBox,
+  openGame,
+  play,
+  press,
+  sample,
+  startRun,
+  twoBoxes,
+  untilGameOver,
+  untilRestart,
+} from "./probe.ts";
 import type { Sample } from "./probe.ts";
 
 const mockSupportedShare = (page: Page) =>
@@ -10,6 +22,7 @@ const mockSupportedShare = (page: Page) =>
 
 const dieAboveTheFloor = async (page: Page): Promise<{ before: Sample; after: Sample }> => {
   await openGame(page, twoBoxes);
+  await startRun(page);
   await play(page, [2300], 2875);
   return untilGameOver(page);
 };
@@ -51,6 +64,7 @@ test.describe("Rule: Everything except the panda's height stays frozen while it 
 test.describe("Rule: The panda is drawn upside down for exactly as long as the game is over", () => {
   test("The panda flips the instant it dies and flips back the instant it restarts", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     expect((await sample(page)).panda.flipY).toBe(false);
     const { after: diedAt } = await untilGameOver(page);
     expect(diedAt.panda.flipY).toBe(true);
@@ -62,6 +76,7 @@ test.describe("Rule: The panda is drawn upside down for exactly as long as the g
 test.describe("Rule: A panda that dies already on the floor does not need to fall", () => {
   test("Dying without ever leaving the floor keeps the panda's feet at y 426", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const { after: diedAt } = await untilGameOver(page);
     expect(diedAt.panda.bottom).toBe(426);
     const later = last(await advance(page, 500));

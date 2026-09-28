@@ -752,7 +752,7 @@ test("dying and restarting resets the callout so beating the new, higher best tr
 });
 
 test("a panda that dies while still rising has its speed zeroed so it never rises again", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2870);
   run.jump();
   run.advance(10);
@@ -764,7 +764,7 @@ test("a panda that dies while still rising has its speed zeroed so it never rise
 });
 
 test("a panda that dies above the floor keeps falling every step until it settles exactly on the floor, then stays there", () => {
-  const run = createRun(twoBoxColumns(), oneBoxEach(), noStore);
+  const run = createStartedRun(twoBoxColumns(), oneBoxEach(), noStore);
   run.advance(2300);
   run.jump();
   run.advance(900);
@@ -787,7 +787,7 @@ test("a panda that dies above the floor keeps falling every step until it settle
 });
 
 test("a panda that dies already on the floor stays at pandaBottom 426", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);
   const diedAt = run.view();
   expect(diedAt.gameOver).toBe(true);
@@ -814,7 +814,7 @@ test("dying against the front of a double column marks only its boxes as hit", (
 });
 
 test("pandaUpsideDown is true exactly while gameOver is true, and resets on restart", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   expect(run.view().pandaUpsideDown).toBe(false);
   run.advance(2880);
   expect(run.view()).toMatchObject({ gameOver: true, pandaUpsideDown: true });
@@ -924,7 +924,7 @@ test("airPuff clears immediately on death instead of freezing mid-fade", () => {
 });
 
 test("time, score, columns, clouds and floor scroll stay frozen while the panda falls after a mid-air death", () => {
-  const run = createRun(twoBoxColumns(), oneBoxEach(), noStore);
+  const run = createStartedRun(twoBoxColumns(), oneBoxEach(), noStore);
   run.advance(2300);
   run.jump();
   run.advance(900);
