@@ -45,6 +45,7 @@ interface View {
   readonly pandaAngle: number;
   readonly airPuff: { x: number; y: number; alpha: number } | null;
   readonly doubleJumpHint: boolean;
+  readonly pandaShadow: { x: number; y: number; scale: number };
 }
 
 export interface Run {
@@ -102,6 +103,7 @@ const PANDA_ANGLE_PER_SPEED = 20;
 const COUNTDOWN_MS = 1500;
 const COUNTDOWN_STEP_MS = 500;
 const AIR_PUFF_DURATION_MS = 250;
+const SHADOW_PEAK_HEIGHT = 168;
 const HINT_BELOW_SCORE = 3;
 const JUMP_BUFFER_MS = 100;
 const PANDA_CENTER_X = PANDA_X + 12.5;
@@ -281,6 +283,12 @@ const pandaFrameOf = (state: State): number =>
     ? FIRST_RUN_FRAME
     : FIRST_RUN_FRAME + (Math.floor(state.time * FRAMES_PER_MS) % RUN_FRAMES);
 
+const pandaShadowOf = (state: State): View["pandaShadow"] => ({
+  x: PANDA_CENTER_X,
+  y: FLOOR_Y,
+  scale: 1 - (0.5 * Math.min(state.panda.height, SHADOW_PEAK_HEIGHT)) / SHADOW_PEAK_HEIGHT,
+});
+
 const viewOf = (state: State): View => ({
   time: state.time,
   restarts: state.restarts,
@@ -308,6 +316,7 @@ const viewOf = (state: State): View => ({
   pandaAngle: pandaAngleFor(state),
   airPuff: airPuffOf(state),
   doubleJumpHint: doubleJumpHintOf(state),
+  pandaShadow: pandaShadowOf(state),
 });
 
 const resume = (state: State): State => (state.resumeElapsed === null ? { ...state, resumeElapsed: 0 } : state);

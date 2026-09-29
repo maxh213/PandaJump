@@ -59,3 +59,4 @@ add a line merge cleanly instead of conflicting.
 - A coloured medal disc drawn beside the medal name on the game-over screen, matching the medal's colour
 - The full-screen white death flash stays invisible for players whose device asks for reduced motion
 - The panda holds one still frame while it is in the air and only runs its legs on the floor
+- A soft black ground shadow under the panda, drawn above the floor and below the panda, that shrinks from full size on the floor to half size at a floor jump's peak and stays visible while paused and at game over

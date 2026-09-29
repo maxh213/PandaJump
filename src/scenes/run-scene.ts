@@ -61,6 +61,12 @@ const MEDAL_BADGE_GAP = 18;
 const MEDAL_BADGE_STROKE_WIDTH = 2;
 const DEATH_FLASH_DEPTH = 1;
 const GAME_OVER_DEPTH = 2;
+const SHADOW_DEPTH = 0.25;
+const PANDA_DEPTH = 0.5;
+const AIR_PUFF_DEPTH = 0.75;
+const SHADOW_WIDTH = 24;
+const SHADOW_HEIGHT = 6;
+const SHADOW_ALPHA = 0.3;
 const DEATH_FLASH_COLOR = 0xffffff;
 const shareSupported = typeof navigator.share === "function";
 const PAGE_TITLE = "Panda Jump";
@@ -79,6 +85,7 @@ export class RunScene extends Phaser.Scene {
   private readonly timeScale: number;
   private readonly reducedMotion: boolean;
   private panda!: Phaser.GameObjects.Sprite;
+  private pandaShadow!: Phaser.GameObjects.Ellipse;
   private airPuff!: Phaser.GameObjects.Graphics;
   private boxes!: Phaser.GameObjects.Group;
   private clouds!: Phaser.GameObjects.Group;
@@ -128,12 +135,7 @@ export class RunScene extends Phaser.Scene {
 
   create(): void {
     this.clouds = this.add.group({ classType: Phaser.GameObjects.Image, defaultKey: "cloud_02.png", name: "clouds" });
-    this.panda = this.add
-      .sprite(0, 0, "Panda.png")
-      .setOrigin(0.5, 0.5)
-      .setScale(PANDA_SCALE)
-      .setName("panda");
-    this.airPuff = this.add.graphics().setName("airPuff");
+    this.createPandaAndEffects();
     this.boxes = this.add.group({ classType: Phaser.GameObjects.Image, defaultKey: "dirt_06.png", name: "boxes" });
     this.rock = this.addFloorStrip(FLOOR_Y, "rock_06.png").setName("rock");
     this.grass = this.addFloorStrip(GRASS_Y, "top_grass_01.png").setName("grass");
@@ -164,6 +166,20 @@ export class RunScene extends Phaser.Scene {
     this.countdownText = this.centeredText(GAME_OVER_Y, "", "40px").setName("countdownText");
     this.wireInput();
     this.draw();
+  }
+
+  private createPandaAndEffects(): void {
+    this.panda = this.add
+      .sprite(0, 0, "Panda.png")
+      .setOrigin(0.5, 0.5)
+      .setScale(PANDA_SCALE)
+      .setDepth(PANDA_DEPTH)
+      .setName("panda");
+    this.pandaShadow = this.add
+      .ellipse(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT, 0x000000, SHADOW_ALPHA)
+      .setDepth(SHADOW_DEPTH)
+      .setName("pandaShadow");
+    this.airPuff = this.add.graphics().setDepth(AIR_PUFF_DEPTH).setName("airPuff");
   }
 
   private wireInput(): void {
@@ -357,6 +373,7 @@ export class RunScene extends Phaser.Scene {
     const view = this.run.view();
     this.cameras.main.setBackgroundColor(view.sky);
     this.drawPanda(view);
+    this.pandaShadow.setPosition(view.pandaShadow.x, view.pandaShadow.y).setScale(view.pandaShadow.scale);
     this.drawAirPuff(view.airPuff);
     this.rock.tilePositionX = view.floorScroll;
     this.grass.tilePositionX = view.floorScroll;

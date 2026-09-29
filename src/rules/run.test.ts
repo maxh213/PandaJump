@@ -75,6 +75,7 @@ test("a run starts with the panda on the floor, score 0 and no boxes", () => {
     pandaAngle: 0,
     airPuff: null,
     doubleJumpHint: true,
+    pandaShadow: { x: 112.5, y: 426, scale: 1 },
   });
 });
 
@@ -1072,4 +1073,20 @@ test("a buffered jump is discarded when the panda dies before landing", () => {
   run.jump();
   run.advance(500);
   expect(run.view()).toMatchObject({ gameOver: false, pandaBottom: 426, restarts: 1 });
+});
+
+test("the panda shadow shrinks from 1 towards 0.5 as the panda rises and stays at 0.5 from 168 px up", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  expect(run.view().pandaShadow).toEqual({ x: 112.5, y: 426, scale: 1 });
+  run.jump();
+  run.advance(290);
+  const partway = run.view().pandaShadow;
+  expect(partway.scale).toBeGreaterThan(0.5);
+  expect(partway.scale).toBeLessThan(1);
+  expect(partway).toMatchObject({ x: 112.5, y: 426 });
+  run.advance(290);
+  expect(run.view().pandaShadow.scale).toBeCloseTo(0.5);
+  run.jump();
+  run.advance(100);
+  expect(run.view().pandaShadow.scale).toBe(0.5);
 });

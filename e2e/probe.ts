@@ -57,6 +57,20 @@ export interface Sample {
   deathFlash: { x: number; y: number; width: number; height: number; alpha: number; color: string; depth: number };
   viewClouds: View["clouds"];
   viewDeathFlash: View["deathFlash"];
+  pandaShadow: {
+    x: number;
+    y: number;
+    scale: number;
+    visible: boolean;
+    width: number;
+    height: number;
+    alpha: number;
+    color: string;
+    depth: number;
+    order: number;
+  };
+  viewPandaShadow: View["pandaShadow"];
+  order: { rock: number; grass: number; panda: number };
   airPuff: { x: number; y: number; alpha: number; visible: boolean };
   gameOverMedalBadge: {
     x: number;
@@ -118,6 +132,19 @@ interface GameTileSprite {
   y: number;
   tilePositionX: number;
   texture: { key: string };
+}
+
+interface GameEllipse {
+  x: number;
+  y: number;
+  scaleX: number;
+  scaleY: number;
+  visible: boolean;
+  displayWidth: number;
+  displayHeight: number;
+  fillAlpha: number;
+  fillColor: number;
+  depth: number;
 }
 
 interface GameGraphics {
@@ -208,6 +235,8 @@ export const installProbe = () => {
     const badge = named("gameOverMedalBadge") as GameGraphics;
     const command = (index: number): number => badge.commandBuffer[index] ?? Number.NaN;
     const hex = (color: number): string => `#${color.toString(16).padStart(6, "0")}`;
+    const shadow = named("pandaShadow") as GameEllipse;
+    const orderOf = (name: string) => scene.children.list.indexOf(named(name) as object as (typeof scene.children.list)[number]);
     const bounds = panda.getBounds();
     return {
       time: view.time,
@@ -276,6 +305,20 @@ export const installProbe = () => {
       },
       viewClouds: view.clouds,
       viewDeathFlash: view.deathFlash,
+      pandaShadow: {
+        x: shadow.x,
+        y: shadow.y,
+        scale: shadow.scaleX,
+        visible: shadow.visible,
+        width: shadow.displayWidth / shadow.scaleX,
+        height: shadow.displayHeight / shadow.scaleY,
+        alpha: shadow.fillAlpha,
+        color: `#${shadow.fillColor.toString(16).padStart(6, "0")}`,
+        depth: shadow.depth,
+        order: orderOf("pandaShadow"),
+      },
+      viewPandaShadow: view.pandaShadow,
+      order: { rock: orderOf("rock"), grass: orderOf("grass"), panda: orderOf("panda") },
       airPuff: { x: airPuff.x, y: airPuff.y, alpha: airPuff.alpha, visible: airPuff.visible },
       gameOverMedalBadge: {
         x: badge.x,
