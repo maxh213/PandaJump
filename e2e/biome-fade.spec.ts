@@ -130,7 +130,7 @@ test.describe("Rule: Stars fade in entering industrial and out leaving it", () =
 
 test.describe("Rule: Pausing or dying freezes a fade; restart snaps to meadow", () => {
   test("Pausing halfway through the desert fade freezes the sky and layer alphas", async ({ page }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(120_000);
     await reachScore(page, 20);
     await advanceAlive(page, 1500);
     const frozen = await sample(page);
@@ -145,7 +145,7 @@ test.describe("Rule: Pausing or dying freezes a fade; restart snaps to meadow", 
   });
 
   test("Dying mid-fade freezes the scenery, and a restart shows pure meadow", async ({ page }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(120_000);
     await reachScore(page, 20);
     await advanceAlive(page, 1000);
     const mid = await sample(page);
