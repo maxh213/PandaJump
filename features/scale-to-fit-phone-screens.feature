@@ -56,6 +56,19 @@ Feature: Panda Jump scales to fit phone screens
       And the canvas is fully visible without scrolling
       And the page has no horizontal scrollbar
 
+    Scenario: A short phone with a top inset shrinks the canvas so it still fits
+      Given the device reports a 47 px safe area at the top of the screen
+      And the browser viewport is 390 by 500 px
+      Then the canvas starts at least 47 px from the top of the page
+      And the canvas is fully visible without scrolling
+      And the page has no horizontal scrollbar
+
+    Scenario: Side safe-area insets shrink the canvas so it still fits
+      Given the device reports a 47 px safe area on the left and right of the screen
+      And the browser viewport is 390 by 844 px
+      Then the canvas is no wider than 296 px
+      And the page has no horizontal scrollbar
+
     Scenario: The viewport meta tag lets the page extend under the status bar
       Then the viewport meta tag asks for viewport-fit cover
       And the viewport meta tag still disables user scaling

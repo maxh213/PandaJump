@@ -160,6 +160,52 @@ test.describe("Rule: The canvas stays clear of the device's safe area", () => {
     });
   });
 
+  test.describe("A short phone with a top inset shrinks the canvas so it still fits", () => {
+    test.use({ viewport: { width: 390, height: 500 } });
+
+    test("A short phone with a top inset shrinks the canvas so it still fits", async ({ page }) => {
+      await page.addInitScript(() => {
+        document.addEventListener("DOMContentLoaded", () => {
+          const style = document.createElement("style");
+          style.textContent = "body { padding-top: 47px; }";
+          document.head.append(style);
+          window.dispatchEvent(new Event("resize"));
+        });
+      });
+      await page.goto("./");
+      const box = await settledCanvasBox(page);
+      expect(box.y).toBeGreaterThanOrEqual(47);
+      expect(box.y + box.height).toBeLessThanOrEqual(500);
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBe(0);
+    });
+  });
+
+  test.describe("Side safe-area insets shrink the canvas so it still fits", () => {
+    test.use({ viewport: { width: 390, height: 844 } });
+
+    test("Side safe-area insets shrink the canvas so it still fits", async ({ page }) => {
+      await page.addInitScript(() => {
+        document.addEventListener("DOMContentLoaded", () => {
+          const style = document.createElement("style");
+          style.textContent = "body { padding-left: 47px; padding-right: 47px; }";
+          document.head.append(style);
+          window.dispatchEvent(new Event("resize"));
+        });
+      });
+      await page.goto("./");
+      const box = await settledCanvasBox(page);
+      expect(box.width).toBeLessThanOrEqual(296);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBe(0);
+    });
+  });
+
   test.describe("The viewport meta tag lets the page extend under the status bar", () => {
     test("The viewport meta tag lets the page extend under the status bar", async ({ page }) => {
       await page.goto("./");
