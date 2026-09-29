@@ -56,6 +56,7 @@ interface View {
   readonly pandaUpsideDown: boolean;
   readonly bestMarker: { x: number; y: number } | null;
   readonly deathFlash: number;
+  readonly deathShake: { x: number; y: number };
   readonly pandaAngle: number;
   readonly pandaScaleX: number;
   readonly pandaScaleY: number;
@@ -125,6 +126,11 @@ const SCORE_POP_DURATION_MS = 150;
 const SPEED_UP_DURATION_MS = 800;
 const DEATH_FLASH_PEAK = 0.6;
 const DEATH_FLASH_DURATION_MS = 200;
+const DEATH_SHAKE_PEAK = 6;
+const DEATH_SHAKE_DURATION_MS = 200;
+const DEATH_SHAKE_X_RATE = Math.PI / 25;
+const DEATH_SHAKE_Y_RATE = Math.PI / 20;
+const NO_SHAKE = { x: 0, y: 0 };
 const MAX_PANDA_ANGLE = 25;
 const PANDA_ANGLE_PER_SPEED = 20;
 const COUNTDOWN_MS = 1500;
@@ -284,6 +290,15 @@ const liveBestMarker = (state: State): { x: number; y: number } | null =>
 const deathFlashOf = (deathElapsed: number | null): number =>
   deathElapsed === null ? 0 : Math.max(0, DEATH_FLASH_PEAK * (1 - deathElapsed / DEATH_FLASH_DURATION_MS));
 
+const deathShakeOf = (deathElapsed: number | null): View["deathShake"] => {
+  if (deathElapsed === null || deathElapsed >= DEATH_SHAKE_DURATION_MS) return NO_SHAKE;
+  const amplitude = DEATH_SHAKE_PEAK * (1 - deathElapsed / DEATH_SHAKE_DURATION_MS);
+  return {
+    x: amplitude * Math.sin(deathElapsed * DEATH_SHAKE_X_RATE) + 0,
+    y: amplitude * Math.cos(deathElapsed * DEATH_SHAKE_Y_RATE) + 0,
+  };
+};
+
 const pandaAngleFor = (state: State): number => {
   if (state.deathElapsed !== null) return 0;
   const raw = -state.panda.speed / PANDA_ANGLE_PER_SPEED;
@@ -395,6 +410,7 @@ const viewOf = (state: State): View => ({
   pandaUpsideDown: state.deathElapsed !== null,
   bestMarker: liveBestMarker(state),
   deathFlash: deathFlashOf(state.deathElapsed),
+  deathShake: deathShakeOf(state.deathElapsed),
   pandaAngle: pandaAngleFor(state),
   pandaScaleX: pandaScaleOf(state).x,
   pandaScaleY: pandaScaleOf(state).y,

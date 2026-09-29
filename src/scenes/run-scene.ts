@@ -498,7 +498,7 @@ export class RunScene extends Phaser.Scene {
     this.best.setText(`Best: ${view.best}`).setColor(BEST_COLORS[String(view.newBest) as "true" | "false"]);
     this.speedUp.setVisible(view.speedUp);
     this.doubleJumpHint.setVisible(view.doubleJumpHint);
-    this.deathFlash.setAlpha(view.deathFlash * Number(!this.reducedMotion));
+    this.drawDeathEffects(view);
     this.drawGameOverTexts(view);
     this.pauseTitle.setVisible(view.paused);
     this.pausePrompt.setVisible(view.paused);
@@ -521,6 +521,12 @@ export class RunScene extends Phaser.Scene {
     this.refreshGroup(this.clouds, view.clouds, (cloud) => {
       this.showCloud(cloud);
     });
+  }
+
+  private drawDeathEffects(view: ReturnType<Run["view"]>): void {
+    const motion = Number(!this.reducedMotion);
+    this.cameras.main.setScroll(view.deathShake.x * motion, view.deathShake.y * motion);
+    this.deathFlash.setAlpha(view.deathFlash * motion);
   }
 
   private drawGameOverTexts(view: ReturnType<Run["view"]>): void {

@@ -65,6 +65,8 @@ export interface Sample {
   deathFlash: { x: number; y: number; width: number; height: number; alpha: number; color: string; depth: number };
   viewClouds: View["clouds"];
   viewDeathFlash: View["deathFlash"];
+  cameraScroll: { x: number; y: number };
+  viewDeathShake: View["deathShake"];
   pandaShadow: {
     x: number;
     y: number;
@@ -193,7 +195,7 @@ interface GameScene {
     getByName: (name: string) => unknown;
     list: readonly GameNode[];
   };
-  cameras: { main: { backgroundColor: { color: number } } };
+  cameras: { main: { backgroundColor: { color: number }; scrollX: number; scrollY: number } };
 }
 
 interface RunHandle {
@@ -344,6 +346,8 @@ export const installProbe = () => {
       },
       viewClouds: view.clouds,
       viewDeathFlash: view.deathFlash,
+      cameraScroll: { x: scene.cameras.main.scrollX, y: scene.cameras.main.scrollY },
+      viewDeathShake: view.deathShake,
       pandaShadow: {
         x: shadow.x,
         y: shadow.y,

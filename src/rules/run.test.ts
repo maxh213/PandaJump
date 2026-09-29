@@ -90,6 +90,7 @@ test("a run starts ready, with the panda on the floor, score 0 and no boxes", ()
     pandaUpsideDown: false,
     bestMarker: null,
     deathFlash: 0,
+    deathShake: { x: 0, y: 0 },
     ...naturalShape,
     airPuff: null,
     doubleJumpHint: false,
@@ -214,7 +215,7 @@ test("touching a column freezes the run and shows game over instead of restartin
   run.advance(2895);
   run.advance(200);
   const frozen = run.view();
-  expect(frozen).toMatchObject({ restarts: 0, score: "0", gameOver: true, canRestart: false, deathFlash: 0 });
+  expect(frozen).toMatchObject({ restarts: 0, score: "0", gameOver: true, canRestart: false, deathFlash: 0, deathShake: { x: 0, y: 0 } });
   expect(frozen.boxes).not.toEqual([]);
   run.advance(10);
   expect(run.view()).toEqual(frozen);
@@ -236,6 +237,36 @@ test("deathFlash is 0 through a live run, jumps to 0.6 the instant the panda die
   expect(run.view().deathFlash).toBe(0);
 });
 
+test("deathShake is still through a live run, shakes within 6px for 200ms after the hit and is exactly 0 from 200ms on", () => {
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2870);
+  expect(run.view().deathShake).toEqual({ x: 0, y: 0 });
+  run.advance(6);
+  expect(run.view().gameOver).toBe(true);
+  const offsets = Array.from({ length: 20 }, () => {
+    run.advance(10);
+    return run.view().deathShake;
+  });
+  expect(offsets.some((offset) => offset.x !== 0 && offset.y !== 0)).toBe(true);
+  expect(offsets.every((offset) => Math.abs(offset.x) <= 6 && Math.abs(offset.y) <= 6)).toBe(true);
+  run.advance(200);
+  expect(run.view().deathShake).toEqual({ x: 0, y: 0 });
+  run.advance(800);
+  expect(run.view().deathShake).toEqual({ x: 0, y: 0 });
+});
+
+test("deathShake follows the same offsets for the same steps and is 0 again after a restart", () => {
+  const first = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  const second = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  first.advance(2880);
+  second.advance(2880);
+  expect(first.view().deathShake).toEqual(second.view().deathShake);
+  expect(first.view().deathShake).not.toEqual({ x: 0, y: 0 });
+  first.advance(500);
+  first.jump();
+  expect(first.view().deathShake).toEqual({ x: 0, y: 0 });
+});
+
 test("no click, tap or Space input restarts the run during the first 500ms after death, and canRestart stays false", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2895);
@@ -243,7 +274,7 @@ test("no click, tap or Space input restarts the run during the first 500ms after
   run.advance(499);
   expect(run.view()).toMatchObject({ gameOver: true, canRestart: false });
   run.jump();
-  expect(run.view()).toMatchObject({ ...frozen, restarts: 0, gameOver: true, canRestart: false, deathFlash: 0 });
+  expect(run.view()).toMatchObject({ ...frozen, restarts: 0, gameOver: true, canRestart: false, deathFlash: 0, deathShake: { x: 0, y: 0 } });
 });
 
 test("canRestart becomes true once 500ms have passed since death, before any input arrives", () => {
