@@ -25,7 +25,7 @@ const FEET_FORGIVENESS = 4;
 const SECOND_COLUMN_SCORE = 10;
 const MARKER_GAP = 8;
 
-const columnX = (column: Column, distance: number): number =>
+export const columnX = (column: Column, distance: number): number =>
   CANVAS_WIDTH + column.offset - (distance - column.spawnDistance);
 
 const skipTextureDraw = (random: Random): void => {

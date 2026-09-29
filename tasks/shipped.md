@@ -89,3 +89,4 @@ add a line merge cleanly instead of conflicting.
 - The page extends under the iPhone status bar and notch when installed, with the canvas padded below the safe area so the score and pause button are no longer covered
 - Scenery crossfades over 3 seconds of game time when the run enters a new biome: sky colour lerps, hills and ground strips stack with rising alpha, and stars fade in or out with the industrial biome
 - The panda's soft ground shadow sits on the top of a box column while the panda is above it, and on the floor otherwise, shrinking with height above that surface
+- When the panda fails to clear a box it knocks left clear of the column with a short impact burst and bounce, instead of falling through the boxes

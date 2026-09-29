@@ -51,6 +51,35 @@ const createStartedRun = (...args: Parameters<typeof createRun>): Run => {
   return run;
 };
 
+const untilDead = (run: Run): ReturnType<Run["view"]> => {
+  while (!run.view().gameOver) run.advance(10);
+  return run.view();
+};
+
+const untilFloor = (run: Run): void => {
+  let steps = 0;
+  while (run.view().pandaBottom < 426) {
+    steps += 1;
+    if (steps > 1000) throw new Error("the panda never reached the floor");
+    run.advance(10);
+  }
+};
+
+const hitColumnLeft = (view: ReturnType<Run["view"]>): number =>
+  Math.min(...view.boxes.filter((box) => box.hit).map((box) => box.x));
+
+const assertKnockbackClears = (run: Run, hitLeft: number, hitOverlap: number): void => {
+  let previousX = run.view().pandaX;
+  Array.from({ length: 25 }, () => {
+    run.advance(10);
+    const current = run.view();
+    expect(current.pandaX).toBeLessThanOrEqual(previousX);
+    expect(Math.max(0, current.pandaX + 22 - hitLeft)).toBeLessThanOrEqual(hitOverlap);
+    previousX = current.pandaX;
+  });
+  expect(run.view().pandaX + 22).toBeLessThanOrEqual(hitLeft - 2);
+};
+
 const startingClouds = [
   { x: 0, y: 53, texture: "cloud_02.png" },
   { x: 150, y: 100, texture: "cloud_05.png" },
@@ -116,6 +145,7 @@ test("a run starts ready, with the panda on the floor, score 0 and no boxes", ()
     doubleJumpHint: false,
     pandaShadow: { x: 112.5, y: 426, scale: 1 },
     landingPuff: null,
+    impactBurst: null,
   });
 });
 
@@ -272,7 +302,7 @@ test("a column spawns every 1500 ms at the right edge", () => {
   expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "dirt_06.png", hit: false }]);
 });
 
-test("touching a column freezes the run and shows game over instead of restarting at once", () => {
+test("touching a column freezes the world while the panda still bounces", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2895);
   run.advance(200);
@@ -280,7 +310,16 @@ test("touching a column freezes the run and shows game over instead of restartin
   expect(frozen).toMatchObject({ restarts: 0, score: "0", gameOver: true, canRestart: false, deathFlash: 0, deathShake: { x: 0, y: 0 } });
   expect(frozen.boxes).not.toEqual([]);
   run.advance(10);
-  expect(run.view()).toEqual(frozen);
+  const later = run.view();
+  expect(later).toMatchObject({
+    time: frozen.time,
+    score: frozen.score,
+    boxes: frozen.boxes,
+    clouds: frozen.clouds,
+    floorScroll: frozen.floorScroll,
+    canRestart: false,
+  });
+  expect(later.pandaX !== frozen.pandaX || later.pandaBottom !== frozen.pandaBottom).toBe(true);
 });
 
 test("deathFlash is 0 through a live run, jumps to 0.6 the instant the panda dies and fades to 0 by 200ms", () => {
@@ -332,11 +371,11 @@ test("deathShake follows the same offsets for the same steps and is 0 again afte
 test("no click, tap or Space input restarts the run during the first 500ms after death, and canRestart stays false", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2895);
-  const frozen = run.view();
   run.advance(499);
-  expect(run.view()).toMatchObject({ gameOver: true, canRestart: false });
+  const beforeJump = run.view();
+  expect(beforeJump).toMatchObject({ gameOver: true, canRestart: false });
   run.jump();
-  expect(run.view()).toMatchObject({ ...frozen, restarts: 0, gameOver: true, canRestart: false, deathFlash: 0, deathShake: { x: 0, y: 0 } });
+  expect(run.view()).toEqual(beforeJump);
 });
 
 test("canRestart becomes true once 500ms have passed since death, before any input arrives", () => {
@@ -896,7 +935,7 @@ test("dying and restarting resets the callout so beating the new, higher best tr
   expect(run.view()).toMatchObject({ score: "2", best: "2", newBest: true });
 });
 
-test("a panda that dies while still rising has its speed zeroed so it never rises again", () => {
+test("a panda that dies while rising gets an upward bounce then falls to the floor", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2885);
   run.jump();
@@ -905,40 +944,74 @@ test("a panda that dies while still rising has its speed zeroed so it never rise
   expect(diedAt.gameOver).toBe(true);
   expect(diedAt.pandaBottom).toBeLessThan(426);
   run.advance(10);
-  expect(run.view().pandaBottom).toBeGreaterThan(diedAt.pandaBottom);
+  expect(run.view().pandaBottom).toBeLessThan(diedAt.pandaBottom);
+  untilFloor(run);
+  expect(run.view().pandaBottom).toBe(426);
 });
 
-test("a panda that dies above the floor keeps falling every step until it settles exactly on the floor, then stays there", () => {
+test("a panda that dies above the floor bounces left clear of the column and settles on the floor", () => {
   const run = createStartedRun(twoBoxColumns(), oneBoxEach(), noStore);
   run.advance(2300);
   run.jump();
-  run.advance(900);
-  const diedAt = run.view();
-  expect(diedAt.gameOver).toBe(true);
+  const diedAt = untilDead(run);
   expect(diedAt.pandaBottom).toBeLessThan(426);
-  let previous = diedAt.pandaBottom;
-  let steps = 0;
-  while (previous < 426) {
-    steps += 1;
-    if (steps > 1000) throw new Error("the panda never reached the floor");
-    run.advance(10);
-    const current = run.view().pandaBottom;
-    expect(current).toBeGreaterThan(previous);
-    expect(current).toBeLessThanOrEqual(426);
-    previous = current;
-  }
+  expect(diedAt.pandaX).toBe(100);
+  const hitLeft = hitColumnLeft(diedAt);
+  assertKnockbackClears(run, hitLeft, Math.max(0, diedAt.pandaX + 22 - hitLeft));
+  untilFloor(run);
+  expect(run.view()).toMatchObject({ pandaBottom: 426 });
+  expect(run.view().pandaX + 22).toBeLessThanOrEqual(hitLeft - 2);
+});
+
+test("a panda that dies already on the floor pops up then settles back at pandaBottom 426", () => {
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  const diedAt = untilDead(run);
+  expect(diedAt.pandaBottom).toBe(426);
+  expect(diedAt.pandaX).toBe(100);
   run.advance(50);
+  expect(run.view().pandaBottom).toBeLessThan(426);
+  run.advance(500);
+  expect(run.view().pandaBottom).toBe(426);
+  expect(run.view().pandaX + 22).toBeLessThanOrEqual(hitColumnLeft(run.view()) - 2);
+});
+
+test("a corner hit on a two-box column knocks the panda left clear and lands it on the floor", () => {
+  const run = createStartedRun(twoBoxColumns(), oneBoxEach(), noStore);
+  run.advance(2300);
+  run.jump();
+  const diedAt = untilDead(run);
+  expect(diedAt.pandaBottom).toBeLessThan(426);
+  expect(diedAt.pandaBottom).toBeGreaterThan(298);
+  expect(diedAt.impactBurst?.y).toBe(298);
+  expect(diedAt.impactBurst?.progress).toBe(0);
+  const hitLeft = hitColumnLeft(diedAt);
+  expect(diedAt.impactBurst?.x).toBe(hitLeft);
+  run.advance(250);
+  expect(run.view().pandaX + 22).toBeLessThanOrEqual(hitLeft - 2);
+  untilFloor(run);
   expect(run.view().pandaBottom).toBe(426);
 });
 
-test("a panda that dies already on the floor stays at pandaBottom 426", () => {
+test("impactBurst appears on the hit step and is gone after 250ms", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2895);
-  const diedAt = run.view();
-  expect(diedAt.gameOver).toBe(true);
-  expect(diedAt.pandaBottom).toBe(426);
-  run.advance(300);
-  expect(run.view().pandaBottom).toBe(426);
+  expect(untilDead(run).impactBurst).toMatchObject({ progress: 0 });
+  run.advance(125);
+  expect(run.view().impactBurst?.progress).toBeCloseTo(0.5);
+  run.advance(125);
+  expect(run.view().impactBurst).toBeNull();
+});
+
+test("death impact squash starts at 0.8 by 1.15 and eases to 1 over 120ms", () => {
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  untilDead(run);
+  expect(run.view().pandaScaleX).toBe(0.8);
+  expect(run.view().pandaScaleY).toBe(1.15);
+  run.advance(60);
+  expect(run.view().pandaScaleX).toBeCloseTo(0.9);
+  expect(run.view().pandaScaleY).toBeCloseTo(1.075);
+  run.advance(60);
+  expect(run.view().pandaScaleX).toBe(1);
+  expect(run.view().pandaScaleY).toBe(1);
 });
 
 test("dying against the front of a double column marks only its boxes as hit", () => {
@@ -1214,6 +1287,7 @@ test("a jump pressed more than 100ms before landing is dropped", () => {
 test("a buffered jump fires once and is cleared", () => {
   const run = bufferedRun(1400);
   run.advance(1800);
+  untilFloor(run);
   expect(run.view().pandaBottom).toBe(426);
 });
 
@@ -1528,15 +1602,15 @@ test("a buffered jump that fires on landing stretches the panda", () => {
   expect(run.view().pandaBottom).toBeLessThan(426);
 });
 
-test("the panda's scale is 1 at game over and after a restart", () => {
+test("the panda's scale is the impact squash at death, then 1 after 120ms and after a restart", () => {
   const run = createStartedRun(twoBoxColumns(), oneBoxEach(), noStore);
   run.advance(2300);
   run.jump();
-  run.advance(900);
-  expect(run.view().gameOver).toBe(true);
+  untilDead(run);
+  expect(scaleOf(run)).toEqual([0.8, 1.15]);
+  run.advance(120);
   expect(scaleOf(run)).toEqual([1, 1]);
-  run.advance(1000);
-  expect(scaleOf(run)).toEqual([1, 1]);
+  run.advance(880);
   run.jump();
   expect(scaleOf(run)).toEqual([1, 1]);
 });

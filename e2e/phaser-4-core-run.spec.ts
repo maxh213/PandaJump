@@ -671,10 +671,11 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     expect(diedAt.gameOverBest.y).toBeLessThan(diedAt.gameOverPrompt.y);
 
     const frozen = last(await advance(page, 300));
-    expect(frozen.panda).toEqual(diedAt.panda);
+    expect(frozen.viewPandaX).toBeLessThan(diedAt.viewPandaX);
     expect(frozen.boxes).toEqual(diedAt.boxes);
     expect(frozen.rock.scroll).toBe(diedAt.rock.scroll);
     expect(frozen.grass.scroll).toBe(diedAt.grass.scroll);
+    expect(frozen.time).toBe(diedAt.time);
     expect(frozen.restarts).toBe(0);
 
     const restart = await untilRestart(page);

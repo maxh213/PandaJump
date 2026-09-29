@@ -34,10 +34,11 @@ Feature: Panda Jump on Phaser 4, slice: squash and stretch
       And the bottom of the sprite is at y 426, within 1 px, while it is squashed
       And 120 ms after landing its scale is 1.25 by 1.25
 
-  Rule: The panda is normal at game over and after a restart
+  Rule: The panda impact-squashes on death, then is normal after a restart
 
-    Scenario: The scale is 1.25 by 1.25 on the game-over screen and after restarting
+    Scenario: The scale is the impact squash on the hit frame, then 1.25 by 1.25 after restarting
       When the panda hits a column and the run ends
-      Then the panda's scale is 1.25 by 1.25
+      Then the panda's scale is 1.0 by 1.4375 on the hit frame
+      And 120 ms later it is 1.25 by 1.25
       When I restart the run
       Then the panda's scale is 1.25 by 1.25

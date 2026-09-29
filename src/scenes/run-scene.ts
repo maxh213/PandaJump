@@ -37,6 +37,11 @@ const AIR_PUFF_RADIUS = 8;
 const LANDING_PUFF_RADIUS = 5;
 const LANDING_PUFF_OFFSET = 10;
 const LANDING_PUFF_COLOR = 0xd2b48c;
+const IMPACT_BURST_COLOR = 0xfff8dc;
+const IMPACT_BURST_RAYS = 5;
+const IMPACT_BURST_INNER = 3;
+const IMPACT_BURST_OUTER = 14;
+const IMPACT_BURST_STROKE = 2;
 const PANDA_SCALE = 1.25;
 const SCALE_STEPS = 1024;
 const PANDA_FRAME_WIDTH = 20;
@@ -112,6 +117,24 @@ const clipboardSupported = typeof (navigator as { clipboard?: Clipboard }).clipb
 const COUNTDOWN_LABELS: Record<"3" | "2" | "1" | "null", string> = { "3": "3", "2": "2", "1": "1", null: "" };
 const hillKey = (color: string): string => `hills-${color}`;
 const hasValue = <T>(value: T | null): value is T => value !== null;
+const deathScale = (view: ReturnType<Run["view"]>, reducedMotion: boolean): { x: number; y: number } => {
+  const keep = 1 - Number(reducedMotion) * Number(view.gameOver);
+  return { x: 1 + (view.pandaScaleX - 1) * keep, y: 1 + (view.pandaScaleY - 1) * keep };
+};
+
+const burstExpand = (progress: number, reducedMotion: boolean): number =>
+  progress + (1 - progress) * Number(reducedMotion);
+
+const burstRays = (outer: number): readonly (readonly [number, number, number, number])[] =>
+  Array.from({ length: IMPACT_BURST_RAYS }, (_, index) => {
+    const angle = (Math.PI * 2 * index) / IMPACT_BURST_RAYS - Math.PI / 2;
+    return [
+      Math.cos(angle) * IMPACT_BURST_INNER,
+      Math.sin(angle) * IMPACT_BURST_INNER,
+      Math.cos(angle) * outer,
+      Math.sin(angle) * outer,
+    ] as const;
+  });
 const DEATH_VIBRATION_MS = 100;
 
 interface NavigatorWithVibrate {
@@ -127,6 +150,7 @@ export class RunScene extends Phaser.Scene {
   private pandaShadow!: Phaser.GameObjects.Ellipse;
   private airPuff!: Phaser.GameObjects.Graphics;
   private landingPuff!: Phaser.GameObjects.Graphics;
+  private impactBurst!: Phaser.GameObjects.Graphics;
   private boxes!: Phaser.GameObjects.Group;
   private clouds!: Phaser.GameObjects.Group;
   private stars!: Phaser.GameObjects.Group;
@@ -278,6 +302,7 @@ export class RunScene extends Phaser.Scene {
       .setName("pandaShadow");
     this.airPuff = this.add.graphics().setDepth(AIR_PUFF_DEPTH).setName("airPuff");
     this.landingPuff = this.add.graphics().setDepth(AIR_PUFF_DEPTH).setName("landingPuff");
+    this.impactBurst = this.add.graphics().setDepth(AIR_PUFF_DEPTH).setName("impactBurst");
   }
 
   private wireInput(): void {
@@ -490,13 +515,20 @@ export class RunScene extends Phaser.Scene {
   }
 
   private drawPanda(view: ReturnType<Run["view"]>): void {
-    const scaleY = Math.round(PANDA_SCALE * view.pandaScaleY * SCALE_STEPS) / SCALE_STEPS;
+    const scale = deathScale(view, this.reducedMotion);
+    const scaleY = Math.round(PANDA_SCALE * scale.y * SCALE_STEPS) / SCALE_STEPS;
     this.panda
       .setPosition(view.pandaX + PANDA_HALF_WIDTH, view.pandaBottom - (PANDA_FRAME_HEIGHT * scaleY) / 2)
-      .setScale(PANDA_SCALE * view.pandaScaleX, scaleY)
+      .setScale(PANDA_SCALE * scale.x, scaleY)
       .setFrame(view.pandaFrame)
       .setFlipY(view.pandaUpsideDown)
       .setAngle(view.pandaAngle);
+  }
+
+  private drawScenery(view: ReturnType<Run["view"]>): void {
+    this.hills.setTexture(hillKey(view.hillColor)).setTilePosition(view.hillsScroll, 0);
+    this.rock.setTexture(view.biome.floor).tilePositionX = view.floorScroll;
+    this.grass.setTexture(view.biome.top).setY(TOP_STRIP_Y[view.biome.top]).tilePositionX = view.floorScroll;
   }
 
   private drawScore(view: ReturnType<Run["view"]>): void {
@@ -541,6 +573,7 @@ export class RunScene extends Phaser.Scene {
     this.pandaShadow.setPosition(view.pandaShadow.x, view.pandaShadow.y).setScale(view.pandaShadow.scale);
     this.drawAirPuff(view.airPuff);
     this.drawLandingPuff(view.landingPuff);
+    this.drawImpactBurst(view.impactBurst);
     this.drawScenery(view);
     this.drawScore(view);
     const titles: Record<"true" | "false", string> = { true: PAGE_TITLE, false: `${view.score} - ${PAGE_TITLE}` };
@@ -652,6 +685,22 @@ export class RunScene extends Phaser.Scene {
         .setAlpha(puff.alpha)
         .setVisible(true);
     });
+  }
+
+  private drawImpactBurst(burst: { x: number; y: number; progress: number } | null): void {
+    this.impactBurst.clear().setVisible(false);
+    [burst].filter(hasValue).forEach((spark) => {
+      this.paintImpactBurst(spark);
+    });
+  }
+
+  private paintImpactBurst(spark: { x: number; y: number; progress: number }): void {
+    const outer = IMPACT_BURST_INNER + (IMPACT_BURST_OUTER - IMPACT_BURST_INNER) * burstExpand(spark.progress, this.reducedMotion);
+    this.impactBurst.lineStyle(IMPACT_BURST_STROKE, IMPACT_BURST_COLOR, 1);
+    burstRays(outer).forEach(([x1, y1, x2, y2]) => {
+      this.impactBurst.lineBetween(x1, y1, x2, y2);
+    });
+    this.impactBurst.setPosition(spark.x, spark.y).setAlpha(1 - spark.progress).setVisible(true);
   }
 
   private readonly vibrateOnDeath = (gameOver: boolean): void => {

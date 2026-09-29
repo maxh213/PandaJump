@@ -3,6 +3,7 @@ import type { BestStore } from "./best.ts";
 import {
   bestColumnMarker,
   boxesOf,
+  columnX,
   countCleared,
   moveColumns,
   spawnColumns,
@@ -79,6 +80,7 @@ interface View {
   readonly doubleJumpHint: boolean;
   readonly pandaShadow: { x: number; y: number; scale: number };
   readonly landingPuff: { x: number; y: number; alpha: number } | null;
+  readonly impactBurst: { x: number; y: number; progress: number } | null;
 }
 
 export interface Run {
@@ -125,6 +127,10 @@ interface State {
   readonly jumpStart: number | null;
   readonly fadeFrom: Biome | null;
   readonly fadeStart: number | null;
+  readonly pandaX: number;
+  readonly knockbackEndX: number;
+  readonly impactX: number;
+  readonly impactY: number;
 }
 
 interface Squash {
@@ -164,7 +170,13 @@ const JUMP_BUFFER_MS = 100;
 const SQUASH_MS = 120;
 const STRETCH: Squash = { x: 0.8, y: 1.2 };
 const SQUASH: Squash = { x: 1.2, y: 0.8 };
-const PANDA_CENTER_X = PANDA_X + 12.5;
+const IMPACT_SQUASH: Squash = { x: 0.8, y: 1.15 };
+const PANDA_HALF = 12.5;
+const HITBOX_RIGHT_OFFSET = 22;
+const KNOCKBACK_CLEARANCE = 2;
+const KNOCKBACK_MS = 250;
+const IMPACT_BURST_MS = 250;
+const DEATH_BOUNCE_SPEED = 200;
 
 type Carried = Pick<State, "restarts" | "best" | "topScores" | "hintPending">;
 
@@ -199,6 +211,10 @@ const freshState = ({ restarts, best, topScores, hintPending }: Carried, randoms
   jumpStart: null,
   fadeFrom: null,
   fadeStart: null,
+  pandaX: PANDA_X,
+  knockbackEndX: PANDA_X,
+  impactX: 0,
+  impactY: 0,
 });
 
 const distanceAt = (state: State, time: number): number =>
@@ -288,15 +304,55 @@ const settleBuffer = (state: State, bufferedAt: number): State => {
 const reboundIfBuffered = (before: Panda, state: State): State =>
   state.bufferedAt !== null && landedFrom(before, state) ? settleBuffer(state, state.bufferedAt) : state;
 
+const knockbackProgress = (deathElapsed: number): number => {
+  const t = Math.min(1, deathElapsed / KNOCKBACK_MS);
+  return 1 - (1 - t) * (1 - t);
+};
+
+const pandaXAt = (knockbackEndX: number, deathElapsed: number): number =>
+  PANDA_X + (knockbackEndX - PANDA_X) * knockbackProgress(deathElapsed);
+
+const impactPoint = (column: Column, distance: number, height: number): { x: number; y: number } => {
+  const left = columnX(column, distance);
+  const columnTop = column.boxes * TILE_SIZE;
+  const corner = height > columnTop - TILE_SIZE;
+  return { x: left, y: FLOOR_Y - (corner ? columnTop : height) };
+};
+
+const knockbackEndFor = (column: Column, distance: number): number =>
+  columnX(column, distance) - HITBOX_RIGHT_OFFSET - KNOCKBACK_CLEARANCE;
+
+const dieAgainst = (state: State, hitColumn: Column): State => {
+  const distance = currentDistance(state);
+  const impact = impactPoint(hitColumn, distance, state.panda.height);
+  return {
+    ...state,
+    panda: { ...state.panda, speed: DEATH_BOUNCE_SPEED },
+    deathElapsed: 0,
+    hitColumn,
+    knockbackEndX: knockbackEndFor(hitColumn, distance),
+    impactX: impact.x,
+    impactY: impact.y,
+  };
+};
+
+const stepDeath = (state: State, deathElapsed: number, ms: number): State => {
+  const nextElapsed = deathElapsed + ms;
+  return {
+    ...state,
+    deathElapsed: nextElapsed,
+    panda: fall(state.panda, ms),
+    pandaX: pandaXAt(state.knockbackEndX, nextElapsed),
+  };
+};
+
 const step = (state: State, ms: number, randoms: Randoms): State => {
   if (state.deathElapsed !== null) {
-    return { ...state, deathElapsed: state.deathElapsed + ms, panda: fall(state.panda, ms) };
+    return stepDeath(state, state.deathElapsed, ms);
   }
   const next = spawnIfDue(moveOn(state, ms, randoms), randoms.columns);
   const hitColumn = touchingColumn(next.columns, currentDistance(next), next.panda.height);
-  return hitColumn !== null
-    ? { ...next, panda: { ...next.panda, speed: 0 }, deathElapsed: 0, hitColumn }
-    : reboundIfBuffered(state.panda, next);
+  return hitColumn !== null ? dieAgainst(next, hitColumn) : reboundIfBuffered(state.panda, next);
 };
 
 const idleStep = (state: State, ms: number, randoms: Randoms): State => ({
@@ -383,7 +439,12 @@ const latestSquash = (state: State): { start: number; shape: Squash } =>
     : { start: startOf(state.jumpStart), shape: STRETCH };
 
 const pandaScaleOf = (state: State): Squash => {
-  if (state.deathElapsed !== null) return { x: 1, y: 1 };
+  if (state.deathElapsed !== null) {
+    return {
+      x: easedScale(IMPACT_SQUASH.x, state.deathElapsed),
+      y: easedScale(IMPACT_SQUASH.y, state.deathElapsed),
+    };
+  }
   const { start, shape } = latestSquash(state);
   const elapsed = state.time - start;
   return { x: easedScale(shape.x, elapsed), y: easedScale(shape.y, elapsed) };
@@ -398,7 +459,7 @@ const airPuffOf = (state: State): View["airPuff"] => {
   if (state.airPuffStart === null || state.deathElapsed !== null) return null;
   const elapsed = state.time - state.airPuffStart;
   return elapsed < AIR_PUFF_DURATION_MS
-    ? { x: PANDA_CENTER_X, y: state.airPuffBottom, alpha: 1 - elapsed / AIR_PUFF_DURATION_MS }
+    ? { x: state.pandaX + PANDA_HALF, y: state.airPuffBottom, alpha: 1 - elapsed / AIR_PUFF_DURATION_MS }
     : null;
 };
 
@@ -406,8 +467,17 @@ const landingPuffOf = (state: State): View["landingPuff"] => {
   if (state.landingStart === null || state.deathElapsed !== null) return null;
   const elapsed = state.time - state.landingStart;
   return elapsed < LANDING_PUFF_DURATION_MS
-    ? { x: PANDA_CENTER_X, y: FLOOR_Y, alpha: 1 - elapsed / LANDING_PUFF_DURATION_MS }
+    ? { x: state.pandaX + PANDA_HALF, y: FLOOR_Y, alpha: 1 - elapsed / LANDING_PUFF_DURATION_MS }
     : null;
+};
+
+const impactBurstOf = (state: State): View["impactBurst"] => {
+  if (state.deathElapsed === null || state.deathElapsed >= IMPACT_BURST_MS) return null;
+  return {
+    x: state.impactX,
+    y: state.impactY,
+    progress: state.deathElapsed / IMPACT_BURST_MS,
+  };
 };
 
 const doubleJumpHintOf = (state: State): boolean =>
@@ -419,7 +489,7 @@ const pandaFrameOf = (state: State): number =>
     : FIRST_RUN_FRAME + (Math.floor(clockOf(state) * FRAMES_PER_MS) % RUN_FRAMES);
 
 const pandaShadowOf = (state: State): View["pandaShadow"] => {
-  const x = PANDA_CENTER_X;
+  const x = state.pandaX + PANDA_HALF;
   const surfaceHeight = surfaceHeightUnder(state.columns, currentDistance(state), x);
   const heightAbove = Math.max(0, state.panda.height - surfaceHeight);
   return {
@@ -496,7 +566,7 @@ const sceneryViewOf = (state: State) => {
 };
 
 const pandaViewOf = (state: State) => ({
-  pandaX: PANDA_X,
+  pandaX: state.pandaX,
   pandaBottom: FLOOR_Y - state.panda.height,
   pandaFrame: pandaFrameOf(state),
   pandaUpsideDown: state.deathElapsed !== null,
@@ -505,6 +575,7 @@ const pandaViewOf = (state: State) => ({
   airPuff: airPuffOf(state),
   pandaShadow: pandaShadowOf(state),
   landingPuff: landingPuffOf(state),
+  impactBurst: impactBurstOf(state),
 });
 
 const viewOf = (state: State): View => ({

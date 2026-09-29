@@ -55,14 +55,16 @@ test.describe("Rule: Landing squashes the panda wide", () => {
   });
 });
 
-test.describe("Rule: The panda is normal at game over and after a restart", () => {
-  test("The scale is 1.25 by 1.25 on the game-over screen and after restarting", async ({ page }) => {
+test.describe("Rule: The panda impact-squashes on death, then is normal after a restart", () => {
+  test("The scale is the impact squash on the hit frame, then 1.25 by 1.25 after restarting", async ({ page }) => {
     await openGame(page, standardRandom());
     await startRun(page);
     await pressSpace(page);
     const { after } = await untilGameOver(page);
     expect(after.gameOver).toBe(true);
-    expectScale([after.panda.scaleX, after.panda.scaleY], 1.25, 1.25);
+    expectScale([after.panda.scaleX, after.panda.scaleY], 1.0, 1.4375);
+    await advance(page, 120);
+    expectScale(await scaleOf(page), 1.25, 1.25);
     const restarted = await untilRestart(page);
     expectScale([restarted.after.panda.scaleX, restarted.after.panda.scaleY], 1.25, 1.25);
   });

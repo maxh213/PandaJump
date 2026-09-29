@@ -54,6 +54,7 @@ export interface Sample {
     scaleX: number;
     scaleY: number;
   };
+  viewPandaX: number;
   hills: { y: number; height: number; depth: number; scroll: number; key: string; visible: boolean; alpha: number };
   hillsFade: { key: string; alpha: number; visible: boolean; scroll: number };
   viewHills: { scroll: number; color: string };
@@ -104,6 +105,8 @@ export interface Sample {
   viewAirPuff: View["airPuff"];
   landingPuff: { x: number; y: number; alpha: number; visible: boolean };
   viewLandingPuff: View["landingPuff"];
+  impactBurst: { x: number; y: number; alpha: number; visible: boolean };
+  viewImpactBurst: View["impactBurst"];
   sky: string;
   cameraSky: string;
   biome: string;
@@ -273,6 +276,7 @@ export const installProbe = () => {
     const shadow = named("pandaShadow") as GameEllipse;
     const orderOf = (name: string) => scene.children.list.indexOf(named(name) as object as (typeof scene.children.list)[number]);
     const landingPuff = named("landingPuff") as GameGraphics;
+    const impactBurst = named("impactBurst") as GameGraphics;
     const bounds = panda.getBounds();
     return {
       time: view.time,
@@ -319,6 +323,7 @@ export const installProbe = () => {
         scaleX: panda.scaleX,
         scaleY: panda.scaleY,
       },
+      viewPandaX: view.pandaX,
       hills: {
         y: hills.y,
         height: hills.height,
@@ -421,6 +426,8 @@ export const installProbe = () => {
       viewAirPuff: view.airPuff,
       landingPuff: { x: landingPuff.x, y: landingPuff.y, alpha: landingPuff.alpha, visible: landingPuff.visible },
       viewLandingPuff: view.landingPuff,
+      impactBurst: { x: impactBurst.x, y: impactBurst.y, alpha: impactBurst.alpha, visible: impactBurst.visible },
+      viewImpactBurst: view.impactBurst,
       sky: view.sky,
       cameraSky: `#${scene.cameras.main.backgroundColor.color.toString(16).padStart(6, "0")}`,
       biome: view.biome.name,

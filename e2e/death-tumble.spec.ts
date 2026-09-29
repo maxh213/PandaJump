@@ -27,31 +27,33 @@ const dieAboveTheFloor = async (page: Page): Promise<{ before: Sample; after: Sa
   return untilGameOver(page);
 };
 
-test.describe("Rule: A panda that dies above the floor keeps falling until it lands", () => {
-  test("Dying on top of a two-box column drops the panda straight down to the floor", async ({ page }) => {
+const hitColumnLeft = (state: Sample): number =>
+  Math.min(...state.boxes.filter((box) => box.tint === 0xff6666).map((box) => box.x));
+
+test.describe("Rule: A panda that dies above the floor lands on the floor left of the column", () => {
+  test("Dying on top of a two-box column knocks left and lands on the floor", async ({ page }) => {
     const { after: diedAt } = await dieAboveTheFloor(page);
     expect(diedAt.panda.bottom).toBeLessThan(426);
+    const columnLeft = hitColumnLeft(diedAt);
 
-    let previous = diedAt.panda.bottom;
-    for (const entry of await advance(page, 1000)) {
-      expect(entry.panda.bottom).toBeGreaterThanOrEqual(previous);
-      expect(entry.panda.bottom).toBeLessThanOrEqual(426);
-      previous = entry.panda.bottom;
-    }
-    expect(previous).toBe(426);
-
-    const settled = last(await advance(page, 100));
+    await advance(page, 1000);
+    const settled = await sample(page);
     expect(settled.panda.bottom).toBe(426);
+    expect(settled.viewPandaX + 22).toBeLessThanOrEqual(columnLeft - 2);
+
+    const later = last(await advance(page, 100));
+    expect(later.panda.bottom).toBe(426);
   });
 });
 
-test.describe("Rule: Everything except the panda's height stays frozen while it falls after death", () => {
-  test("Game time, score, the columns, the clouds and the floor scroll do not move while the panda falls", async ({
+test.describe("Rule: Everything except the panda's position stays frozen while it tumbles after death", () => {
+  test("Game time, score, the columns, the clouds and the floor scroll do not move while the panda tumbles", async ({
     page,
   }) => {
     const { after: diedAt } = await dieAboveTheFloor(page);
     const later = last(await advance(page, 1000));
     expect(later.panda.bottom).not.toBe(diedAt.panda.bottom);
+    expect(later.viewPandaX).not.toBe(diedAt.viewPandaX);
     expect(later.time).toBe(diedAt.time);
     expect(later.score.text).toBe(diedAt.score.text);
     expect(later.boxes.map((box) => box.x)).toEqual(diedAt.boxes.map((box) => box.x));
@@ -73,14 +75,16 @@ test.describe("Rule: The panda is drawn upside down for exactly as long as the g
   });
 });
 
-test.describe("Rule: A panda that dies already on the floor does not need to fall", () => {
-  test("Dying without ever leaving the floor keeps the panda's feet at y 426", async ({ page }) => {
+test.describe("Rule: A panda that dies already on the floor still bounces then settles", () => {
+  test("Dying without ever leaving the floor pops up then returns to y 426", async ({ page }) => {
     await openGame(page, oneBox);
     await startRun(page);
     const { after: diedAt } = await untilGameOver(page);
     expect(diedAt.panda.bottom).toBe(426);
-    const later = last(await advance(page, 500));
-    expect(later.panda.bottom).toBe(426);
+    const mid = last(await advance(page, 50));
+    expect(mid.panda.bottom).toBeLessThan(426);
+    await advance(page, 500);
+    expect((await sample(page)).panda.bottom).toBe(426);
   });
 });
 

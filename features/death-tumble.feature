@@ -8,28 +8,29 @@ Feature: Panda Jump on Phaser 4, slice: the dead panda tumbles to the floor
   "The two-box column scenario" means: the random source picks 2 boxes for the first column, and I
   press Space at 2300 ms; with no further input the panda rises, comes back down onto the column's
   top and touches it at about 3165 ms, above the floor.
+  On death the panda also knocks left clear of the column (see features/bounce-off-box.feature); the
+  tumble here is the bounce up then fall to the floor under gravity while upside down.
 
   Background:
     Given I open the Panda Jump page
     And the run has just started
 
-  Rule: A panda that dies above the floor keeps falling until it lands
+  Rule: A panda that dies above the floor lands on the floor left of the column
 
-    Scenario: Dying on top of a two-box column drops the panda straight down to the floor
+    Scenario: Dying on top of a two-box column knocks left and lands on the floor
       Given the two-box column scenario
       Then the panda is above the floor the instant the run ends
       When time passes while the game-over screen is shown
-      Then the panda sinks lower every following moment, never higher than the frame before
-      And the panda never rises again after the hit
-      And the panda comes to rest with its feet exactly at the floor, y 426, and stays there
+      Then the panda moves left and comes to rest with its feet exactly at the floor, y 426, left of the column
+      And the panda stays at y 426 after it has landed
 
-  Rule: Everything except the panda's height stays frozen while it falls after death
+  Rule: Everything except the panda's position stays frozen while it tumbles after death
 
-    Scenario: Game time, score, the columns, the clouds and the floor scroll do not move while the panda falls
+    Scenario: Game time, score, the columns, the clouds and the floor scroll do not move while the panda tumbles
       Given the two-box column scenario
       When 1000 ms pass while the game-over screen is shown
       Then the game time, the score, every box's x position, the clouds and the floor scroll are exactly
-        as they were the instant the run ended, even though the panda's height has changed
+        as they were the instant the run ended, even though the panda's position has changed
 
   Rule: The panda is drawn upside down for exactly as long as the game is over
 
@@ -42,13 +43,13 @@ Feature: Panda Jump on Phaser 4, slice: the dead panda tumbles to the floor
       When 500 ms pass and I tap to play again
       Then the panda is drawn right-side up again
 
-  Rule: A panda that dies already on the floor does not need to fall
+  Rule: A panda that dies already on the floor still bounces then settles
 
-    Scenario: Dying without ever leaving the floor keeps the panda's feet at y 426
+    Scenario: Dying without ever leaving the floor pops up then returns to y 426
       Given the random source picks 1 box for the first column
       When I do not jump
       Then the panda touches the column at about 2890 ms with its feet already at the floor, y 426
-      And the panda's feet stay at y 426 for as long as the game-over screen is shown
+      And the panda rises briefly then comes back to y 426 while the game-over screen is shown
 
   Rule: The death tumble does not change the restart freeze or restart behaviour
 

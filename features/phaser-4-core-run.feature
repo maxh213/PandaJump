@@ -257,7 +257,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       Given the random source picks 1 box for the first column
       When I do not jump
       Then the panda touches the column at about 2890 ms
-      And the panda, the columns and the floor stop moving
+      And the columns and the floor stop moving while the panda knocks left off the box
       And the page reads "Game over" centred in white 40px
       And the page reads "Score: 0" and "Best: 0" under it, in white
       And the page does not yet invite a tap, click or Space press to restart
