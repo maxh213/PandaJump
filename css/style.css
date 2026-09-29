@@ -40,3 +40,18 @@ a {
 #game_div canvas {
 	touch-action: none;
 }
+
+body.fill-window {
+	display: flex;
+	flex-direction: column;
+}
+
+body.fill-window #game_div {
+	order: -1;
+	max-width: none;
+	margin-top: 0;
+}
+
+body.fill-window #game_div canvas {
+	display: block;
+}

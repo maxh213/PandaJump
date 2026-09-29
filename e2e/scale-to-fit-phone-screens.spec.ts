@@ -23,6 +23,21 @@ const settledCanvasBox = async (page: import("@playwright/test").Page) => {
   return last;
 };
 
+const expectPageTextReachable = async (page: import("@playwright/test").Page) => {
+  await expect(page.locator("h1")).toHaveText("Panda Jump");
+  await expect(page.getByText("Controls:")).toBeAttached();
+  await expect(page.getByRole("link", { name: "Github" })).toBeAttached();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(0);
+  await page.getByRole("link", { name: "Github" }).scrollIntoViewIfNeeded();
+  await expect(page.getByRole("link", { name: "Github" })).toBeInViewport();
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+  });
+};
+
 // Resizes are handled asynchronously; under load the default 5s poll is too short.
 const poll = { timeout: 15_000 };
 
@@ -44,23 +59,25 @@ test.describe("Rule: The canvas scales to fit the viewport", () => {
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
       expect(overflow).toBe(0);
+      expect(box.width).toBeGreaterThanOrEqual(370);
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      await expectPageTextReachable(page);
     });
   });
 
-  test.describe("A short landscape viewport shows the whole game with no cropping", () => {
+  test.describe("A short landscape viewport fills the screen and shows the whole game", () => {
     test.use({ viewport: { width: 667, height: 375 } });
 
-    test("A short landscape viewport shows the whole game with no cropping", async ({ page }) => {
+    test("A short landscape viewport fills the screen and shows the whole game", async ({ page }) => {
       await page.goto("./");
       const box = await settledCanvasBox(page);
+      expect(box.height).toBeGreaterThanOrEqual(360);
       expect(box.y).toBeGreaterThanOrEqual(0);
       expect(box.y + box.height).toBeLessThanOrEqual(375);
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width).toBeLessThanOrEqual(667);
-      const hOverflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
-      expect(hOverflow).toBe(0);
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      await expectPageTextReachable(page);
     });
   });
 
@@ -73,6 +90,10 @@ test.describe("Rule: The canvas scales to fit the viewport", () => {
       expect(box).toMatchObject({ width: 400, height: 490 });
       const centre = box.x + box.width / 2;
       expect(Math.abs(centre - 1024 / 2)).toBeLessThanOrEqual(1);
+      const title = await page.locator("h1").boundingBox();
+      if (!title) throw new Error("title has no bounding box");
+      expect(title.y + title.height).toBeLessThanOrEqual(box.y);
+      await expectPageTextReachable(page);
     });
   });
 
@@ -99,7 +120,7 @@ test.describe("Rule: The canvas scales to fit the viewport", () => {
       expect(portrait.width).toBeGreaterThan(300);
 
       await page.setViewportSize({ width: 667, height: 375 });
-      await expect.poll(async () => (await canvasBox(page)).width, poll).toBeLessThan(300);
+      await expect.poll(async () => (await canvasBox(page)).height, poll).toBeGreaterThanOrEqual(360);
 
       await page.setViewportSize({ width: 375, height: 667 });
       await expect

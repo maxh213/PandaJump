@@ -43,15 +43,20 @@ const topScoresStore: TopScoresStore = { load: loadTopScores, save: saveTopScore
 
 const bestStore: BestStore = { load: loadBest, save: saveBest, topScores: topScoresStore };
 
+const fillsWithoutText = (gameDiv: HTMLElement): boolean => {
+  const chromeHeight = document.documentElement.scrollHeight - gameDiv.getBoundingClientRect().height;
+  const containerWidth = gameDiv.parentElement?.clientWidth ?? window.innerWidth;
+  return containerWidth >= CANVAS_WIDTH && window.innerHeight - chromeHeight >= CANVAS_HEIGHT;
+};
+
 const fitGameContainer = (): void => {
   const gameDiv = document.getElementById("game_div");
   if (!gameDiv) return;
+  document.body.classList.remove("fill-window");
   gameDiv.style.width = "";
-  const chromeHeight = document.documentElement.scrollHeight - gameDiv.getBoundingClientRect().height;
-  const availableHeight = window.innerHeight - chromeHeight;
-  const widthFromHeight = (availableHeight * CANVAS_WIDTH) / CANVAS_HEIGHT;
-  const widthFromContainer = gameDiv.parentElement?.clientWidth ?? window.innerWidth;
-  const width = Math.max(0, Math.min(CANVAS_WIDTH, widthFromContainer, widthFromHeight));
+  if (fillsWithoutText(gameDiv)) return;
+  document.body.classList.add("fill-window");
+  const width = Math.min(window.innerWidth, (window.innerHeight * CANVAS_WIDTH) / CANVAS_HEIGHT);
   gameDiv.style.width = `${width.toFixed(3)}px`;
 };
 

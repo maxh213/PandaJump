@@ -53,7 +53,7 @@ test.describe("Rule: The page opts out of the browser's pull-to-refresh gesture"
 
     test("The solid black edge-to-edge page still has no visible layout regression", async ({ page }) => {
       await page.goto("./");
-      const pixels = await pixelsAt(page, corners(375, 812));
+      const pixels = await pixelsAt(page, corners(375, 812).filter(({ y }) => y > 0));
       pixels.forEach((pixel) => {
         expect(pixel).toEqual(BLACK);
       });

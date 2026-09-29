@@ -14,5 +14,5 @@ Feature: Panda Jump blocks the page's pull-to-refresh gesture
 
     Scenario: The solid black edge-to-edge page still has no visible layout regression
       Given the browser viewport is 375 by 812 px
-      Then the pixel colour at each of the four page corners is pure black
+      Then the pixel colour at each of the two bottom page corners is pure black, the game canvas filling the top of the screen
       And the html and body backgrounds are pure black with no body margin

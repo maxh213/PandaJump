@@ -26,6 +26,9 @@ const cornersAndBelowContent = (width: number, height: number, belowContentY: nu
   { x: Math.floor(width / 2), y: belowContentY },
 ];
 
+const bottomCornersAndBelowContent = (width: number, height: number, belowContentY: number) =>
+  cornersAndBelowContent(width, height, belowContentY).filter(({ y }) => y > 0);
+
 const rootBackgroundsAndBodyMargin = (page: Page) =>
   page.evaluate(() => ({
     htmlBackground: getComputedStyle(document.documentElement).backgroundColor,
@@ -39,7 +42,7 @@ test.describe("Rule: The page has no default-coloured margin or gap anywhere", (
 
     test("A small phone-sized viewport is solid black at every corner and below the content", async ({ page }) => {
       await page.goto("./");
-      const pixels = await pixelsAt(page, cornersAndBelowContent(375, 812, 750));
+      const pixels = await pixelsAt(page, bottomCornersAndBelowContent(375, 812, 750));
       pixels.forEach((pixel) => {
         expect(pixel).toEqual(BLACK);
       });

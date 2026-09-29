@@ -2,10 +2,10 @@
 
 Use a desktop browser with dev tools' device toolbar, and a real phone or touch emulation for steps 4-5.
 
-1. Run `npm ci` then `npm run dev` and open the URL it prints with a desktop-width window (e.g. 1024 px). **Expected:** the game canvas is 400x490 px and centred, exactly as before this change; no visible scaling artefact.
-2. Open dev tools' device toolbar and pick a narrow phone (e.g. 375x667 px, "iPhone SE"). **Expected:** the whole canvas is visible, scaled down and centred horizontally; the page has no horizontal scrollbar and nothing is cropped.
+1. Run `npm ci` then `npm run dev` and open the URL it prints with a desktop-width window (e.g. 1024 px). **Expected:** the game canvas is 400x490 px and centred, exactly as before this change, with the "Panda Jump" title above it; no visible scaling artefact.
+2. Open dev tools' device toolbar and pick a narrow phone (e.g. 375x667 px, "iPhone SE"). **Expected:** the whole canvas is visible at load without scrolling, at least 370 px wide and centred horizontally; the title, controls and GitHub link are below it, reachable by scrolling; the page has no horizontal scrollbar and nothing is cropped.
 3. Resize the browser window from wide to narrow and back. **Expected:** the canvas smoothly rescales and stays centred; it never exceeds 400x490 px even in a very wide window, and it returns to exactly 400x490 px once the window is wide again, even after having been shrunk.
-3a. Switch the device toolbar to a short landscape phone size (e.g. 667x375 px). **Expected:** the whole canvas (floor and panda included) is visible without scrolling; it shrinks to fit the shorter viewport instead of rendering at full size and running off the bottom of the screen.
+3a. Switch the device toolbar to a short landscape phone size (e.g. 667x375 px). **Expected:** the canvas fills the viewport (at least 360 px tall), floor and panda included, fully visible at load without scrolling and with no horizontal scrollbar. The title, controls line and GitHub link are below it, reachable by scrolling.
 4. On the narrow phone emulation (or a real phone), tap the canvas. **Expected:** the panda jumps, exactly as a click does on desktop; the page does not scroll or pinch-zoom.
 5. On the narrow phone emulation, try to drag or pinch on the canvas. **Expected:** the page does not pan or zoom; only the game responds.
 6. View page source. **Expected:** `<head>` has a `viewport` meta tag with `width=device-width` and disables user scaling.
