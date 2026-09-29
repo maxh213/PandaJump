@@ -2,7 +2,7 @@
 
 Use a desktop browser with dev tools. Heights are in px from the top of the canvas.
 
-1. Run `npm ci` then `npm run dev` and open the URL it prints. **Expected:** the console shows no errors, and a row of rounded, solid-coloured hills sits on the grass line, darker than the sky.
+1. Run `npm ci` then `npm run dev` and open the URL it prints. **Expected:** the console shows no errors, and a row of rounded, solid-coloured hills sits directly on the green top of the grass with no strip of sky between them, darker than the sky.
 2. Look at how high the hills reach. **Expected:** their tops are never above y 300, so they never sit behind the score, the callouts or the game-over text.
 3. Look at what overlaps what. **Expected:** the hills are in front of the clouds (and the stars at night) and behind the columns, the panda and its shadow.
 4. Watch a run for a few seconds. **Expected:** the hills drift left slowly, at a quarter of the speed the floor moves, and loop seamlessly with no visible jump.

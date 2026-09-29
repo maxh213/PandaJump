@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, columnClearTime, oneBox, openGame, play, press, pressSpace, sample, spawnTimeOf, startRun, untilGameOver, untilRestart } from "./probe.ts";
+import { advance, advanceTo, columnClearTime, oneBox, openGame, pixelRows, play, press, pressSpace, sample, spawnTimeOf, startRun, untilGameOver, untilRestart } from "./probe.ts";
 import type { Sample } from "./probe.ts";
 
 const EXTRA_COLUMNS = 3;
@@ -72,7 +72,7 @@ test.describe("Rule: The hills sit in front of the sky and behind everything els
     await startRun(page);
     const { hills } = await sample(page);
     expect(hills.y).toBeGreaterThanOrEqual(300);
-    expect(hills.y + hills.height).toBe(392);
+    expect(hills.y + hills.height).toBe(424);
   });
 });
 
@@ -165,5 +165,59 @@ test.describe("Rule: The hill colour follows the sky", () => {
     expect(restart.after.score.text).toBe("0");
     expect(restart.after.viewHills.color).toBe(DAY);
     expect(restart.after.hills.key).toBe(`hills-${DAY}`);
+  });
+});
+
+const GRASS_SURFACE = 424;
+const JOIN_ROWS = [GRASS_SURFACE - 4, GRASS_SURFACE - 1, GRASS_SURFACE, GRASS_SURFACE + 2];
+const SCROLL_STEPS = [0, 37, 211, 640];
+
+const rgb = (hex: string): number[] => [1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16));
+
+const expectClose = (pixel: number[], wanted: number[]): void => {
+  pixel.forEach((channel, index) => { expect(Math.abs(channel - (wanted[index] ?? -1000))).toBeLessThanOrEqual(3); });
+};
+
+const expectHillsMeetGround = async (page: Page, hill: string): Promise<void> => {
+  const state = await sample(page);
+  const sky = rgb(state.sky);
+  const hills = rgb(hill);
+  const rows = await pixelRows(page, JOIN_ROWS);
+  const above = rows[0] ?? [];
+  const grassTop = rows[2] ?? [];
+  rows.forEach((row) => {
+    row.forEach((pixel) => { expect(pixel).not.toEqual(sky); });
+  });
+  above.forEach((pixel, x) => {
+    const box = state.boxes.some((entry) => x >= entry.x - 1 && x < entry.x + entry.width + 1);
+    if (!box && Math.abs(x - state.panda.x) > 30) expectClose(pixel, hills);
+  });
+  grassTop.forEach((pixel) => { expect(pixel).not.toEqual(hills); });
+};
+
+const expectJoinAtEveryScroll = async (page: Page, hill: string): Promise<void> => {
+  for (const step of SCROLL_STEPS) {
+    await advance(page, step);
+    await expectHillsMeetGround(page, hill);
+  }
+};
+
+test.describe("Rule: The bottom of the hills meets the top of the ground", () => {
+  test("The hills sit on the grass with no sky between them at the start and after the floor has scrolled", async ({ page }) => {
+    await openGame(page, oneBox);
+    await startRun(page);
+    await expectJoinAtEveryScroll(page, DAY);
+  });
+
+  test("The hills meet the ground under the sunset sky", async ({ page }) => {
+    test.setTimeout(60_000);
+    await playThroughColumn(page, 20);
+    await expectJoinAtEveryScroll(page, SUNSET);
+  });
+
+  test("The hills meet the ground under the night sky", async ({ page }) => {
+    test.setTimeout(120_000);
+    await playThroughColumn(page, 40);
+    await expectJoinAtEveryScroll(page, NIGHT);
   });
 });

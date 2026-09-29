@@ -5,7 +5,7 @@ Feature: Panda Jump scrolls a row of distant hills behind the columns at a quart
 
   Times use the same conventions as features/phaser-4-core-run.feature.
   "The hills" means the repeating hill layer, drawn with shapes rather than art from assets/. It sits on the grass
-  line and spans y 300 to y 392, so no part of it is drawn above y 300. It is drawn in front of every cloud and
+  line and spans y 300 to y 424, so no part of it is drawn above y 300. It is drawn in front of every cloud and
   star and behind every box, the panda and its shadow.
   The hills scroll left by exactly one quarter of the distance the floor scrolls, so they follow the difficulty
   ramp's speed-ups, and they stand still whenever game time stands still.
@@ -26,7 +26,7 @@ Feature: Panda Jump scrolls a row of distant hills behind the columns at a quart
 
     Scenario: No part of the hills is drawn above y 300
       Then the top of the hills is at y 300 or lower
-      And the bottom of the hills is at the grass line, y 392
+      And the bottom of the hills is at the top of the grass, y 424
 
   Rule: The hills scroll at a quarter of the floor's speed
 
@@ -79,3 +79,19 @@ Feature: Panda Jump scrolls a row of distant hills behind the columns at a quart
       When the panda dies and I restart
       Then the score reads "0"
       And the hill colour is "#4a9ba6"
+
+  Rule: The bottom of the hills meets the top of the ground
+
+    Scenario: The hills sit on the grass with no sky between them at the start and after the floor has scrolled
+      Then in the rows just above and just below y 424 no pixel across the canvas is the sky colour
+      And no pixel in the row at y 424 is the hill colour
+      When 37, 211 and 640 ms pass
+      Then those same rows still hold no sky-coloured pixel and no hill-coloured pixel at y 424
+
+    Scenario: The hills meet the ground under the sunset sky
+      Given I play the ramped schedule through column 20
+      Then no pixel in the rows around y 424 is the sky colour, at the same scroll offsets
+
+    Scenario: The hills meet the ground under the night sky
+      Given I play the ramped schedule through column 40
+      Then no pixel in the rows around y 424 is the sky colour, at the same scroll offsets

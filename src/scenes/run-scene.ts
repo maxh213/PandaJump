@@ -25,6 +25,7 @@ const TINT_ACTIONS: Record<"true" | "false", (image: Phaser.GameObjects.Image) =
 const PAD_JUMP_BUTTON = 0;
 const PAD_PAUSE_BUTTON = 9;
 const GRASS_Y = 392;
+const GRASS_SURFACE_Y = GRASS_Y + 32;
 const AIR_PUFF_RADIUS = 8;
 const LANDING_PUFF_RADIUS = 5;
 const LANDING_PUFF_OFFSET = 10;
@@ -38,10 +39,10 @@ const CLOUD_DEPTH = -1;
 const STAR_DEPTH = -2;
 const HILLS_DEPTH = -0.5;
 const HILLS_TOP = 300;
-const HILLS_HEIGHT = GRASS_Y - HILLS_TOP;
+const HILLS_HEIGHT = GRASS_SURFACE_Y - HILLS_TOP;
 const HILL_SHAPES: readonly (readonly [number, number, number])[] = [
   [45, 45, 50],
-  [115, 45, HILLS_HEIGHT],
+  [125, 45, HILLS_HEIGHT],
 ];
 const DAY_HILL_COLOR = "#4a9ba6";
 const HILL_COLORS = [DAY_HILL_COLOR, "#c97b3a", "#1a1b2b"];
@@ -207,7 +208,9 @@ export class RunScene extends Phaser.Scene {
   private makeHillTexture(color: string): void {
     const graphics = this.add.graphics().fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
     HILL_SHAPES.forEach(([x, radiusX, radiusY]) => {
-      graphics.fillEllipse(x, HILLS_HEIGHT, radiusX * 2, radiusY * 2);
+      [x, x - HILLS_REPEAT_WIDTH].forEach((left) => {
+        graphics.fillEllipse(left, HILLS_HEIGHT, radiusX * 2, radiusY * 2);
+      });
     });
     graphics.generateTexture(hillKey(color), HILLS_REPEAT_WIDTH, HILLS_HEIGHT).destroy();
   }
