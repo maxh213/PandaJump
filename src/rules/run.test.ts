@@ -57,21 +57,25 @@ const startingClouds = [
   { x: 300, y: 53, texture: "cloud_02.png" },
 ];
 
+const startingScoreView = {
+  score: "0",
+  gameOverScore: "0",
+  scoreScale: 1,
+  best: "0",
+  topScores: [],
+  newBest: false,
+  overtookBest: false,
+  speedUp: false,
+  medal: "none",
+  medalGoal: "Bronze medal at 10",
+};
+
 test("a run starts ready, with the panda on the floor, score 0 and no boxes", () => {
   expect(createRun(oneBoxEach(), oneBoxEach(), noStore).view()).toEqual({
     ready: true,
     time: 0,
     restarts: 0,
-    score: "0",
-    gameOverScore: "0",
-    scoreScale: 1,
-    best: "0",
-    topScores: [],
-    newBest: false,
-    overtookBest: false,
-    speedUp: false,
-    medal: "none",
-    medalGoal: "Bronze medal at 10",
+    ...startingScoreView,
     biome: BIOMES[0],
     sky: "#71c5cf",
     stars: [],

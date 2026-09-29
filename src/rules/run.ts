@@ -378,10 +378,7 @@ const gameOverScoreOf = (state: State): string =>
 
 const topScoresOf = (state: State): readonly number[] => (state.ready ? state.topScores : NO_SCORES);
 
-const viewOf = (state: State): View => ({
-  ready: state.ready,
-  time: state.time,
-  restarts: state.restarts,
+const scoreViewOf = (state: State) => ({
   score: String(state.score),
   gameOverScore: gameOverScoreOf(state),
   scoreScale: scoreScaleOf(state),
@@ -392,32 +389,47 @@ const viewOf = (state: State): View => ({
   speedUp: isSpeedUp(state),
   medal: medalFor(state.score),
   medalGoal: medalGoalFor(medalFor(state.score)),
+  bestMarker: liveBestMarker(state),
+});
+
+const sceneryViewOf = (state: State) => ({
   biome: biomeFor(state.score),
   sky: biomeFor(state.score).sky,
   stars: starsFor(state.score),
-  pandaX: PANDA_X,
-  pandaBottom: FLOOR_Y - state.panda.height,
-  pandaFrame: pandaFrameOf(state),
   floorScroll: currentDistance(state) % TILE_SIZE,
   hillsScroll: hillsScrollFor(currentDistance(state)),
   hillColor: biomeFor(state.score).hills,
   boxes: boxesOf(state.columns, currentDistance(state), state.hitColumn),
   clouds: cloudsOf(state.clouds, state.time),
-  gameOver: state.deathElapsed !== null,
-  canRestart: canRestart(state),
-  paused: state.paused && state.resumeElapsed === null,
-  countdown: state.resumeElapsed === null ? null : countdownDigit(state.resumeElapsed),
+});
+
+const pandaViewOf = (state: State) => ({
+  pandaX: PANDA_X,
+  pandaBottom: FLOOR_Y - state.panda.height,
+  pandaFrame: pandaFrameOf(state),
   pandaUpsideDown: state.deathElapsed !== null,
-  bestMarker: liveBestMarker(state),
-  deathFlash: deathFlashOf(state.deathElapsed),
-  deathShake: deathShakeOf(state.deathElapsed),
   pandaAngle: pandaAngleFor(state),
   pandaScaleX: pandaScaleOf(state).x,
   pandaScaleY: pandaScaleOf(state).y,
   airPuff: airPuffOf(state),
-  doubleJumpHint: doubleJumpHintOf(state),
   pandaShadow: pandaShadowOf(state),
   landingPuff: landingPuffOf(state),
+});
+
+const viewOf = (state: State): View => ({
+  ready: state.ready,
+  time: state.time,
+  restarts: state.restarts,
+  ...scoreViewOf(state),
+  ...sceneryViewOf(state),
+  ...pandaViewOf(state),
+  gameOver: state.deathElapsed !== null,
+  canRestart: canRestart(state),
+  paused: state.paused && state.resumeElapsed === null,
+  countdown: state.resumeElapsed === null ? null : countdownDigit(state.resumeElapsed),
+  deathFlash: deathFlashOf(state.deathElapsed),
+  deathShake: deathShakeOf(state.deathElapsed),
+  doubleJumpHint: doubleJumpHintOf(state),
 });
 
 const resume = (state: State): State => (state.resumeElapsed === null ? { ...state, resumeElapsed: 0 } : state);
