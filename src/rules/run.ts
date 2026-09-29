@@ -85,6 +85,7 @@ interface Randoms {
 interface State {
   readonly ready: boolean;
   readonly time: number;
+  readonly idle: number;
   readonly rampTime: number;
   readonly rampDistance: number;
   readonly restarts: number;
@@ -156,6 +157,7 @@ type Carried = Pick<State, "restarts" | "best" | "topScores" | "hintPending">;
 const freshState = ({ restarts, best, topScores, hintPending }: Carried, randoms: Randoms): State => ({
   ready: false,
   time: 0,
+  idle: 0,
   rampTime: 0,
   rampDistance: 0,
   restarts,
@@ -185,6 +187,8 @@ const freshState = ({ restarts, best, topScores, hintPending }: Carried, randoms
 
 const distanceAt = (state: State, time: number): number =>
   state.rampDistance + speedForScore(state.score) * (time - state.rampTime);
+
+const clockOf = (state: State): number => state.time + state.idle;
 
 const currentDistance = (state: State): number => distanceAt(state, state.time);
 
@@ -231,7 +235,7 @@ const moveOn = (state: State, ms: number, randoms: Randoms): State => {
     calloutStart,
     speedUpStart: nextSpeedUpStart(state, ramp, time),
     columns: moveColumns(state.columns, distance),
-    clouds: moveClouds(state.clouds, time, randoms.clouds),
+    clouds: moveClouds(state.clouds, time + state.idle, randoms.clouds),
   };
 };
 
@@ -268,11 +272,21 @@ const step = (state: State, ms: number, randoms: Randoms): State => {
     : reboundIfBuffered(state.panda, next);
 };
 
+const idleStep = (state: State, ms: number, randoms: Randoms): State => ({
+  ...state,
+  idle: state.idle + ms,
+  rampDistance: state.rampDistance + speedForScore(0) * ms,
+  clouds: moveClouds(state.clouds, state.idle + ms, randoms.clouds),
+});
+
 const stepsOf = (ms: number): number[] =>
   Array.from({ length: Math.ceil(ms / MAX_STEP) }, (_, index) => Math.min(MAX_STEP, ms - index * MAX_STEP));
 
 const advanceState = (state: State, ms: number, randoms: Randoms): State =>
   stepsOf(ms).reduce((current, part) => step(current, part, randoms), state);
+
+const idleAdvance = (state: State, ms: number, randoms: Randoms): State =>
+  stepsOf(ms).reduce((current, part) => idleStep(current, part, randoms), state);
 
 const canRestart = (state: State): boolean => state.deathElapsed !== null && state.deathElapsed >= RESTART_FREEZE_MS;
 
@@ -375,7 +389,7 @@ const doubleJumpHintOf = (state: State): boolean =>
 const pandaFrameOf = (state: State): number =>
   isLive(state) && state.panda.height > 0
     ? FIRST_RUN_FRAME
-    : FIRST_RUN_FRAME + (Math.floor(state.time * FRAMES_PER_MS) % RUN_FRAMES);
+    : FIRST_RUN_FRAME + (Math.floor(clockOf(state) * FRAMES_PER_MS) % RUN_FRAMES);
 
 const pandaShadowOf = (state: State): View["pandaShadow"] => ({
   x: PANDA_CENTER_X,
@@ -415,7 +429,7 @@ const sceneryViewOf = (state: State) => ({
   hillsScroll: hillsScrollFor(currentDistance(state)),
   hillColor: biomeFor(state.score).hills,
   boxes: boxesOf(state.columns, currentDistance(state), state.hitColumn),
-  clouds: cloudsOf(state.clouds, state.time),
+  clouds: cloudsOf(state.clouds, clockOf(state)),
 });
 
 const pandaViewOf = (state: State) => ({
@@ -484,7 +498,7 @@ const act = (state: State, randoms: Randoms): State => {
   return canRestart(state) ? freshState(carried, randoms) : state;
 };
 
-const isFrozen = (state: State): boolean => state.ready || (state.paused && state.resumeElapsed === null);
+const isFrozen = (state: State): boolean => state.paused && state.resumeElapsed === null;
 
 const pausedState = (state: State): State =>
   state.ready || state.deathElapsed !== null
@@ -539,6 +553,10 @@ export const createRun = (random: Random, cloudRandom: Random, store: BestStore)
       state = togglePause(state);
     },
     advance: (ms) => {
+      if (state.ready) {
+        state = idleAdvance(state, ms, randoms);
+        return;
+      }
       if (isFrozen(state)) return;
       const next = stepAdvance(state, ms, randoms);
       if (next.best !== state.best) {

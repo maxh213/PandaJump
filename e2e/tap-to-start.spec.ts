@@ -5,7 +5,7 @@ import type { Sample } from "./probe.ts";
 
 const peakOf = (samples: Sample[]) => samples.reduce((best, entry) => (heightOf(entry) > heightOf(best) ? entry : best));
 
-test.describe("Rule: A fresh page load waits on a ready screen and nothing moves", () => {
+test.describe("Rule: A fresh page load waits on a ready screen where the panda runs in place and the scenery scrolls", () => {
   test("The ready prompt is shown and no game-over text is visible", async ({ page }) => {
     await openGame(page, [0]);
     const start = await sample(page);
@@ -26,19 +26,37 @@ test.describe("Rule: A fresh page load waits on a ready screen and nothing moves
     expect(start.gameOverRuns.visible).toBe(false);
   });
 
-  test("With no input, the clock, score, boxes, panda and clouds all stay put", async ({ page }) => {
+  test("With no input, the clock, score, boxes and panda's feet stay put while the ready prompt and best runs stay shown", async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem("pandaJump.topScores", JSON.stringify([7, 3]));
+    });
     await openGame(page, [0]);
-    const before = await sample(page);
-    const after = last(await advance(page, 5000));
+    const after = last(await advance(page, 1000));
     expect(after.time).toBe(0);
     expect(after.ready).toBe(true);
     expect(after.score.text).toBe("0");
     expect(after.boxes).toEqual([]);
     expect(after.gameOver).toBe(false);
     expect(after.panda.bottom).toBe(426);
-    expect(after.viewClouds).toEqual(before.viewClouds);
-    expect(after.rock.scroll).toBe(before.rock.scroll);
-    expect(after.grass.scroll).toBe(before.grass.scroll);
+    expect(after.readyPrompt.visible).toBe(true);
+    const heading = await page.evaluate(() => {
+      const text = window.pandaJump?.game.scene.getScene("run").children.getByName("topScoresHeading") as { text: string; visible: boolean };
+      return { text: text.text, visible: text.visible };
+    });
+    expect(heading).toEqual({ text: "Your best runs", visible: true });
+  });
+
+  test("In the same time the panda's frame changes and the floor, hills and a cloud all scroll", async ({ page }) => {
+    await openGame(page, [0]);
+    const before = await sample(page);
+    const samples = await advance(page, 1000);
+    const after = last(samples);
+    expect(new Set(samples.map((entry) => entry.panda.frame)).size).toBeGreaterThan(1);
+    expect(after.floorScroll).not.toBe(before.floorScroll);
+    expect(after.grass.scroll).not.toBe(before.grass.scroll);
+    expect(after.viewHills.scroll).not.toBe(before.viewHills.scroll);
+    expect(after.hills.scroll).not.toBe(before.hills.scroll);
+    expect(after.viewClouds.some((cloud, index) => cloud.x !== before.viewClouds[index]?.x)).toBe(true);
   });
 });
 
@@ -66,6 +84,15 @@ test.describe("Rule: The player's first input starts the run without jumping", (
       });
     });
   }
+
+  test("The floor continues from its ready-screen position instead of resetting", async ({ page }) => {
+    await openGame(page, oneBox);
+    const before = last(await advance(page, 1000));
+    await pressSpace(page);
+    const started = await sample(page);
+    expect(Math.abs(started.floorScroll - before.floorScroll)).toBeLessThanOrEqual(16 * 0.2);
+    expect(started.floorScroll).not.toBe(0);
+  });
 
   test("Every press after the first works as a normal jump, including a double jump", async ({ page }) => {
     await openGame(page, oneBox);

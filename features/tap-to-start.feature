@@ -10,20 +10,28 @@ Feature: Panda Jump waits for the player's first tap, click or Space press befor
   Background:
     Given I open the Panda Jump page
 
-  Rule: A fresh page load waits on a ready screen and nothing moves
+  Rule: A fresh page load waits on a ready screen where the panda runs in place and the scenery scrolls
 
     Scenario: The ready prompt is shown and no game-over text is visible
       Then the page reads "Tap or press Space to start" centred in white 20px Arial at (200, 320)
       And no game-over text is visible
 
-    Scenario: With no input, the clock, score, boxes, panda and clouds all stay put
-      When 5000 ms pass
+    Scenario: With no input, the clock, score, boxes and panda's feet stay put
+      Given the page has stored best runs
+      When 1000 ms pass
       Then the run's time is still 0
       And the score still reads "0"
       And no box is on screen
       And the run has not ended
       And the panda's feet are still on the floor at y 426
-      And the clouds and the floor scroll have not moved
+      And the ready prompt and the "Your best runs" list are still shown
+
+    Scenario: With no input, the panda runs in place and the scenery scrolls
+      When 1000 ms pass
+      Then the panda's frame has changed
+      And the floor scroll has changed
+      And the hills scroll has changed
+      And at least one cloud's position has changed
 
   Rule: The player's first input starts the run without jumping
 
@@ -39,6 +47,12 @@ Feature: Panda Jump waits for the player's first tap, click or Space press befor
         | click the canvas |
         | tap the canvas   |
         | press Space      |
+
+    Scenario: The floor continues from its ready-screen position when the run starts
+      Given 1000 ms have passed on the ready screen
+      When I press Space
+      Then the floor scroll differs from its value just before the press by no more than one frame's scroll
+      And it has not reset to 0
 
     Scenario: Every press after the first works as a normal jump, including a double jump
       Given I pressed Space to start the run

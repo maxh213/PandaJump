@@ -104,11 +104,53 @@ test("a run starts ready, with the panda on the floor, score 0 and no boxes", ()
   });
 });
 
-test("while ready, advancing time changes nothing: clock, panda, columns and clouds all stay put", () => {
+test("while ready, advancing keeps the clock, score, columns and panda's feet still", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  expect(run.view()).toMatchObject({ ready: true, time: 0, score: "0", boxes: [], gameOver: false, pandaBottom: 426 });
+});
+
+test("while ready, the panda cycles its running frames, the floor and hills scroll at 0.2 px/ms and clouds drift", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   const before = run.view();
-  run.advance(5000);
-  expect(run.view()).toEqual(before);
+  run.advance(100);
+  const after = run.view();
+  expect(after.pandaFrame).toBe(18);
+  expect(after.floorScroll).toBeCloseTo(20);
+  expect(after.hillsScroll).toBeCloseTo(5);
+  expect(after.clouds[1]?.x).toBeCloseTo((before.clouds[1]?.x ?? 0) - 4);
+  expect(after.clouds).not.toEqual(before.clouds);
+});
+
+test("while ready, a cloud that drifts off the left respawns from its own random cursor", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1300);
+  expect(run.view().clouds[0]?.x).toBeGreaterThan(300);
+  expect(run.view().boxes).toEqual([]);
+});
+
+test("starting after waiting keeps the floor, hills and clouds where they were and spawns column 1 after 1500 ms", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  const before = run.view();
+  run.jump();
+  const started = run.view();
+  expect(started).toMatchObject({ ready: false, time: 0, pandaBottom: 426, floorScroll: before.floorScroll, hillsScroll: before.hillsScroll });
+  expect(started.clouds).toEqual(before.clouds);
+  run.advance(1500);
+  expect(run.view().boxes).toEqual([{ x: 400, y: 362, texture: "dirt_06.png", hit: false }]);
+});
+
+test("two runs given the same waits and inputs show identical scenery", () => {
+  const play = () => {
+    const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+    run.advance(1234);
+    run.jump();
+    run.advance(1600);
+    const { floorScroll, hillsScroll, clouds, boxes } = run.view();
+    return { floorScroll, hillsScroll, clouds, boxes };
+  };
+  expect(play()).toEqual(play());
 });
 
 test("the first jump leaves ready without making the panda jump, and starts the run from time 0", () => {
