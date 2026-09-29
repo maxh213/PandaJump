@@ -68,3 +68,4 @@ add a line merge cleanly instead of conflicting.
 - Game controller support: the bottom face button (A, Cross) jumps, resumes a paused run and restarts after game over, and the Start button pauses and resumes
 - A row of distant rounded hills scrolls behind the columns at a quarter of the floor's speed, darker than the sky and changing colour with it at scores 20 and 40
 - P or Escape during the 3-2-1 resume countdown puts the run back on the Paused screen, the same as the on-screen pause button
+- The panda stretches tall for 120 ms as it jumps off the floor and squashes wide for 120 ms as it lands, easing back to normal

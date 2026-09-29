@@ -87,6 +87,7 @@ test("a run starts ready, with the panda on the floor, score 0 and no boxes", ()
     bestMarker: null,
     deathFlash: 0,
     pandaAngle: 0,
+    pandaScaleX: 1, pandaScaleY: 1,
     airPuff: null,
     doubleJumpHint: false,
     pandaShadow: { x: 112.5, y: 426, scale: 1 },
@@ -1244,4 +1245,79 @@ test("the view scrolls the hills a quarter of the floor's distance and colours t
   run.advance(1000);
   expect(run.view().hillsScroll).toBeCloseTo(50);
   expect(run.view().hillColor).toBe("#4a9ba6");
+});
+
+const scaleOf = (run: Run) => [run.view().pandaScaleX, run.view().pandaScaleY];
+
+test("a floor jump stretches the panda tall and eases back to 1 over 120ms", () => {
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  expect(scaleOf(run)).toEqual([1, 1]);
+  run.jump();
+  expect(scaleOf(run)).toEqual([0.8, 1.2]);
+  run.advance(60);
+  expect(scaleOf(run)[0]).toBeCloseTo(0.9);
+  expect(scaleOf(run)[1]).toBeCloseTo(1.1);
+  run.advance(60);
+  expect(scaleOf(run)).toEqual([1, 1]);
+  run.advance(50);
+  expect(scaleOf(run)).toEqual([1, 1]);
+});
+
+test("an air jump leaves the panda's scale alone", () => {
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  run.advance(300);
+  run.jump();
+  expect(scaleOf(run)).toEqual([1, 1]);
+});
+
+test("landing squashes the panda wide and eases back to 1 over 120ms", () => {
+  const landed = landedRun();
+  expect(scaleOf(landed)).toEqual([1.2, 0.8]);
+  landed.advance(60);
+  expect(scaleOf(landed)[0]).toBeCloseTo(1.1);
+  expect(scaleOf(landed)[1]).toBeCloseTo(0.9);
+  landed.advance(60);
+  expect(scaleOf(landed)).toEqual([1, 1]);
+});
+
+test("a jump right after landing stretches the panda instead of squashing it", () => {
+  const landed = landedRun();
+  landed.jump();
+  expect(scaleOf(landed)).toEqual([0.8, 1.2]);
+});
+
+test("a buffered jump that fires on landing stretches the panda", () => {
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  run.advance(300);
+  run.jump();
+  while (run.view().pandaBottom < 400) run.advance(10);
+  run.jump();
+  while (scaleOf(run)[1] === 1) run.advance(10);
+  expect(scaleOf(run)).toEqual([0.8, 1.2]);
+  run.advance(10);
+  expect(run.view().pandaBottom).toBeLessThan(426);
+});
+
+test("the panda's scale is 1 at game over and after a restart", () => {
+  const run = createStartedRun(twoBoxColumns(), oneBoxEach(), noStore);
+  run.advance(2300);
+  run.jump();
+  run.advance(900);
+  expect(run.view().gameOver).toBe(true);
+  expect(scaleOf(run)).toEqual([1, 1]);
+  run.advance(1000);
+  expect(scaleOf(run)).toEqual([1, 1]);
+  run.jump();
+  expect(scaleOf(run)).toEqual([1, 1]);
+});
+
+test("the shape holds while paused", () => {
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  run.advance(60);
+  run.pause();
+  run.advance(500);
+  expect(scaleOf(run)[1]).toBeCloseTo(1.1);
 });

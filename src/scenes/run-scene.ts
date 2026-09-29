@@ -30,10 +30,10 @@ const LANDING_PUFF_RADIUS = 5;
 const LANDING_PUFF_OFFSET = 10;
 const LANDING_PUFF_COLOR = 0xd2b48c;
 const PANDA_SCALE = 1.25;
+const SCALE_STEPS = 1024;
 const PANDA_FRAME_WIDTH = 20;
 const PANDA_FRAME_HEIGHT = 21;
 const PANDA_HALF_WIDTH = (PANDA_FRAME_WIDTH * PANDA_SCALE) / 2;
-const PANDA_HALF_HEIGHT = (PANDA_FRAME_HEIGHT * PANDA_SCALE) / 2;
 const CLOUD_DEPTH = -1;
 const STAR_DEPTH = -2;
 const HILLS_DEPTH = -0.5;
@@ -422,8 +422,10 @@ export class RunScene extends Phaser.Scene {
   }
 
   private drawPanda(view: ReturnType<Run["view"]>): void {
+    const scaleY = Math.round(PANDA_SCALE * view.pandaScaleY * SCALE_STEPS) / SCALE_STEPS;
     this.panda
-      .setPosition(view.pandaX + PANDA_HALF_WIDTH, view.pandaBottom - PANDA_HALF_HEIGHT)
+      .setPosition(view.pandaX + PANDA_HALF_WIDTH, view.pandaBottom - (PANDA_FRAME_HEIGHT * scaleY) / 2)
+      .setScale(PANDA_SCALE * view.pandaScaleX, scaleY)
       .setFrame(view.pandaFrame)
       .setFlipY(view.pandaUpsideDown)
       .setAngle(view.pandaAngle);

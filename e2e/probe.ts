@@ -51,6 +51,8 @@ export interface Sample {
     flipY: boolean;
     depth: number;
     angle: number;
+    scaleX: number;
+    scaleY: number;
   };
   hills: { y: number; height: number; depth: number; scroll: number; key: string; visible: boolean };
   viewHills: { scroll: number; color: string };
@@ -124,6 +126,8 @@ interface GameSprite {
   flipY: boolean;
   depth: number;
   angle: number;
+  scaleX: number;
+  scaleY: number;
   getBounds: () => Bounds;
 }
 
@@ -297,6 +301,8 @@ export const installProbe = () => {
         flipY: panda.flipY,
         depth: panda.depth,
         angle: panda.angle,
+        scaleX: panda.scaleX,
+        scaleY: panda.scaleY,
       },
       hills: {
         y: hills.y,

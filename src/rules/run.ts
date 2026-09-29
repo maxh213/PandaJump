@@ -52,6 +52,8 @@ interface View {
   readonly bestMarker: { x: number; y: number } | null;
   readonly deathFlash: number;
   readonly pandaAngle: number;
+  readonly pandaScaleX: number;
+  readonly pandaScaleY: number;
   readonly airPuff: { x: number; y: number; alpha: number } | null;
   readonly doubleJumpHint: boolean;
   readonly pandaShadow: { x: number; y: number; scale: number };
@@ -96,6 +98,12 @@ interface State {
   readonly hintPending: boolean;
   readonly bufferedAt: number | null;
   readonly landingStart: number | null;
+  readonly jumpStart: number | null;
+}
+
+interface Squash {
+  readonly x: number;
+  readonly y: number;
 }
 
 const MAX_STEP = 10;
@@ -119,6 +127,9 @@ const SHADOW_PEAK_HEIGHT = 168;
 const LANDING_PUFF_DURATION_MS = 200;
 const HINT_BELOW_SCORE = 3;
 const JUMP_BUFFER_MS = 100;
+const SQUASH_MS = 120;
+const STRETCH: Squash = { x: 0.8, y: 1.2 };
+const SQUASH: Squash = { x: 1.2, y: 0.8 };
 const PANDA_CENTER_X = PANDA_X + 12.5;
 
 type Carried = Pick<State, "restarts" | "best" | "hintPending">;
@@ -148,6 +159,7 @@ const freshState = ({ restarts, best, hintPending }: Carried, randoms: Randoms):
   hintPending,
   bufferedAt: null,
   landingStart: null,
+  jumpStart: null,
 });
 
 const distanceAt = (state: State, time: number): number =>
@@ -213,11 +225,13 @@ const spawnIfDue = (state: State, random: Random): State =>
 
 const landedFrom = (before: Panda, state: State): boolean => before.height > 0 && state.panda.height === 0;
 
-const settleBuffer = (state: State, bufferedAt: number): State => ({
-  ...state,
-  panda: state.time - bufferedAt <= JUMP_BUFFER_MS ? jump(state.panda) : state.panda,
-  bufferedAt: null,
-});
+const jumpStartAfter = (state: State, panda: Panda): number | null =>
+  state.panda.height === 0 && panda !== state.panda ? state.time : state.jumpStart;
+
+const settleBuffer = (state: State, bufferedAt: number): State => {
+  const panda = state.time - bufferedAt <= JUMP_BUFFER_MS ? jump(state.panda) : state.panda;
+  return { ...state, panda, jumpStart: jumpStartAfter(state, panda), bufferedAt: null };
+};
 
 const reboundIfBuffered = (before: Panda, state: State): State =>
   state.bufferedAt !== null && landedFrom(before, state) ? settleBuffer(state, state.bufferedAt) : state;
@@ -287,6 +301,23 @@ const stepAdvance = (state: State, ms: number, randoms: Randoms): State => {
   return advanceState(ticked.state, ticked.worldMs, randoms);
 };
 
+const easedScale = (peak: number, elapsed: number): number =>
+  1 + (peak - 1) * Math.max(0, 1 - elapsed / SQUASH_MS);
+
+const startOf = (time: number | null): number => time ?? -Infinity;
+
+const latestSquash = (state: State): { start: number; shape: Squash } =>
+  startOf(state.landingStart) > startOf(state.jumpStart)
+    ? { start: startOf(state.landingStart), shape: SQUASH }
+    : { start: startOf(state.jumpStart), shape: STRETCH };
+
+const pandaScaleOf = (state: State): Squash => {
+  if (state.deathElapsed !== null) return { x: 1, y: 1 };
+  const { start, shape } = latestSquash(state);
+  const elapsed = state.time - start;
+  return { x: easedScale(shape.x, elapsed), y: easedScale(shape.y, elapsed) };
+};
+
 const airPuffOf = (state: State): View["airPuff"] => {
   if (state.airPuffStart === null || state.deathElapsed !== null) return null;
   const elapsed = state.time - state.airPuffStart;
@@ -353,6 +384,8 @@ const viewOf = (state: State): View => ({
   bestMarker: liveBestMarker(state),
   deathFlash: deathFlashOf(state.deathElapsed),
   pandaAngle: pandaAngleFor(state),
+  pandaScaleX: pandaScaleOf(state).x,
+  pandaScaleY: pandaScaleOf(state).y,
   airPuff: airPuffOf(state),
   doubleJumpHint: doubleJumpHintOf(state),
   pandaShadow: pandaShadowOf(state),
@@ -373,7 +406,7 @@ const hintAfterJump = (state: State, panda: Panda): Pick<State, "hintPending"> =
 const jumpLive = (state: State): State => {
   const panda = jump(state.panda);
   const bufferedAt = panda === state.panda ? state.time : state.bufferedAt;
-  return { ...state, panda, bufferedAt, ...hintAfterJump(state, panda), ...airPuffAfterJump(state, panda) };
+  return { ...state, panda, bufferedAt, jumpStart: jumpStartAfter(state, panda), ...hintAfterJump(state, panda), ...airPuffAfterJump(state, panda) };
 };
 
 const frozenAct = (state: State): State | null => {
