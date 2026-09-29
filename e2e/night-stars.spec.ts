@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { columnClearTime, oneBox, openGame, play, sample, spawnTimeOf, untilRestart } from "./probe.ts";
+import { columnClearTime, oneBox, openGame, play, sample, spawnTimeOf, startRun, untilRestart } from "./probe.ts";
 import type { Sample } from "./probe.ts";
 
 const EXTRA_COLUMNS = 3;
@@ -18,6 +18,7 @@ const scoreReadAt = (column: number): number => columnClearTime(column) + CLEAR_
 
 const playThroughColumn = async (page: Page, column: number, box = oneBox): Promise<void> => {
   await openGame(page, rampedRandom(column, box));
+  await startRun(page);
   await play(page, jumpTimesFor(1, column), scoreReadAt(column));
 };
 

@@ -1177,7 +1177,7 @@ test("gameOverScore stays 0 for a run that died with score 0", () => {
 });
 
 const landedRun = () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.jump();
   run.advance(1000);
   while (run.view().pandaBottom < 426) run.advance(10);
@@ -1185,7 +1185,7 @@ const landedRun = () => {
 };
 
 test("landingPuff is null in the air, appears on landing at the feet and fades over 200ms", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   expect(run.view().landingPuff).toBeNull();
   run.jump();
   run.advance(500);
@@ -1199,7 +1199,7 @@ test("landingPuff is null in the air, appears on landing at the feet and fades o
 });
 
 test("landingPuff stays null when a dead panda falls to the floor", () => {
-  const run = createRun(twoBoxColumns(), oneBoxEach(), noStore);
+  const run = createStartedRun(twoBoxColumns(), oneBoxEach(), noStore);
   run.advance(2300);
   run.jump();
   run.advance(900);
@@ -1210,7 +1210,7 @@ test("landingPuff stays null when a dead panda falls to the floor", () => {
 });
 
 test("landingPuff is null right after a restart", () => {
-  const run = createRun(twoBoxColumns(), oneBoxEach(), noStore);
+  const run = createStartedRun(twoBoxColumns(), oneBoxEach(), noStore);
   run.advance(2300);
   run.jump();
   run.advance(900);

@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { advance, advanceTo, openGame, oneBox, pressSpace, sample, untilGameOver } from "./probe.ts";
+import { advance, advanceTo, openGame, oneBox, pressSpace, sample, startRun, untilGameOver } from "./probe.ts";
 
 test.describe("Rule: The dust appears only when the panda lands from a jump", () => {
   test("No dust while the panda is in the air", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await pressSpace(page);
     await advanceTo(page, 290);
     expect((await sample(page)).viewLandingPuff).toBeNull();
@@ -15,6 +16,7 @@ test.describe("Rule: The dust appears only when the panda lands from a jump", ()
 
   test("The dust appears on landing and fades to gone over 200 ms", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await pressSpace(page);
     await advanceTo(page, 1000);
     let landed = await sample(page);
@@ -38,6 +40,7 @@ test.describe("Rule: The dust appears only when the panda lands from a jump", ()
 test.describe("Rule: A dead panda kicks up no dust", () => {
   test("Falling to the floor during game over shows no dust", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await advanceTo(page, 2300);
     await pressSpace(page);
     const { after } = await untilGameOver(page);
