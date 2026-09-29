@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { columnClearTime, last, oneBox, openGame, play, sample, spawnTimeOf, untilGameOver, untilRestart } from "./probe.ts";
+import { columnClearTime, last, oneBox, openGame, play, sample, spawnTimeOf, startRun, untilGameOver, untilRestart } from "./probe.ts";
 
 const JUMP_OFFSET = 788;
 const EXTRA_COLUMNS = 3;
@@ -22,6 +22,7 @@ const colourFor = (score: number): string => {
 
 const playThroughColumn = async (page: Page, column: number) => {
   await openGame(page, rampedRandom(column));
+  await startRun(page);
   return play(page, jumpTimesFor(column), clearedBy(column));
 };
 
