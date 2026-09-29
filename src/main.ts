@@ -17,7 +17,7 @@ const loadBest = (): number => {
 
 const saveBest = (best: number): void => {
   try {
-    localStorage.setItem(BEST_KEY, String(best));
+    localStorage.setItem(BEST_KEY, String(Math.max(best, loadBest())));
   } catch {
     return;
   }

@@ -17,4 +17,5 @@ Use a desktop browser with dev tools. Clear localStorage for the page's origin b
     ```
     then reload. **Expected:** the page still loads and plays, the console shows no uncaught error from Panda Jump, and "Best: N" reads "Best: 0" and updates live as you play (it just won't survive this particular reload, since storage is blocked for the whole session).
 11. Watch the floor scroll for a few seconds with the best text on screen. **Expected:** no seam or flicker in the floor tiles behind or around the "Best: N" text, same as slice 1.
-12. Run `npx playwright test`. **Expected:** every scenario in `features/phaser-4-core-run.feature` and `features/high-score.feature` has a passing test.
+12. Open the game in two tabs. In tab A, beat your best so it reads a high value. In tab B, which loaded before that, play a run that scores lower than tab A's best and die. **Expected:** the `pandaJump.best` value in Local Storage is still tab A's higher value.
+13. Run `npx playwright test`. **Expected:** every scenario in `features/phaser-4-core-run.feature` and `features/high-score.feature` has a passing test.

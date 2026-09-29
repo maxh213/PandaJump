@@ -79,3 +79,4 @@ add a line merge cleanly instead of conflicting.
 - The 'II' pause button stays hidden on the ready screen, so a tap in the top-right corner of a fresh page starts the run instead of doing nothing, and appears once the run starts
 - The run moves through a new biome every 20 points (meadow, desert, snowfield, industrial, then repeating), each with its own floor, column texture, sky and hill colour; the sky change and night stars now belong to the biomes
 - The ready screen's "Your best runs" list now includes the stored best when a run was closed after beating it but before the panda died
+- A second open tab or installed copy of the game can no longer lower the stored best score: saving keeps the larger of the new best and the value already stored

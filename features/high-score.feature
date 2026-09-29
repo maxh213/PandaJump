@@ -63,6 +63,20 @@ Feature: Panda Jump on Phaser 4, slice 2: the high score
       And I reload the Panda Jump page
       Then the page reads "Best: 5"
 
+  Rule: The best is kept in the browser between visits, across tabs
+
+    Scenario: A second open tab never lowers the stored best
+      Given the stored best is 5
+      And the page has loaded
+      When the stored best is changed to 30 from another tab
+      And I clear 7 columns on the standard schedule and then die
+      Then the stored best is still 30
+
+    Scenario: A score above the stored best is still stored
+      Given the stored best is 5
+      When I clear 7 columns on the standard schedule and then die
+      Then the stored best is 7
+
   Rule: A missing, corrupt or blocked store never breaks the game
 
     Scenario: No stored value yet is treated as a best of 0

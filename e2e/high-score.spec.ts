@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advanceTo, oneBox, openGame, play, sample, startRun, untilRestart } from "./probe.ts";
+import { advanceTo, columnClearTime, oneBox, openGame, play, sample, standardJumps, standardRandom, startRun, untilRestart } from "./probe.ts";
 import type { GameText } from "./probe.ts";
 
 const BEST_KEY = "pandaJump.best";
@@ -95,6 +95,32 @@ test.describe("Rule: The best is kept in the browser between visits", () => {
     await startRun(page);
     await untilRestart(page);
     expect(await reloadAndReadBest(page)).toBe("5");
+  });
+});
+
+test.describe("Rule: The best is kept in the browser between visits, across tabs", () => {
+  test("A second open tab never lowers the stored best", async ({ page }) => {
+    await seedBest(page, 5);
+    await openGame(page, standardRandom());
+    await page.evaluate((key) => {
+      localStorage.setItem(key, "30");
+    }, BEST_KEY);
+    await startRun(page);
+    const until = columnClearTime(7) + 50;
+    await play(page, standardJumps(until), until);
+    expect((await sample(page)).score.text).toBe("7");
+    await untilRestart(page);
+    expect(await page.evaluate((key) => localStorage.getItem(key), BEST_KEY)).toBe("30");
+  });
+
+  test("A score above the stored best is still stored", async ({ page }) => {
+    await seedBest(page, 5);
+    await openGame(page, standardRandom());
+    await startRun(page);
+    const until = columnClearTime(7) + 50;
+    await play(page, standardJumps(until), until);
+    await untilRestart(page);
+    expect(await page.evaluate((key) => localStorage.getItem(key), BEST_KEY)).toBe("7");
   });
 });
 
