@@ -6,7 +6,7 @@ test.describe("Rule: The game over screen shows the attempt number for this sess
     await openGame(page, oneBox);
     await startRun(page);
     const { after: diedAt } = await untilGameOver(page);
-    expect(Math.abs(diedAt.time - 2875)).toBeLessThanOrEqual(16);
+    expect(Math.abs(diedAt.time - 2890)).toBeLessThanOrEqual(16);
     expect(diedAt.gameOverRuns).toMatchObject({
       text: "Run 1",
       x: 200,

@@ -4,7 +4,7 @@ Feature: Panda Jump on Phaser 4, slice: flash the screen white for an instant wh
   So that I know right away that I died instead of wondering whether the game froze or missed my input
 
   Times are game time in ms since the run started, same as features/phaser-4-core-run.feature.
-  Column 1 spawns at 1500 ms and touches an idle panda at about 2875 ms, as in features/phaser-4-core-run.feature.
+  Column 1 spawns at 1500 ms and touches an idle panda at about 2890 ms, as in features/phaser-4-core-run.feature.
   "The flash" means the full-canvas white rectangle named "deathFlash", drawn above the panda, the
   boxes and the floor and below the "Game over" title. Its opacity is 0 during a live run, jumps to
   0.6 the instant the panda dies, then falls in a straight line to 0 as the 200 ms after death pass,
@@ -26,7 +26,7 @@ Feature: Panda Jump on Phaser 4, slice: flash the screen white for an instant wh
     Scenario: Running into a column snaps the flash to 0.6 the moment gameOver first becomes true
       Given the random source picks 1 box for the first column
       When I do not jump
-      Then the panda touches the column at about 2875 ms
+      Then the panda touches the column at about 2890 ms
       And the deathFlash rectangle has alpha 0.6, within 0.05, on the first frame where the game is over
 
   Rule: The flash fades out in a straight line over 200ms and then stays gone

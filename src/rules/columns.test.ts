@@ -71,11 +71,15 @@ test("moving marks cleared columns as scored and drops columns off screen", () =
   expect(moveColumns([oneBox], 764)).toEqual([]);
 });
 
-test("a column touches the panda while they overlap and the panda is below its top", () => {
-  expect(hitsPanda([oneBox], 575, 0)).toBe(false);
-  expect(hitsPanda([oneBox], 575.2, 63)).toBe(true);
-  expect(hitsPanda([oneBox], 575.2, 64)).toBe(false);
-  expect(hitsPanda([twoBoxes], 600, 127)).toBe(true);
+test("a column touches the panda only inside x 103 to 122 and below its top minus 4 px", () => {
+  expect(hitsPanda([oneBox], 577, 0)).toBe(false);
+  expect(hitsPanda([oneBox], 578.1, 59.9)).toBe(true);
+  expect(hitsPanda([oneBox], 578.1, 60)).toBe(false);
+  expect(hitsPanda([twoBoxes], 600, 123.9)).toBe(true);
+  expect(hitsPanda([twoBoxes], 600, 124)).toBe(false);
+  expect(hitsPanda([oneBox], 577.9, 0)).toBe(false);
+  expect(hitsPanda([oneBox], 660.9, 0)).toBe(true);
+  expect(hitsPanda([oneBox], 661, 0)).toBe(false);
   expect(hitsPanda([oneBox], 664, 0)).toBe(false);
 });
 
@@ -88,9 +92,9 @@ test("boxes stack up from the floor at the column's position", () => {
 });
 
 test("a column touching the panda is the one returned as the touching column", () => {
-  expect(touchingColumn([oneBox], 575, 0)).toBeNull();
-  expect(touchingColumn([oneBox], 575.2, 63)).toEqual(oneBox);
-  expect(touchingColumn([oneBox], 575.2, 64)).toBeNull();
+  expect(touchingColumn([oneBox], 578, 0)).toBeNull();
+  expect(touchingColumn([oneBox], 578.1, 59.9)).toEqual(oneBox);
+  expect(touchingColumn([oneBox], 578.1, 60)).toBeNull();
 });
 
 test("boxesOf marks every box of the hit column as hit and leaves every other box untouched", () => {

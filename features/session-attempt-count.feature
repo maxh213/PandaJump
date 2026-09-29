@@ -19,7 +19,7 @@ Feature: Panda Jump shows the session's attempt count on the game over screen
     Scenario: The first death reads Run 1
       Given the random source picks 1 box for the first column
       When I do not jump
-      Then the panda touches the column at about 2875 ms
+      Then the panda touches the column at about 2890 ms
       And the page reads "Run 1" centred in white 20px Arial text on the game over screen
       And "Run 1" does not overlap "Game over", "Score: 0", "Best: 0" or "Tap, press Space or the Up Arrow key to play again"
 
@@ -29,13 +29,13 @@ Feature: Panda Jump shows the session's attempt count on the game over screen
     Scenario: Each restart increases the attempt number by one
       Given the random source picks 1 box for the first column
       When I do not jump
-      Then the panda touches the column at about 2875 ms
+      Then the panda touches the column at about 2890 ms
       And the page reads "Run 1" on the game over screen
       When 500 ms pass
       And I press Space
       Then the run restarts
       When I do not jump
-      Then the panda touches the column at about 2875 ms after the latest restart
+      Then the panda touches the column at about 2890 ms after the latest restart
       And the page reads "Run 2" on the game over screen
 
   Rule: The attempt count is per session only, not persisted

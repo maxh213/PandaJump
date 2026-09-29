@@ -19,7 +19,9 @@ export interface Box {
   readonly hit: boolean;
 }
 
-const PANDA_WIDTH = 25;
+const HITBOX_LEFT = PANDA_X + 3;
+const HITBOX_RIGHT = PANDA_X + 22;
+const FEET_FORGIVENESS = 4;
 const SECOND_COLUMN_SCORE = 10;
 const MARKER_GAP = 8;
 
@@ -65,7 +67,7 @@ export const moveColumns = (columns: readonly Column[], distance: number): Colum
 
 const touches = (column: Column, distance: number, height: number): boolean => {
   const x = columnX(column, distance);
-  return x < PANDA_X + PANDA_WIDTH && x + TILE_SIZE > PANDA_X && height < column.boxes * TILE_SIZE;
+  return x < HITBOX_RIGHT && x + TILE_SIZE > HITBOX_LEFT && height < column.boxes * TILE_SIZE - FEET_FORGIVENESS;
 };
 
 export const touchingColumn = (columns: readonly Column[], distance: number, height: number): Column | null =>

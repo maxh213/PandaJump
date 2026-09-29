@@ -81,7 +81,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       Then the canvas background is "#71c5cf"
       And the panda stands on the floor with its left edge at x 100
       And the panda is drawn 25 px wide, 1.25 times the 20 px frame
-      And the panda's hitbox matches the drawn frame: 25 px wide from x 100 to x 125, with its bottom at y 426
+      And the panda's hitbox is 3 px inside the drawn frame on each side, from x 103 to x 122, and forgives the bottom 4 px: a column of n boxes touches it only while its height is below n * 64 - 4
       And the score reads "0" in white 30 px text at (20, 20)
       And no box is on screen
 
@@ -235,10 +235,28 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
 
   Rule: Touching a box freezes the run and shows a game over screen
 
+    Scenario: Grazing a column by 3 px or less does not end the run
+      Given the random source picks 1 box for the first column
+      When the panda jumps at 2755 ms
+      Then at 2882 ms the drawn panda overlaps the column's top-left corner by 3 px or less
+      And the panda does not touch the column and the run carries on with no game over screen
+
+    Scenario: Sinking clearly into a column ends the run
+      Given the random source picks 1 box for the first column
+      When the panda jumps at 2800 ms
+      Then the panda is more than 10 px below the column's top when it touches the column
+      And the page reads "Game over" and that column is tinted red
+
+    Scenario: Coming down inside a column ends the run
+      Given the random source picks 1 box for the first column
+      When the panda jumps at 2000 ms and comes down onto the column
+      Then the drawn panda overlaps the column by at least 10 px horizontally when it touches the column
+      And the page reads "Game over" and that column is tinted red
+
     Scenario: Running into a column freezes the run and shows game over
       Given the random source picks 1 box for the first column
       When I do not jump
-      Then the panda touches the column at about 2875 ms
+      Then the panda touches the column at about 2890 ms
       And the panda, the columns and the floor stop moving
       And the page reads "Game over" centred in white 40px
       And the page reads "Score: 0" and "Best: 0" under it, in white
@@ -268,7 +286,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       Given the random source picks 1 box and no second column for every column
       When I press Space at 2700, 4200 and 5700 ms and then stop jumping
       Then the score reads "3" at 7300 ms
-      And the panda touches column 4 at about 7375 ms
+      And the panda touches column 4 at about 7390 ms
       And the page reads "Score: 3" and "New best: 3" on the game over screen, in gold (#ffd700), since this run overtook the stored best of 0
       And the run has not restarted
 
@@ -311,7 +329,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
     Scenario: Holding Space through death does not auto-restart the run from its auto-repeat
       Given the random source picks 1 box for the first column
       When I press Space at 0 ms and keep it held down, and do not press it again
-      Then the panda touches the column at about 2875 ms
+      Then the panda touches the column at about 2890 ms
       When the held key's auto-repeat sends further keydowns at 500, 520 and 600 ms after death
       Then the run has not restarted
       And the page still reads "Game over"

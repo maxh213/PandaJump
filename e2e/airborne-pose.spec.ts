@@ -80,9 +80,9 @@ test.describe("Rule: Pause and game over look as they always did", () => {
     await startRun(page);
     await advanceTo(page, 2000);
     await press(page, "Space");
-    await advanceTo(page, 3037);
+    await advanceTo(page, 3050);
     const dead = await sample(page);
-    expect(dead.time).toBe(3037);
+    expect(dead.time).toBe(3050);
     expect(dead.panda.bottom).toBeLessThan(426);
     expect(dead.panda.frame).toBe(20);
   });

@@ -48,5 +48,5 @@ Feature: Panda Jump on Phaser 4, slice: the airborne pose
 
     Scenario: A panda that hits a box in the air shows the frame game time gives
       When I press Space at 2000 ms
-      And the panda hits a box in the air at 3037 ms
-      Then the panda's frame is 20, the frame game time 3037 ms gives
+      And the panda hits a box in the air at 3050 ms
+      Then the panda's frame is 20, the frame game time 3050 ms gives

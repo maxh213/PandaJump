@@ -13,7 +13,7 @@ Feature: Vibrate the device the instant the panda dies
     Scenario: The device vibrates once the moment the panda touches a column
       Given the random source picks 1 box for the first column
       When I do not jump
-      Then the panda touches the column at about 2875 ms
+      Then the panda touches the column at about 2890 ms
       And navigator.vibrate has been called exactly once, with a short pattern
       And navigator.vibrate is not called again while the game over screen stays up
 
@@ -37,6 +37,6 @@ Feature: Vibrate the device the instant the panda dies
       Given navigator.vibrate is undefined
       And the random source picks 1 box for the first column
       When I do not jump
-      Then the panda touches the column at about 2875 ms
+      Then the panda touches the column at about 2890 ms
       And the page reads "Game over"
       And no error is thrown or logged

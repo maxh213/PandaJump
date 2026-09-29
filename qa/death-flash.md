@@ -10,7 +10,7 @@ by frame instead.
    text and score appear. You can tell immediately that you died, without having to notice the "Game
    over" text first.
 3. Open `./?clock=manual&random=0.25,0.5,0` in the console and run
-   `window.pandaJump.run.advance(2880); window.pandaJump.run.view().deathFlash`. **Expected:** a
+   `window.pandaJump.run.advance(2895); window.pandaJump.run.view().deathFlash`. **Expected:** a
    number around 0.5–0.6 (the flash is near its peak just after death).
 4. Keep calling `window.pandaJump.run.advance(50); window.pandaJump.run.view().deathFlash` a few more
    times. **Expected:** the number falls smoothly towards 0 and reaches exactly 0 once about 200ms

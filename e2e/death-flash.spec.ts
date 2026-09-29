@@ -46,7 +46,7 @@ test.describe("Rule: The flash jumps to its peak opacity the instant the panda d
     await startRun(page);
     const { after } = await untilGameOver(page);
     expect(after.gameOver).toBe(true);
-    expect(Math.abs(after.time - 2875)).toBeLessThanOrEqual(16);
+    expect(Math.abs(after.time - 2890)).toBeLessThanOrEqual(16);
     expect(after.deathFlash.alpha).toBeCloseTo(0.6, 1);
     expect(after.viewDeathFlash).toBeCloseTo(0.6, 1);
   });

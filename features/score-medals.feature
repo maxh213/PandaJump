@@ -21,7 +21,7 @@ Feature: Panda Jump awards a medal on the game-over screen
     Scenario: A run that dies at score 0 shows no medal
       Given the random source picks 1 box for the first column
       When I do not jump
-      Then the panda touches the column at about 2875 ms
+      Then the panda touches the column at about 2890 ms
       And the page reads "Score: 0" on the game-over screen
       And "Bronze medal at 10" is shown in #ffffff, 16px and outlined, with no disc
 

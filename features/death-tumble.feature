@@ -47,7 +47,7 @@ Feature: Panda Jump on Phaser 4, slice: the dead panda tumbles to the floor
     Scenario: Dying without ever leaving the floor keeps the panda's feet at y 426
       Given the random source picks 1 box for the first column
       When I do not jump
-      Then the panda touches the column at about 2875 ms with its feet already at the floor, y 426
+      Then the panda touches the column at about 2890 ms with its feet already at the floor, y 426
       And the panda's feet stay at y 426 for as long as the game-over screen is shown
 
   Rule: The death tumble does not change the restart freeze or restart behaviour

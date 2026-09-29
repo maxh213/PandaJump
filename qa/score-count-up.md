@@ -8,7 +8,7 @@ console steps below use `?clock=manual` to walk through it.
    screen ticks up quickly from 0 to your final score, finishing just as the "Tap to play again"
    prompt appears, and never overshoots.
 3. Open `./?clock=manual&random=0.25,0.5,0` in the console and run
-   `window.pandaJump.run.advance(2880); window.pandaJump.run.view().gameOverScore`. **Expected:**
+   `window.pandaJump.run.advance(2895); window.pandaJump.run.view().gameOverScore`. **Expected:**
    `"0"` (a run that dies at score 0 shows 0 at every moment).
 4. While the count runs, check the top-left score and the tab title. **Expected:** both show your final
    score at once, and the medal (from 10 points up) shows at once too.

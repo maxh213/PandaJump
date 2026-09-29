@@ -371,8 +371,8 @@ test.describe("Rule: The panda runs on a scrolling floor", () => {
     expect(start.score).toEqual({ text: "0", x: 20, y: 20, color: "#ffffff", fontSize: "30px", scale: 1 });
     expect(start.boxes).toEqual([]);
     const restart = await untilRestart(page);
-    expect(deathTime(restart)).toBeGreaterThanOrEqual(2875);
-    expect(deathTime(restart)).toBeLessThanOrEqual(2891);
+    expect(deathTime(restart)).toBeGreaterThanOrEqual(2890);
+    expect(deathTime(restart)).toBeLessThanOrEqual(2906);
   });
 
   test("The run cycle plays whole frames", async ({ page }) => {
@@ -658,7 +658,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     await openGame(page, oneBox);
     await startRun(page);
     const { after: diedAt } = await untilGameOver(page);
-    expect(Math.abs(diedAt.time - 2875)).toBeLessThanOrEqual(16);
+    expect(Math.abs(diedAt.time - 2890)).toBeLessThanOrEqual(16);
     expect(diedAt.restarts).toBe(0);
     expect(diedAt.gameOverTitle).toMatchObject({ text: "Game over", x: 200, y: 190, color: "#ffffff", fontSize: "40px", visible: true });
     expect(diedAt.gameOverTitle.originX).toBeCloseTo(0.5);
@@ -720,13 +720,54 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     await expectCleanRestart(page);
   });
 
+  test("Grazing the top-left corner of a column by 3 px or less does not end the run", async ({ page }) => {
+    await openGame(page, oneBox);
+    await startRun(page);
+    await play(page, [2755], 2882);
+    const grazing = await sample(page);
+    const column = first(columnsAt(grazing));
+    expect(grazing.gameOver).toBe(false);
+    expect(125 - column.x).toBeGreaterThan(0);
+    expect(125 - column.x).toBeLessThanOrEqual(3);
+    expect(64 - heightOf(grazing)).toBeGreaterThan(0);
+    expect(64 - heightOf(grazing)).toBeLessThanOrEqual(3);
+    const cleared = await advanceTo(page, 3400);
+    expect(cleared.some((entry) => entry.gameOver)).toBe(false);
+    expect(last(cleared).score.text).toBe("1");
+    expect(last(cleared).gameOverTitle.visible).toBe(false);
+  });
+
+  test("Sinking at least 10 px into a column still ends the run with that column tinted red", async ({ page }) => {
+    await openGame(page, oneBox);
+    await startRun(page);
+    await play(page, [2800], 2880);
+    const { after: diedAt } = await untilGameOver(page);
+    const column = first(columnsAt(diedAt));
+    expect(125 - column.x).toBeGreaterThanOrEqual(3);
+    expect(64 - heightOf(diedAt)).toBeGreaterThanOrEqual(10);
+    expect(diedAt.gameOverTitle).toMatchObject({ text: "Game over", visible: true });
+    expect(column.boxes.every((box) => box.tint === 0xff6666)).toBe(true);
+  });
+
+  test("Coming down 10 px or more inside a column still ends the run with that column tinted red", async ({ page }) => {
+    await openGame(page, oneBox);
+    await startRun(page);
+    await play(page, [2000], 3000);
+    const { after: diedAt } = await untilGameOver(page);
+    const column = first(columnsAt(diedAt));
+    expect(125 - column.x).toBeGreaterThanOrEqual(10);
+    expect(heightOf(diedAt)).toBeLessThan(60);
+    expect(diedAt.gameOverTitle).toMatchObject({ text: "Game over", visible: true });
+    expect(column.boxes.every((box) => box.tint === 0xff6666)).toBe(true);
+  });
+
   test("Dying after scoring freezes the run with the score it reached", async ({ page }) => {
     await openGame(page, oneBox);
     await startRun(page);
     await play(page, [2700, 4200, 5700], 7300);
     expect(await scoreNow(page)).toBe("3");
     const { after: diedAt } = await untilGameOver(page);
-    expect(Math.abs(diedAt.time - 7375)).toBeLessThanOrEqual(16);
+    expect(Math.abs(diedAt.time - 7390)).toBeLessThanOrEqual(16);
     expect(diedAt.score.text).toBe("3");
     expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 3");
     expect(diedAt.gameOverBest).toMatchObject({ text: "New best: 3", color: "#ffd700" });
@@ -812,7 +853,7 @@ test.describe("Rule: Touching a box freezes the run and shows a game over screen
     await startRun(page);
     for (let death = 0; death < 3; death += 1) {
       const restart = await untilRestart(page);
-      expect(Math.abs(restart.diedAt.time - 2875)).toBeLessThanOrEqual(16);
+      expect(Math.abs(restart.diedAt.time - 2890)).toBeLessThanOrEqual(16);
     }
     const afterThird = await sample(page);
     expect(afterThird.restarts).toBe(3);

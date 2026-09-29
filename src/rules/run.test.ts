@@ -113,7 +113,7 @@ test("the first jump leaves ready without making the panda jump, and starts the 
 
 test("restarting from the game-over screen stays instant and does not return to ready", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2880);
+  run.advance(2895);
   run.advance(500);
   run.jump();
   expect(run.view()).toMatchObject({ ready: false, restarts: 1, time: 0 });
@@ -174,8 +174,8 @@ test("a panda that dies in the air shows the time-based frame, not the air pose"
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2000);
   run.jump();
-  run.advance(1037);
-  expect(run.view()).toMatchObject({ gameOver: true, time: 3037, pandaFrame: 20 });
+  run.advance(1050);
+  expect(run.view()).toMatchObject({ gameOver: true, time: 3050, pandaFrame: 20 });
   expect(run.view().pandaBottom).toBeLessThan(426);
 });
 
@@ -209,7 +209,7 @@ test("a column spawns every 1500 ms at the right edge", () => {
 
 test("touching a column freezes the run and shows game over instead of restarting at once", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2880);
+  run.advance(2895);
   run.advance(200);
   const frozen = run.view();
   expect(frozen).toMatchObject({ restarts: 0, score: "0", gameOver: true, canRestart: false, deathFlash: 0 });
@@ -220,7 +220,7 @@ test("touching a column freezes the run and shows game over instead of restartin
 
 test("deathFlash is 0 through a live run, jumps to 0.6 the instant the panda dies and fades to 0 by 200ms", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2870);
+  run.advance(2885);
   expect(run.view().deathFlash).toBe(0);
   run.advance(6);
   const death = run.view();
@@ -236,7 +236,7 @@ test("deathFlash is 0 through a live run, jumps to 0.6 the instant the panda die
 
 test("no click, tap or Space input restarts the run during the first 500ms after death, and canRestart stays false", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2880);
+  run.advance(2895);
   const frozen = run.view();
   run.advance(499);
   expect(run.view()).toMatchObject({ gameOver: true, canRestart: false });
@@ -246,14 +246,14 @@ test("no click, tap or Space input restarts the run during the first 500ms after
 
 test("canRestart becomes true once 500ms have passed since death, before any input arrives", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2880);
+  run.advance(2895);
   run.advance(500);
   expect(run.view()).toMatchObject({ restarts: 0, gameOver: true, canRestart: true });
 });
 
 test("a click, tap or Space input after 500ms starts a fresh run at score 0 and clears the game over screen", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2880);
+  run.advance(2895);
   run.advance(500);
   run.jump();
   expect(run.view()).toMatchObject({
@@ -269,11 +269,11 @@ test("a click, tap or Space input after 500ms starts a fresh run at score 0 and 
 
 test("the restarts counter increments by exactly 1 on every restart", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2880);
+  run.advance(2895);
   run.advance(500);
   run.jump();
   expect(run.view().restarts).toBe(1);
-  run.advance(2880);
+  run.advance(2895);
   run.advance(500);
   run.jump();
   expect(run.view().restarts).toBe(2);
@@ -369,7 +369,7 @@ test("restarting after death resets the score pop to scale 1", () => {
   run.advance(640);
   expect(run.view()).toMatchObject({ score: "1" });
   expect(run.view().scoreScale).toBeGreaterThan(1);
-  run.advance(1040);
+  run.advance(1060);
   expect(run.view()).toMatchObject({ restarts: 0, score: "1", gameOver: true });
   run.advance(600);
   run.jump();
@@ -403,7 +403,7 @@ test("the best is not saved again once the score falls back below it", () => {
   run.jump();
   run.advance(640);
   expect(saved).toEqual([1]);
-  run.advance(1040);
+  run.advance(1060);
   expect(run.view()).toMatchObject({ restarts: 0, score: "1", best: "1", gameOver: true });
   run.advance(600);
   run.jump();
@@ -545,7 +545,7 @@ test("dying keeps the best score reached so far", () => {
   run.jump();
   run.advance(640);
   expect(run.view().best).toBe("1");
-  run.advance(1040);
+  run.advance(1060);
   expect(run.view()).toMatchObject({ restarts: 0, score: "1", best: "1", gameOver: true });
   run.advance(600);
   run.jump();
@@ -689,7 +689,7 @@ test("pause is ignored while the run is still ready, so the ready screen never s
 
 test("pause is ignored while the game-over screen is shown", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2880);
+  run.advance(2895);
   expect(run.view()).toMatchObject({ gameOver: true, canRestart: false, paused: false });
   run.pause();
   expect(run.view().paused).toBe(false);
@@ -729,7 +729,7 @@ test("pauseOrResume during the countdown cancels it and shows Paused again", () 
 
 test("pauseOrResume is ignored while the game-over screen is shown", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2880);
+  run.advance(2895);
   expect(run.view()).toMatchObject({ gameOver: true, paused: false });
   run.pauseOrResume();
   expect(run.view().paused).toBe(false);
@@ -744,7 +744,7 @@ test("overtookBest is false until the run overtakes the stored best, then stays 
   run.jump();
   run.advance(640);
   expect(run.view()).toMatchObject({ score: "1", best: "1", overtookBest: true });
-  run.advance(1040);
+  run.advance(1060);
   expect(run.view()).toMatchObject({ restarts: 0, score: "1", best: "1", gameOver: true, overtookBest: true });
   run.advance(600);
   run.jump();
@@ -765,7 +765,7 @@ test("dying and restarting resets the callout so beating the new, higher best tr
   run.jump();
   run.advance(640);
   expect(run.view()).toMatchObject({ score: "1", best: "1", newBest: true });
-  run.advance(1040);
+  run.advance(1060);
   expect(run.view()).toMatchObject({ restarts: 0, gameOver: true, newBest: false });
   run.advance(600);
   run.jump();
@@ -782,7 +782,7 @@ test("dying and restarting resets the callout so beating the new, higher best tr
 
 test("a panda that dies while still rising has its speed zeroed so it never rises again", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2870);
+  run.advance(2885);
   run.jump();
   run.advance(10);
   const diedAt = run.view();
@@ -817,7 +817,7 @@ test("a panda that dies above the floor keeps falling every step until it settle
 
 test("a panda that dies already on the floor stays at pandaBottom 426", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2880);
+  run.advance(2895);
   const diedAt = run.view();
   expect(diedAt.gameOver).toBe(true);
   expect(diedAt.pandaBottom).toBe(426);
@@ -845,7 +845,7 @@ test("dying against the front of a double column marks only its boxes as hit", (
 test("pandaUpsideDown is true exactly while gameOver is true, and resets on restart", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   expect(run.view().pandaUpsideDown).toBe(false);
-  run.advance(2880);
+  run.advance(2895);
   expect(run.view()).toMatchObject({ gameOver: true, pandaUpsideDown: true });
   run.advance(500);
   run.jump();
@@ -864,7 +864,7 @@ test("bestMarker shows over the column that would beat the stored best while liv
   run.jump();
   run.advance(1500);
   expect(run.view().bestMarker).not.toBeNull();
-  run.advance(1040);
+  run.advance(1060);
   expect(run.view()).toMatchObject({ gameOver: true, bestMarker: null });
 });
 
@@ -905,7 +905,7 @@ test("pandaAngle clamps at 25, nose down, during a long fall", () => {
 
 test("pandaAngle is 0 during game over even though the panda is still falling", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2880);
+  run.advance(2895);
   expect(run.view()).toMatchObject({ gameOver: true, pandaAngle: 0 });
 });
 
@@ -947,7 +947,7 @@ test("airPuff clears immediately on death instead of freezing mid-fade", () => {
   const bottomAtAirJump = run.view().pandaBottom;
   run.jump();
   expect(run.view().airPuff).toEqual({ x: 112.5, y: bottomAtAirJump, alpha: 1 });
-  run.advance(80);
+  run.advance(100);
   expect(run.view().gameOver).toBe(true);
   expect(run.view().airPuff).toBeNull();
 });
@@ -1132,7 +1132,7 @@ test("a buffered jump is discarded when the panda dies before landing", () => {
   run.advance(200);
   run.jump();
   run.jump();
-  run.advance(80);
+  run.advance(100);
   expect(run.view().gameOver).toBe(true);
   run.advance(2000);
   run.jump();
