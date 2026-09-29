@@ -123,6 +123,7 @@ test.describe("Rule: The game-over screen shows the medal that matches the final
 test.describe("Rule: The goal line only shows on a game-over screen", () => {
   test("The goal line is hidden while live, paused and after restart until the next game over", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     expect((await sample(page)).gameOverMedal.visible).toBe(false);
     await page.keyboard.press("p");
     const paused = await sample(page);
