@@ -69,6 +69,7 @@ Feature: Panda Jump on Phaser 4, slice: the new-best callout
       When I press Space at 2700, 4200 and 5700 ms and then stop jumping
       Then the score reads "3" and the panda touches the next column, freezing the run
       And the page reads "Best: 5" in white (#ffffff) on the game-over screen
+      And the score line reads "Score: 3 (2nd best)", as described in features/game-over-rank.feature
 
     Scenario: A run that only ties the stored best keeps the plain "Best" label, in white
       Given the stored best is 1

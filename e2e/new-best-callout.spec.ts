@@ -92,7 +92,7 @@ test.describe("Rule: The game-over screen marks a run that overtook the stored b
     await startRun(page);
     await play(page, [2700, 4200, 5700], 7300);
     const { after: diedAt } = await untilGameOver(page);
-    expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 3");
+    expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 3 (2nd best)");
     expect(diedAt.gameOverBest).toMatchObject({ text: "Best: 5", color: "#ffffff" });
   });
 

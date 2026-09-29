@@ -10,7 +10,7 @@ import grassUrl from "../../assets/top_grass_01.png?no-inline";
 import cloud02Url from "../../assets/cloud_02.png?no-inline";
 import cloud05Url from "../../assets/cloud_05.png?no-inline";
 import { BIOMES, MEADOW, CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, HILLS_REPEAT_WIDTH, TILE_SIZE, shareTextFor } from "../rules/index.ts";
-import type { Biome, Box, Cloud, Medal, Run, Star } from "../rules/index.ts";
+import type { Biome, Box, Cloud, Medal, Placing, Run, Star } from "../rules/index.ts";
 
 const OUTLINE = { stroke: "#000000", strokeThickness: 4 };
 const HIT_COLUMN_TINT = 0xff6666;
@@ -79,6 +79,7 @@ const GAME_OVER_SHARE_Y = 360;
 const GAME_OVER_RUNS_Y = 400;
 const BEST_COLORS: Record<"true" | "false", string> = { true: "#ffd700", false: "#ffffff" };
 const GAME_OVER_BEST_LABELS: Record<"true" | "false", string> = { true: "New best", false: "Best" };
+const PLACING_SUFFIXES: Record<Placing, string> = { 0: "", 2: " (2nd best)", 3: " (3rd best)", 4: " (4th best)", 5: " (5th best)" };
 const MEDAL_LABELS: Record<Medal, string> = {
   none: "",
   Bronze: "Bronze medal",
@@ -551,7 +552,9 @@ export class RunScene extends Phaser.Scene {
       .setText({ ...MEDAL_LABELS, none: view.medalGoal }[view.medal])
       .setColor(MEDAL_COLORS[view.medal]);
     this.drawMedalBadge(view.gameOver, view.medal);
-    this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.gameOverScore}`);
+    this.gameOverScore
+      .setVisible(view.gameOver)
+      .setText(`Score: ${view.gameOverScore}${PLACING_SUFFIXES[view.placing]}`);
     const overtookBest = String(view.overtookBest) as "true" | "false";
     this.gameOverBest
       .setVisible(view.gameOver)

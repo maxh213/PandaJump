@@ -1,5 +1,5 @@
 export { createRun } from "./run.ts";
-export type { Run } from "./run.ts";
+export type { Placing, Run } from "./run.ts";
 export type { BestStore } from "./best.ts";
 export { parseTopScores, seedTopScores } from "./top-scores.ts";
 export type { TopScoresStore } from "./top-scores.ts";

@@ -84,3 +84,4 @@ add a line merge cleanly instead of conflicting.
 - The on-screen "II" pause button has a 48 by 48 canvas-pixel tap area reaching into the top-right corner, so a thumb that misses the glyph still pauses instead of jumping
 - Double-clicking or double-tapping the page heading, text or black area no longer selects text or zooms the page on iOS, so a quick double jump can't throw the view off the game; the GitHub link still works
 - Sharing or copying a score of 10 or more names the earned medal, for example 'I scored 12 and earned a Bronze medal on Panda Jump!'
+- The game-over score line adds (2nd best) to (5th best) once restart is allowed when a run placed 2nd to 5th among the player's best runs and did not set a new best

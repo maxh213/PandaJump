@@ -24,6 +24,8 @@ import { insertScore } from "./top-scores.ts";
 import type { TopScoresStore } from "./top-scores.ts";
 import { FLOOR_Y, PANDA_X, TILE_SIZE, spawnGapForScore, speedForScore } from "./world.ts";
 
+export type Placing = 0 | 2 | 3 | 4 | 5;
+
 interface View {
   readonly ready: boolean;
   readonly time: number;
@@ -35,6 +37,7 @@ interface View {
   readonly topScores: readonly number[];
   readonly newBest: boolean;
   readonly overtookBest: boolean;
+  readonly placing: Placing;
   readonly speedUp: boolean;
   readonly medal: Medal;
   readonly medalGoal: string;
@@ -90,6 +93,7 @@ interface State {
   readonly best: number;
   readonly topScores: readonly number[];
   readonly startingBest: number;
+  readonly placing: Placing;
   readonly calloutStart: number | null;
   readonly speedUpStart: number | null;
   readonly nextSpawn: number;
@@ -120,6 +124,8 @@ const FRAMES_PER_MS = 15 / 1000;
 const NO_COLUMNS: readonly Column[] = [];
 const NO_SCORES: readonly number[] = [];
 const RESTART_FREEZE_MS = 500;
+const NOT_PLACED: Placing = 0;
+const SHOWN_PLACINGS = [2, 3, 4, 5] as const;
 const CALLOUT_DURATION_MS = 600;
 const SCORE_POP_PEAK = 1.3;
 const SCORE_POP_DURATION_MS = 150;
@@ -158,6 +164,7 @@ const freshState = ({ restarts, best, topScores, hintPending }: Carried, randoms
   best,
   topScores,
   startingBest: best,
+  placing: NOT_PLACED,
   calloutStart: null,
   speedUpStart: null,
   nextSpawn: spawnGapForScore(0),
@@ -341,6 +348,11 @@ const pandaScaleOf = (state: State): Squash => {
   return { x: easedScale(shape.x, elapsed), y: easedScale(shape.y, elapsed) };
 };
 
+const pandaScaleFieldsOf = (state: State): Pick<View, "pandaScaleX" | "pandaScaleY"> => {
+  const { x, y } = pandaScaleOf(state);
+  return { pandaScaleX: x, pandaScaleY: y };
+};
+
 const airPuffOf = (state: State): View["airPuff"] => {
   if (state.airPuffStart === null || state.deathElapsed !== null) return null;
   const elapsed = state.time - state.airPuffStart;
@@ -376,6 +388,8 @@ const gameOverScoreOf = (state: State): string =>
     ? String(state.score)
     : String(Math.floor((state.score * state.deathElapsed) / RESTART_FREEZE_MS));
 
+const placingOf = (state: State): Placing => (canRestart(state) ? state.placing : NOT_PLACED);
+
 const topScoresOf = (state: State): readonly number[] => (state.ready ? state.topScores : NO_SCORES);
 
 const scoreViewOf = (state: State) => ({
@@ -386,6 +400,7 @@ const scoreViewOf = (state: State) => ({
   topScores: topScoresOf(state),
   newBest: state.calloutStart !== null && state.time - state.calloutStart < CALLOUT_DURATION_MS,
   overtookBest: state.calloutStart !== null,
+  placing: placingOf(state),
   speedUp: isSpeedUp(state),
   medal: medalFor(state.score),
   medalGoal: medalGoalFor(medalFor(state.score)),
@@ -409,8 +424,7 @@ const pandaViewOf = (state: State) => ({
   pandaFrame: pandaFrameOf(state),
   pandaUpsideDown: state.deathElapsed !== null,
   pandaAngle: pandaAngleFor(state),
-  pandaScaleX: pandaScaleOf(state).x,
-  pandaScaleY: pandaScaleOf(state).y,
+  ...pandaScaleFieldsOf(state),
   airPuff: airPuffOf(state),
   pandaShadow: pandaShadowOf(state),
   landingPuff: landingPuffOf(state),
@@ -481,11 +495,19 @@ const togglePause = (state: State): State => (state.paused && state.resumeElapse
 
 const noTopScores: TopScoresStore = { load: () => NO_SCORES, save: () => undefined };
 
+const rankedPlacing = (before: State, after: State): Placing => {
+  const placing = 1 + before.topScores.filter((kept) => kept > after.score).length;
+  return SHOWN_PLACINGS.find((shown) => shown === placing) ?? NOT_PLACED;
+};
+
+const shownPlacing = (before: State, after: State): Placing =>
+  after.score > 0 && after.calloutStart === null ? rankedPlacing(before, after) : NOT_PLACED;
+
 const recordFinishedRun = (before: State, after: State, store: TopScoresStore): State => {
   if (before.deathElapsed !== null || after.deathElapsed === null) return after;
   const topScores = insertScore(after.topScores, after.score);
   store.save(topScores);
-  return { ...after, topScores };
+  return { ...after, topScores, placing: shownPlacing(before, after) };
 };
 
 const reconcileTopScores = (best: number, loaded: readonly number[], store: TopScoresStore): readonly number[] => {

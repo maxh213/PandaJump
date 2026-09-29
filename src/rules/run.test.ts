@@ -65,6 +65,7 @@ const startingScoreView = {
   topScores: [],
   newBest: false,
   overtookBest: false,
+  placing: 0,
   speedUp: false,
   medal: "none",
   medalGoal: "Bronze medal at 10",
@@ -1449,4 +1450,52 @@ test("a stored best of 0 adds nothing to the list", () => {
 test("merging the stored best keeps the list to five entries", () => {
   const { store } = storeWithBest(9, [5, 4, 3, 2, 1]);
   expect(createRun(oneBoxEach(), oneBoxEach(), store).view().topScores).toEqual([9, 5, 4, 3, 2]);
+});
+
+interface Setup {
+  readonly topScores: readonly number[];
+  readonly best: number;
+  readonly jumped: boolean;
+  readonly ms: number;
+}
+
+const placingAfter = ({ topScores, best, jumped, ms }: Setup) => {
+  const store = { load: () => best, save: () => undefined, topScores: { load: () => topScores, save: () => undefined } };
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), store);
+  if (jumped) {
+    run.advance(2700);
+    run.jump();
+  }
+  while (!run.view().gameOver) run.advance(10);
+  run.advance(ms);
+  return run.view().placing;
+};
+
+test.each([
+  [[30], 2],
+  [[30, 20], 3],
+  [[30, 20, 10], 4],
+  [[30, 20, 10, 9], 5],
+])("a run of 1 against %j reports placing %i once restart is allowed", (list, expected) => {
+  expect(placingAfter({ topScores: list, best: 30, jumped: true, ms: 600 })).toBe(expected);
+});
+
+test("the placing stays hidden while the score counts up, and for a first, sixth, zero or best-overtaking run", () => {
+  expect(placingAfter({ topScores: [30, 20, 10], best: 30, jumped: true, ms: 0 })).toBe(0);
+  expect(placingAfter({ topScores: [], best: 0, jumped: true, ms: 600 })).toBe(0);
+  expect(placingAfter({ topScores: [1], best: 1, jumped: true, ms: 600 })).toBe(0);
+  expect(placingAfter({ topScores: [50, 40, 30, 20, 10], best: 50, jumped: true, ms: 600 })).toBe(0);
+  expect(placingAfter({ topScores: [9], best: 9, jumped: false, ms: 600 })).toBe(0);
+  expect(placingAfter({ topScores: [3], best: 0, jumped: true, ms: 600 })).toBe(0);
+});
+
+test("the placing is cleared on restart and has nothing to show before the next run ends", () => {
+  const store = { load: () => 30, save: () => undefined, topScores: { load: () => [30, 20, 10], save: () => undefined } };
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), store);
+  run.advance(2700);
+  run.jump();
+  while (!run.view().canRestart) run.advance(10);
+  expect(run.view().placing).toBe(4);
+  run.jump();
+  expect(run.view()).toMatchObject({ gameOver: false, placing: 0 });
 });
