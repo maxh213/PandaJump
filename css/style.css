@@ -1,12 +1,17 @@
 html {
 	background: black;
 	overscroll-behavior-y: contain;
+	touch-action: manipulation;
 }
 
 body {
 	background: black;
 	margin: 0;
 	overscroll-behavior-y: contain;
+	touch-action: manipulation;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
 }
 
 h1 {

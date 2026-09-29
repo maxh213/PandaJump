@@ -82,3 +82,4 @@ add a line merge cleanly instead of conflicting.
 - A second open tab or installed copy of the game can no longer lower the stored best score: saving keeps the larger of the new best and the value already stored
 - The whole view shakes by up to 6px for 200ms when the panda hits a column, decaying to still, and never for players who ask for reduced motion
 - The on-screen "II" pause button has a 48 by 48 canvas-pixel tap area reaching into the top-right corner, so a thumb that misses the glyph still pauses instead of jumping
+- Double-clicking or double-tapping the page heading, text or black area no longer selects text or zooms the page on iOS, so a quick double jump can't throw the view off the game; the GitHub link still works
