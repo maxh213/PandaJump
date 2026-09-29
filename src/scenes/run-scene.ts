@@ -292,6 +292,12 @@ export class RunScene extends Phaser.Scene {
     this.run.pause();
   };
 
+  private readonly pauseOrResumeUnlessRepeating = (event: KeyboardEvent): void => {
+    [event]
+      .filter((keyEvent) => !keyEvent.repeat)
+      .forEach(this.pauseOrResume);
+  };
+
   private readonly jumpUnlessRepeating = (event: KeyboardEvent): void => {
     [event]
       .filter((keyEvent) => !keyEvent.repeat)
@@ -420,8 +426,8 @@ export class RunScene extends Phaser.Scene {
 
   private listenForPauseKeys(keyboard: Phaser.Input.Keyboard.KeyboardPlugin): void {
     keyboard.addCapture(["P", "ESC"]);
-    keyboard.on("keydown-P", this.pauseOrResume);
-    keyboard.on("keydown-ESC", this.pauseOrResume);
+    keyboard.on("keydown-P", this.pauseOrResumeUnlessRepeating);
+    keyboard.on("keydown-ESC", this.pauseOrResumeUnlessRepeating);
   }
 
   private drawPanda(view: ReturnType<Run["view"]>): void {

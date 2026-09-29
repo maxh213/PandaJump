@@ -22,14 +22,18 @@ Use a desktop browser and keyboard.
    with Escape). **Expected:** the countdown digit disappears at once and "Paused" with its prompt
    shows again, exactly as tapping the on-screen pause button does. Nothing moves. Press Space.
    **Expected:** a fresh countdown starts at "3" without a jump, and the run continues after 1500 ms.
-7. Check that click, tap, Space and the Up Arrow key still start the same countdown on a run that
+7. Hold P down for two seconds, well past your keyboard's repeat delay, then release it.
+   **Expected:** the run pauses when you press and stays paused while you hold; no countdown digit
+   appears and nothing moves. Repeat with Escape. A fresh press afterwards still starts the
+   countdown.
+8. Check that click, tap, Space and the Up Arrow key still start the same countdown on a run that
    was paused with P or Escape, exactly as they do on a run paused by hiding the tab.
-8. Let the panda die and wait for "Game over" to appear. Press P, then Escape. **Expected:**
+9. Let the panda die and wait for "Game over" to appear. Press P, then Escape. **Expected:**
    neither key does anything: no "Paused" text appears, "Game over" stays on screen, and the run
    does not restart. After about half a second, tapping, clicking or pressing Space still restarts
    the run as before.
-9. Switch to another browser tab (or another app on a phone) for a couple of seconds during a live
+10. Switch to another browser tab (or another app on a phone) for a couple of seconds during a live
    run, then switch back, as in `qa/pause-on-return.md`. **Expected:** this still pauses the run
    exactly as before; pausing with the P or Escape key has not changed it.
-10. Run `npx playwright test`. **Expected:** every scenario in `features/pause-key.feature`, and
+11. Run `npx playwright test`. **Expected:** every scenario in `features/pause-key.feature`, and
    the rest of the Playwright suite, has a passing test.

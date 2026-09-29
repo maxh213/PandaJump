@@ -42,6 +42,26 @@ test.describe("Rule: Pressing P or Escape during a live run pauses it and shows 
   }
 });
 
+test.describe("Rule: Holding P or Escape after it paused the run does not resume it", () => {
+  for (const key of KEYS) {
+    test(`Holding the key down after it paused the run does not resume it: ${key}`, async ({ page }) => {
+      await openGame(page, standardRandom());
+      await startRun(page);
+      await advanceTo(page, 1000);
+      await page.keyboard.down(key);
+      await Promise.all([1, 2, 3].map(() => page.keyboard.down(key)));
+      await page.keyboard.up(key);
+      await advance(page, 2000);
+      const held = await sample(page);
+      expect(held.pauseTitle).toMatchObject({ text: "Paused", visible: true });
+      expect(held.countdownText.visible).toBe(false);
+      expect(held.time).toBe(1000);
+      expect(held.boxes).toEqual([]);
+      expect(held.panda.bottom).toBe(426);
+    });
+  }
+});
+
 test.describe("Rule: Pressing P or Escape while paused starts the same 3, 2, 1 countdown as any other control", () => {
   for (const key of KEYS) {
     test(`The pausing key starts a countdown without a jump: ${key}`, async ({ page }) => {

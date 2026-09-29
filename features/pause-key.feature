@@ -37,6 +37,21 @@ Feature: A player can pause and resume a run on purpose with the P or Escape key
         | P      |
         | Escape |
 
+    Scenario Outline: Holding the key down after it paused the run does not resume it
+      When 1000 ms pass
+      And I press <key> and keep holding it while the browser sends 3 auto-repeat keydowns
+      And 2000 ms pass
+      Then the page reads "Paused" centred in white 40px at (200, 190)
+      And the page shows no countdown digit
+      And the game time is still 1000 ms
+      And no box is on screen
+      And the panda still stands on the floor
+
+      Examples:
+        | key    |
+        | P      |
+        | Escape |
+
   Rule: Pressing P or Escape while paused starts the same 3, 2, 1 countdown as any other control
 
     Scenario Outline: The pausing key starts a countdown without a jump
