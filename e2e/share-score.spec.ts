@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, oneBox, openGame, sample, settle, startRun, untilGameOver } from "./probe.ts";
+import { advance, oneBox, openGame, play, sample, settle, standardJumps, startRun, untilGameOver } from "./probe.ts";
 
 interface CapturedShare {
   text?: string;
@@ -78,6 +78,21 @@ test.describe("Rule: Tapping the share prompt shares the run's score and the pag
     expect(after.gameOver).toBe(true);
     expect(after.gameOverTitle.visible).toBe(true);
     expect(after.gameOverScore.text).toBe("Score: 0");
+  });
+});
+
+test.describe("Rule: A run that earned a medal shares the medal's name", () => {
+  test("Tapping \"Share score\" after a score of 12 names the Bronze medal", async ({ page }) => {
+    const calls = await mockSupportedShare(page);
+    await openGame(page, oneBox);
+    await startRun(page);
+    await play(page, standardJumps(1500 * 12 + 1200), 1500 * 12 + 1200);
+    await untilGameOver(page);
+    await advance(page, 500);
+    await tapSharePrompt(page);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.text).toBe("I scored 12 and earned a Bronze medal on Panda Jump!");
+    expect(calls[0]?.url).toBe(page.url());
   });
 });
 

@@ -13,7 +13,8 @@ console steps below use `?clock=manual` to walk through it.
 4. While the count runs, check the top-left score and the tab title. **Expected:** both show your final
    score at once, and the medal (from 10 points up) shows at once too.
 5. After the count reaches your score (500 ms), tap "Share score" or "Copy score". **Expected:** the
-   text sent says `I scored <final score> on Panda Jump!`.
+   text sent says `I scored <final score> on Panda Jump!`, or `I scored <final score> and earned a <Medal> medal on
+   Panda Jump!` from 10 points up.
 6. Tap or press Space once the prompt shows. **Expected:** the run restarts exactly as before; there
    is no extra delay, and the new run starts with the game-over score line hidden.
 7. Run `npx playwright test`. **Expected:** every scenario in `features/score-count-up.feature`, and

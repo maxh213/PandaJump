@@ -11,7 +11,8 @@ does have `navigator.clipboard.writeText`, so step 2 covers that browser as-is.
    to play again" as before, and a "Copy score" prompt appears in the same spot "Share score" used to,
    in white 20px Arial.
 3. Tap or click "Copy score". **Expected:** the clipboard now holds text like
-   "I scored 3 on Panda Jump! " followed by the page's current URL (paste it somewhere to check),
+   "I scored 3 on Panda Jump! " (from a score of 10 up, "I scored 20 and earned a Silver medal on Panda Jump! ",
+   naming Bronze, Silver, Gold or Platinum) followed by the page's current URL (paste it somewhere to check),
    and the prompt's text changes to "Copied!" in the same spot, colour and size. The run does not
    restart: the game over screen, score and best stay exactly as they were before the tap.
 4. Tap or click elsewhere on the game-over screen (not on "Copy score"/"Copied!"). **Expected:** the

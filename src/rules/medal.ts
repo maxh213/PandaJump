@@ -14,3 +14,6 @@ export const medalGoalFor = (medal: Medal): string => (medal === "none" ? `Bronz
 
 export const medalFor = (score: number): Medal =>
   MEDAL_THRESHOLDS.reduce<Medal>((medal, [threshold, candidate]) => (score >= threshold ? candidate : medal), "none");
+
+export const shareTextFor = (score: number, medal: Medal): string =>
+  medal === "none" ? `I scored ${String(score)} on Panda Jump!` : `I scored ${String(score)} and earned a ${medal} medal on Panda Jump!`;

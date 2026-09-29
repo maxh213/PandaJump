@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, oneBox, openGame, sample, settle, startRun, untilGameOver, untilRestart } from "./probe.ts";
+import { advance, oneBox, openGame, play, sample, settle, standardJumps, startRun, untilGameOver, untilRestart } from "./probe.ts";
 
 interface CapturedWrite {
   text?: string;
@@ -100,6 +100,21 @@ test.describe("Rule: Tapping the copy prompt copies the run's score and the page
     expect(after.gameOver).toBe(true);
     expect(after.gameOverTitle.visible).toBe(true);
     expect(after.gameOverScore.text).toBe("Score: 0");
+  });
+});
+
+test.describe("Rule: A run that earned a medal copies the medal's name", () => {
+  test("Tapping \"Copy score\" after a score of 20 names the Silver medal", async ({ page }) => {
+    await mockUnsupportedShare(page);
+    const calls = await mockSupportedClipboard(page);
+    await openGame(page, oneBox);
+    await startRun(page);
+    await play(page, standardJumps(1500 * 20 + 1200), 1500 * 20 + 1200);
+    await untilGameOver(page);
+    await advance(page, 500);
+    await tapCopyPrompt(page);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.text).toBe(`I scored 20 and earned a Silver medal on Panda Jump! ${page.url()}`);
   });
 });
 

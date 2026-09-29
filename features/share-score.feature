@@ -3,6 +3,8 @@ Feature: Panda Jump on Phaser 4, slice: share score from the game-over screen
   I want to share my score once I die
   So that other people can see how I did and try the game themselves
 
+  A run that ends below 10 shares "I scored N on Panda Jump!"; a run that earned a medal (Bronze at 10,
+  Silver at 20, Gold at 30, Platinum at 40 and above) shares "I scored N and earned a <Medal> medal on Panda Jump!".
   Times are game time in ms since the run started, same as features/phaser-4-core-run.feature.
   "The restart freeze" is the 500ms window after death during which the game over screen does not
   yet invite a tap, click or Space press to restart, as in features/phaser-4-core-run.feature.
@@ -38,6 +40,16 @@ Feature: Panda Jump on Phaser 4, slice: share score from the game-over screen
       And the run has not restarted
       And the page still reads "Game over"
       And the page still reads "Score: 1"
+
+  Rule: A run that earned a medal shares the medal's name
+
+    Scenario: Tapping "Share score" after a score of 12 names the Bronze medal
+      Given sharing is supported
+      And the random source picks 1 box and no second column for every column
+      And the run ends with a score of 12
+      When 500 ms pass
+      And I tap "Share score"
+      Then navigator.share is called once, with text "I scored 12 and earned a Bronze medal on Panda Jump!" and the page's URL
 
   Rule: On a browser without navigator.share, the prompt never shows and the screen behaves as before
 

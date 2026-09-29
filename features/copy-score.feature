@@ -3,6 +3,7 @@ Feature: Panda Jump on Phaser 4, slice: copy score from the game-over screen
   I want to copy my score once I die
   So that I can still paste it into a message myself
 
+  The copied text is the same sentence "Share score" sends, followed by a space and the page URL.
   Times are game time in ms since the run started, same as features/phaser-4-core-run.feature.
   "The restart freeze" is the 500ms window after death during which the game over screen does not
   yet invite a tap, click or Space press to restart, as in features/phaser-4-core-run.feature.
@@ -41,6 +42,17 @@ Feature: Panda Jump on Phaser 4, slice: copy score from the game-over screen
       And the run has not restarted
       And the page still reads "Game over"
       And the page still reads "Score: 1"
+
+  Rule: A run that earned a medal copies the medal's name
+
+    Scenario: Tapping "Copy score" after a score of 20 names the Silver medal
+      Given sharing is not supported
+      And copying is supported
+      And the random source picks 1 box and no second column for every column
+      And the run ends with a score of 20
+      When 500 ms pass
+      And I tap "Copy score"
+      Then navigator.clipboard.writeText is called once, with "I scored 20 and earned a Silver medal on Panda Jump! " followed by the page's URL
 
   Rule: Tapping the copy prompt confirms the copy by changing its text, until the next run starts
 

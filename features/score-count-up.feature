@@ -53,6 +53,12 @@ Feature: Panda Jump on Phaser 4, slice: count the game-over score up from 0 to t
       When sharing is unsupported and I tap "Copy score" on a fresh run
       Then navigator.clipboard.writeText is called with text containing "I scored 3 on Panda Jump!"
 
+    Scenario: Share score after a medal run sends the final score and the medal
+      Given I die at score 12
+      And 500 ms pass
+      When I tap "Share score"
+      Then navigator.share is called with the text "I scored 12 and earned a Bronze medal on Panda Jump!"
+
   Rule: Restarting works exactly as before
 
     Scenario: The restart prompt appears at 500 ms and a tap then restarts

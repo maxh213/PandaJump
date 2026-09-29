@@ -8,6 +8,7 @@ import {
   play,
   sample,
   settle,
+  standardJumps,
   startRun,
   untilGameOver,
 } from "./probe.ts";
@@ -120,6 +121,21 @@ test.describe("Rule: Everything else keeps showing the final score while the cou
     expect(shares.map((share) => share.text)).toEqual([
       "I scored 3 on Panda Jump!",
     ]);
+  });
+
+  test("Share score after a medal run sends the final score and the medal", async ({ page }) => {
+    const { shares } = await mockShareAndClipboard(page);
+    await openGame(page, oneBox);
+    await startRun(page);
+    await play(page, standardJumps(1500 * 12 + 1200), 1500 * 12 + 1200);
+    await untilGameOver(page);
+    await advance(page, 500);
+    const { gameOverShare } = await sample(page);
+    await page
+      .locator("#game_div canvas")
+      .click({ position: { x: gameOverShare.x, y: gameOverShare.y } });
+    await settle(page);
+    expect(shares.map((share) => share.text)).toEqual(["I scored 12 and earned a Bronze medal on Panda Jump!"]);
   });
 
   test("Copy score sends the final score", async ({ page }) => {

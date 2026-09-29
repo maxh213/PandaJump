@@ -16,7 +16,8 @@ run `navigator.share = () => Promise.resolve()` in the console before step 4.
    pass. **Expected:** a "Share score" prompt appears under "Tap, press Space or the Up Arrow key to play again", in
    white 20px Arial, only after the freeze has elapsed (not before).
 5. Tap or click "Share score". **Expected:** the console logs an object with a `text` field like
-   "I scored 3 on Panda Jump!" (matching the score on screen) and a `url` field with the page's
+   "I scored 3 on Panda Jump!" (matching the score on screen; from a score of 10 up the text reads
+   "I scored 12 and earned a Bronze medal on Panda Jump!", naming Bronze, Silver, Gold or Platinum) and a `url` field with the page's
    current URL. The run does not restart: the game over screen, score and best stay exactly as they
    were before the tap.
 6. Tap or click elsewhere on the game-over screen (not on "Share score"). **Expected:** the run

@@ -9,7 +9,7 @@ import rockUrl from "../../assets/rock_06.png?no-inline";
 import grassUrl from "../../assets/top_grass_01.png?no-inline";
 import cloud02Url from "../../assets/cloud_02.png?no-inline";
 import cloud05Url from "../../assets/cloud_05.png?no-inline";
-import { BIOMES, MEADOW, CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, HILLS_REPEAT_WIDTH, TILE_SIZE } from "../rules/index.ts";
+import { BIOMES, MEADOW, CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, HILLS_REPEAT_WIDTH, TILE_SIZE, shareTextFor } from "../rules/index.ts";
 import type { Biome, Box, Cloud, Medal, Run, Star } from "../rules/index.ts";
 
 const OUTLINE = { stroke: "#000000", strokeThickness: 4 };
@@ -341,6 +341,11 @@ export class RunScene extends Phaser.Scene {
       });
   };
 
+  private shareText(): string {
+    const view = this.run.view();
+    return shareTextFor(Number(view.score), view.medal);
+  }
+
   private readonly shareScore = (
     _pointer: Phaser.Input.Pointer,
     gameObject: Phaser.GameObjects.GameObject,
@@ -350,7 +355,7 @@ export class RunScene extends Phaser.Scene {
       .filter((target) => target === this.gameOverShare)
       .forEach(() => {
         event.stopPropagation();
-        navigator.share({ text: `I scored ${this.run.view().score} on Panda Jump!`, url: window.location.href }).catch(() => undefined);
+        navigator.share({ text: this.shareText(), url: window.location.href }).catch(() => undefined);
       });
   };
 
@@ -364,7 +369,7 @@ export class RunScene extends Phaser.Scene {
       .forEach(() => {
         event.stopPropagation();
         navigator.clipboard
-          .writeText(`I scored ${this.run.view().score} on Panda Jump! ${window.location.href}`)
+          .writeText(`${this.shareText()} ${window.location.href}`)
           .then(() => {
             this.copied = true;
           })
