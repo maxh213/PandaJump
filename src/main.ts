@@ -66,13 +66,6 @@ Object.assign(window, { pandaJump: { run, game } });
 
 const registerServiceWorker = (): void => {
   if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return;
-  const hadController = Boolean(navigator.serviceWorker.controller);
-  let reloadedForUpdate = false;
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!hadController || reloadedForUpdate || !run.view().ready) return;
-    reloadedForUpdate = true;
-    window.location.reload();
-  });
   navigator.serviceWorker
     .register("sw.js")
     .then((registration) => registration.update())

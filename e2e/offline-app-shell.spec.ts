@@ -117,6 +117,63 @@ test.describe("Rule: The built site works offline via a service worker", () => {
     }
   });
 
+  const redeploy = async <T>(work: () => Promise<T>): Promise<T> => {
+    const manifestPath = join(outDir, "manifest.json");
+    const originalManifest = readFileSync(manifestPath, "utf8");
+    try {
+      writeFileSync(manifestPath, `${originalManifest} `);
+      execSync(`node scripts/generate-sw.mjs ${OUT_DIR}`, { stdio: "ignore" });
+      return await work();
+    } finally {
+      writeFileSync(manifestPath, originalManifest);
+      execSync(`node scripts/generate-sw.mjs ${OUT_DIR}`, { stdio: "ignore" });
+    }
+  };
+
+  const takeoverWithoutReload = async (page: Page) => {
+    await page.evaluate(() => {
+      Object.assign(window, { survivedTakeover: "still here" });
+    });
+    const before = await page.evaluate(() => caches.keys());
+    const documentLoads: Response[] = [];
+    page.on("response", (response) => {
+      if (response.request().resourceType() === "document") documentLoads.push(response);
+    });
+    await redeploy(async () => {
+      await page.evaluate(async () => {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.update();
+      });
+      await expect
+        .poll(() => page.evaluate(async () => (await caches.keys()).join()), { timeout: 15_000 })
+        .not.toMatch(new RegExp(`${before.join()}|,`));
+      await page.waitForTimeout(500);
+    });
+    expect(documentLoads).toHaveLength(0);
+    expect(await page.evaluate(() => (window as unknown as { survivedTakeover?: string }).survivedTakeover)).toBe(
+      "still here",
+    );
+    expect(await page.evaluate(() => caches.keys())).toHaveLength(1);
+  };
+
+  test("A new worker taking control on the start screen does not reload the page", async ({ page }) => {
+    test.setTimeout(30_000);
+    await openOffline(page, oneBox);
+    await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+    await takeoverWithoutReload(page);
+    expect((await page.evaluate(() => window.pandaJump?.run.view().ready)) ?? false).toBe(true);
+  });
+
+  test("A new worker taking control during a live run does not reload the page", async ({ page }) => {
+    test.setTimeout(30_000);
+    await openOffline(page, oneBox);
+    await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+    await page.evaluate(installProbe);
+    await startRun(page);
+    await takeoverWithoutReload(page);
+    expect((await page.evaluate(() => window.pandaJump?.run.view().ready)) ?? true).toBe(false);
+  });
+
   test("A revisit after a redeploy serves the new build and drops the previous cache", async ({ page }) => {
     test.setTimeout(30_000);
     await openOffline(page, oneBox);
@@ -124,20 +181,12 @@ test.describe("Rule: The built site works offline via a service worker", () => {
     const before = await page.evaluate(() => caches.keys());
     expect(before).toHaveLength(1);
 
-    const manifestPath = join(outDir, "manifest.json");
-    const originalManifest = readFileSync(manifestPath, "utf8");
-    const mutatedManifest = `${originalManifest} `;
-    try {
-      writeFileSync(manifestPath, mutatedManifest);
-      execSync(`node scripts/generate-sw.mjs ${OUT_DIR}`, { stdio: "ignore" });
-
-      const documentLoads: Response[] = [];
-      page.on("response", (response) => {
-        if (response.request().resourceType() === "document") documentLoads.push(response);
-      });
-
+    await redeploy(async () => {
       await page.reload();
-      await expect.poll(() => documentLoads.length, { timeout: 15_000 }).toBeGreaterThanOrEqual(2);
+      await expect
+        .poll(() => page.evaluate(async () => (await caches.keys()).join()), { timeout: 15_000 })
+        .not.toMatch(new RegExp(`${before.join()}|,`));
+      await page.reload();
       await page.waitForFunction(() => window.pandaJump?.game.scene.isActive("run"));
 
       const after = await page.evaluate(() => caches.keys());
@@ -145,11 +194,8 @@ test.describe("Rule: The built site works offline via a service worker", () => {
       expect(after[0]).not.toBe(before[0]);
 
       const manifestText = await page.evaluate(async () => (await fetch("manifest.json")).text());
-      expect(manifestText).toBe(mutatedManifest);
-    } finally {
-      writeFileSync(manifestPath, originalManifest);
-      execSync(`node scripts/generate-sw.mjs ${OUT_DIR}`, { stdio: "ignore" });
-    }
+      expect(manifestText.endsWith(" ")).toBe(true);
+    });
   });
 
   test("A new deploy's service worker does not reload the page in the middle of a run", async ({ page }) => {

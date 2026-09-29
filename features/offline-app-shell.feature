@@ -44,9 +44,23 @@ Feature: Panda Jump caches its app shell so the installed PWA opens offline
       And exactly one cache holds the first build's files
       When a build output file's contents change and "npm run build" runs again
       And I reload the Panda Jump page
-      Then the page reloads a second time on its own once the new service worker takes control
-      And fetching the changed file now returns its new contents
+      Then the new service worker installs and takes control
+      And after one more reload fetching the changed file now returns its new contents
       And only the new build's cache remains; the previous build's cache is gone
+
+  Rule: A new deploy's service worker taking control never reloads the page
+
+    Scenario: A new worker taking control on the start screen does not reload the page
+      Given I open the Panda Jump page and the service worker has taken control
+      And the page is on the start screen with a marker set on window
+      When a redeploy's new service worker installs and takes control
+      Then the page has not reloaded and the marker is still on window
+
+    Scenario: A new worker taking control during a live run does not reload the page
+      Given I open the Panda Jump page and the service worker has taken control
+      And a run is live with a marker set on window
+      When a redeploy's new service worker installs and takes control
+      Then the page has not reloaded and the marker is still on window
 
     Scenario: A new deploy never reloads the page in the middle of a run
       Given I open the Panda Jump page and the service worker has taken control
