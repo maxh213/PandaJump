@@ -239,7 +239,7 @@ test("deathFlash is 0 through a live run, jumps to 0.6 the instant the panda die
 
 test("deathShake is still through a live run, shakes within 6px for 200ms after the hit and is exactly 0 from 200ms on", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  run.advance(2870);
+  run.advance(2885);
   expect(run.view().deathShake).toEqual({ x: 0, y: 0 });
   run.advance(6);
   expect(run.view().gameOver).toBe(true);
@@ -258,8 +258,8 @@ test("deathShake is still through a live run, shakes within 6px for 200ms after 
 test("deathShake follows the same offsets for the same steps and is 0 again after a restart", () => {
   const first = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   const second = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
-  first.advance(2880);
-  second.advance(2880);
+  first.advance(2895);
+  second.advance(2895);
   expect(first.view().deathShake).toEqual(second.view().deathShake);
   expect(first.view().deathShake).not.toEqual({ x: 0, y: 0 });
   first.advance(500);

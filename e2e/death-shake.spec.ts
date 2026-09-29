@@ -21,7 +21,7 @@ test.describe("Rule: The view shakes for 200ms after the hit, within 6px, and th
     await startRun(page);
     const { after } = await untilGameOver(page);
     expect(after.gameOver).toBe(true);
-    expect(Math.abs(after.time - 2875)).toBeLessThanOrEqual(16);
+    expect(Math.abs(after.time - 2888)).toBeLessThanOrEqual(16);
     expect(isStill(after)).toBe(false);
     const during = await advance(page, 176);
     const shaken = [after, ...during].filter((entry) => !isStill(entry));
