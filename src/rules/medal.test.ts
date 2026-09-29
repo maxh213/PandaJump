@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { medalFor } from "./medal.ts";
+import { medalFor, medalGoalFor } from "./medal.ts";
 
 test("no medal below a score of 10", () => {
   expect(medalFor(0)).toBe("none");
@@ -24,4 +24,10 @@ test("Gold from a score of 30 to 39", () => {
 test("Platinum from a score of 40 and above", () => {
   expect(medalFor(40)).toBe("Platinum");
   expect(medalFor(100)).toBe("Platinum");
+});
+
+test("the goal names the bronze threshold only when no medal was earned", () => {
+  expect(medalGoalFor("none")).toBe("Bronze medal at 10");
+  expect(medalGoalFor("Bronze")).toBe("");
+  expect(medalGoalFor("Platinum")).toBe("");
 });

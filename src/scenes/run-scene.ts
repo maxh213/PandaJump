@@ -424,8 +424,8 @@ export class RunScene extends Phaser.Scene {
   private drawGameOverTexts(view: ReturnType<Run["view"]>): void {
     this.gameOverTitle.setVisible(view.gameOver);
     this.gameOverMedal
-      .setVisible([view.gameOver, view.medal !== "none"].every(Boolean))
-      .setText(MEDAL_LABELS[view.medal])
+      .setVisible(view.gameOver)
+      .setText({ ...MEDAL_LABELS, none: view.medalGoal }[view.medal])
       .setColor(MEDAL_COLORS[view.medal]);
     this.drawMedalBadge(view.gameOver, view.medal);
     this.gameOverScore.setVisible(view.gameOver).setText(`Score: ${view.gameOverScore}`);

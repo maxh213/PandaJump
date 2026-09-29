@@ -10,25 +10,25 @@ Feature: Panda Jump awards a medal on the game-over screen
   The medal is drawn as text centred at (200, 226) in 16px Arial, between the "Game over" title
   and the "Score: N" line: "Bronze medal" in #cd7f32 for a final score of 10 to 19, "Silver medal"
   in #c0c0c0 for 20 to 29, "Gold medal" in #ffd700 for 30 to 39, "Platinum medal" in #e5e4e2 for
-  40 and above, and no medal text for a score below 10.
+  40 and above, and, for a score below 10, "Bronze medal at 10" in #ffffff on the same line with no disc.
 
   Background:
     Given I open the Panda Jump page
     And the run has just started
 
-  Rule: No medal shows below a score of 10
+  Rule: A run that ends below a score of 10 shows the goal instead of a medal
 
     Scenario: A run that dies at score 0 shows no medal
       Given the random source picks 1 box for the first column
       When I do not jump
       Then the panda touches the column at about 2875 ms
       And the page reads "Score: 0" on the game-over screen
-      And no medal text is shown
+      And "Bronze medal at 10" is shown in #ffffff, 16px and outlined, with no disc
 
     Scenario: A run that dies at score 9 shows no medal
       Given I play the standard schedule through column 9 and then stop jumping
       Then the page reads "Score: 9" on the game-over screen
-      And no medal text is shown
+      And "Bronze medal at 10" is shown in #ffffff, 16px and outlined, with no disc
 
   Rule: The game-over screen shows the medal that matches the final score
 
@@ -47,17 +47,28 @@ Feature: Panda Jump awards a medal on the game-over screen
 
     Scenario: The medal is hidden while the run is live and disappears after restart
       Given I play the standard schedule through column 10
-      Then no medal text is visible while the run has not yet frozen
+      Then the medal line is not visible while the run has not yet frozen
       When the panda touches the next column, the game freezes
       Then the page reads "Bronze medal" on the game-over screen
       When 500 ms pass
       And I press Space
       Then the run restarts
-      And no medal text is visible
+      And the goal line is not visible
       When I do not jump again
       Then the panda touches the first column of the new run, freezing it
       And the page reads "Score: 0" on the game-over screen
-      And no medal text is shown
+      And "Bronze medal at 10" is shown in #ffffff, 16px and outlined, with no disc
+
+  Rule: The goal line only shows on a game-over screen
+
+    Scenario: The goal line is hidden while live, paused and after restart
+      Then "Bronze medal at 10" is not visible while the run is live
+      When I press P
+      Then it is not visible while paused
+      When I press P again and die without scoring
+      Then it shows on the game-over screen
+      When I restart
+      Then it is not visible until the next game over
 
   Rule: The game-over medal has a coloured disc beside its name
 

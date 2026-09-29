@@ -32,6 +32,18 @@ const medalBounds = (page: Page) =>
     return { title: named("gameOverTitle"), medal: named("gameOverMedal"), score: named("gameOverScore") };
   });
 
+const expectGoal = (after: Sample): void => {
+  expect(after.gameOverMedal).toMatchObject({
+    text: "Bronze medal at 10",
+    x: 200,
+    y: 226,
+    color: "#ffffff",
+    fontSize: "16px",
+    visible: true,
+  });
+  expect(after.gameOverMedalBadge.visible).toBe(false);
+};
+
 const expectBadge = (after: Sample, fill: string): void => {
   const { gameOverMedal: medal, gameOverMedalBadge: badge } = after;
   expect(badge).toMatchObject({
@@ -47,14 +59,13 @@ const expectBadge = (after: Sample, fill: string): void => {
   expect(badge.x).toBeCloseTo(medal.x - medal.bounds.width / 2 - 18);
 };
 
-test.describe("Rule: No medal shows below a score of 10", () => {
+test.describe("Rule: A run that ends below a score of 10 shows the goal instead of a medal", () => {
   test("A run that dies at score 0 shows no medal", async ({ page }) => {
     await openGame(page, oneBox);
     await startRun(page);
     const { after: diedAt } = await untilGameOver(page);
     expect(diedAt.gameOverScore.text).toBe("Score: 0");
-    expect(diedAt.gameOverMedal.visible).toBe(false);
-    expect(diedAt.gameOverMedalBadge.visible).toBe(false);
+    expectGoal(diedAt);
   });
 
   test("A run that dies at score 9 shows no medal", async ({ page }) => {
@@ -63,8 +74,7 @@ test.describe("Rule: No medal shows below a score of 10", () => {
     await playThroughColumn(page, 9);
     const { after: diedAt } = await untilGameOver(page);
     expect(last(await advance(page, 500)).gameOverScore.text).toBe("Score: 9");
-    expect(diedAt.gameOverMedal.visible).toBe(false);
-    expect(diedAt.gameOverMedalBadge.visible).toBe(false);
+    expectGoal(diedAt);
   });
 });
 
@@ -110,6 +120,24 @@ test.describe("Rule: The game-over screen shows the medal that matches the final
   });
 });
 
+test.describe("Rule: The goal line only shows on a game-over screen", () => {
+  test("The goal line is hidden while live, paused and after restart until the next game over", async ({ page }) => {
+    await openGame(page, oneBox);
+    expect((await sample(page)).gameOverMedal.visible).toBe(false);
+    await page.keyboard.press("p");
+    const paused = await sample(page);
+    expect(paused.pauseTitle.visible).toBe(true);
+    expect(paused.gameOverMedal.visible).toBe(false);
+    await page.keyboard.press("p");
+    const { after: diedAt } = await untilGameOver(page);
+    expectGoal(diedAt);
+    const restart = await untilRestart(page);
+    expect(restart.after.gameOverMedal.visible).toBe(false);
+    const { after: diedAgain } = await untilGameOver(page);
+    expectGoal(diedAgain);
+  });
+});
+
 test.describe("Rule: The medal only shows on a game-over screen for the run that earned it", () => {
   test("The medal is hidden while the run is live and disappears after restart", async ({ page }) => {
     await openGame(page, oneBox);
@@ -126,8 +154,7 @@ test.describe("Rule: The medal only shows on a game-over screen for the run that
     expect(restart.after.gameOverMedalBadge.visible).toBe(false);
     const { after: diedAgain } = await untilGameOver(page);
     expect(diedAgain.gameOverScore.text).toBe("Score: 0");
-    expect(diedAgain.gameOverMedal.visible).toBe(false);
-    expect(diedAgain.gameOverMedalBadge.visible).toBe(false);
+    expectGoal(diedAgain);
   });
 });
 

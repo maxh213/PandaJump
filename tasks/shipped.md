@@ -64,3 +64,4 @@ add a line merge cleanly instead of conflicting.
 - A few small white stars scattered across the night sky once the score reaches 40, kept on the game-over screen and cleared on restart
 - A small sand-coloured dust puff at the panda's feet for 200 ms whenever it lands from a jump
 - A ready screen on page load that waits for the first tap, click, Space or Up Arrow press before the first run starts, without that input making the panda jump; restarting after game over stays instant
+- The game-over screen shows "Bronze medal at 10" in white on the medal line when a run ends below a score of 10, so early runs see the first medal to aim for

@@ -105,7 +105,7 @@ test.describe("Rule: Everything else keeps showing the final score while the cou
     const midway = last(await advance(page, 250));
     expect(midway.score.text).toBe("3");
     expect(await page.title()).toContain("3");
-    expect(midway.gameOverMedal.visible).toBe(false);
+    expect(midway.gameOverMedal).toMatchObject({ visible: true, text: "Bronze medal at 10" });
   });
 
   test("Share score sends the final score", async ({ page }) => {

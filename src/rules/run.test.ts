@@ -62,6 +62,7 @@ test("a run starts ready, with the panda on the floor, score 0 and no boxes", ()
     overtookBest: false,
     speedUp: false,
     medal: "none",
+    medalGoal: "Bronze medal at 10",
     sky: "#71c5cf",
     stars: [],
     pandaX: 100,

@@ -11,7 +11,7 @@ import {
 import type { Box, Column, Random } from "./columns.ts";
 import { cloudsOf, initialClouds, moveClouds } from "./clouds.ts";
 import type { Cloud, CloudState } from "./clouds.ts";
-import { medalFor } from "./medal.ts";
+import { medalFor, medalGoalFor } from "./medal.ts";
 import type { Medal } from "./medal.ts";
 import { fall, jump, standingPanda } from "./panda.ts";
 import type { Panda } from "./panda.ts";
@@ -32,6 +32,7 @@ interface View {
   readonly overtookBest: boolean;
   readonly speedUp: boolean;
   readonly medal: Medal;
+  readonly medalGoal: string;
   readonly sky: string;
   readonly stars: readonly Star[];
   readonly pandaX: number;
@@ -330,6 +331,7 @@ const viewOf = (state: State): View => ({
   overtookBest: state.calloutStart !== null,
   speedUp: isSpeedUp(state),
   medal: medalFor(state.score),
+  medalGoal: medalGoalFor(medalFor(state.score)),
   sky: skyFor(state.score),
   stars: starsFor(state.score),
   pandaX: PANDA_X,
