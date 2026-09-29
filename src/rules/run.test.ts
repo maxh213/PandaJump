@@ -1135,7 +1135,7 @@ test("the panda shadow shrinks from 1 towards 0.5 as the panda rises and stays a
 });
 
 const runDiedAtScore = (columns: number): Run => {
-  const run = createRun(standardColumns(), standardColumns(), noStore);
+  const run = createStartedRun(standardColumns(), standardColumns(), noStore);
   for (let column = 1; column <= columns; column += 1) {
     run.advance(1500 * column + 1200 - run.view().time);
     run.jump();
@@ -1156,7 +1156,7 @@ test("gameOverScore counts up from 0 to the final score over the 500 ms restart 
 });
 
 test("gameOverScore equals the score while the run is live", () => {
-  const run = createRun(standardColumns(), standardColumns(), noStore);
+  const run = createStartedRun(standardColumns(), standardColumns(), noStore);
   for (let column = 1; column <= 5; column += 1) {
     run.advance(1500 * column + 1200 - run.view().time);
     run.jump();

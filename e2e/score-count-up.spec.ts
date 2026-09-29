@@ -8,6 +8,7 @@ import {
   play,
   sample,
   settle,
+  startRun,
   untilGameOver,
 } from "./probe.ts";
 
@@ -59,6 +60,7 @@ const mockShareAndClipboard = async (
 
 const dieAtScoreThree = async (page: Page) => {
   await openGame(page, oneBox);
+  await startRun(page);
   await play(page, [2700, 4200, 5700], 7300);
   return untilGameOver(page);
 };
@@ -88,6 +90,7 @@ test.describe("Rule: The game-over score counts up from 0 to the final score ove
     page,
   }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await untilGameOver(page);
     expect(last(await advance(page, 250)).gameOverScore.text).toBe("Score: 0");
     expect(last(await advance(page, 300)).gameOverScore.text).toBe("Score: 0");
