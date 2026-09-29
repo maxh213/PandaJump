@@ -7,7 +7,7 @@ import { expect, test } from "@playwright/test";
 import type { Page, Response } from "@playwright/test";
 import { advanceTo, columnsAt, installProbe, oneBox, openGame, play, sample, startRun, untilGameOver } from "./probe.ts";
 
-const OUT_DIR = "dist-offline-e2e";
+const OUT_DIR = `dist-offline-e2e-${String(process.pid)}`;
 
 const types: Record<string, string> = {
   ".html": "text/html",
@@ -132,7 +132,10 @@ test.describe("Rule: The built site works offline via a service worker", () => {
 
   const takeoverWithoutReload = async (page: Page) => {
     await page.evaluate(() => {
-      Object.assign(window, { survivedTakeover: "still here" });
+      Object.assign(window, { survivedTakeover: "still here", takeovers: 0 });
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        Object.assign(window, { takeovers: (window as unknown as { takeovers: number }).takeovers + 1 });
+      });
     });
     const before = await page.evaluate(() => caches.keys());
     const documentLoads: Response[] = [];
@@ -147,7 +150,7 @@ test.describe("Rule: The built site works offline via a service worker", () => {
       await expect
         .poll(() => page.evaluate(async () => (await caches.keys()).join()), { timeout: 15_000 })
         .not.toMatch(new RegExp(`${before.join()}|,`));
-      await page.waitForTimeout(500);
+      await expect.poll(() => page.evaluate(() => (window as unknown as { takeovers: number }).takeovers)).toBe(1);
     });
     expect(documentLoads).toHaveLength(0);
     expect(await page.evaluate(() => (window as unknown as { survivedTakeover?: string }).survivedTakeover)).toBe(
