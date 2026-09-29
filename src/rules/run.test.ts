@@ -130,7 +130,7 @@ test("time moves the floor and cycles the run frames at 15 per second", () => {
 });
 
 test("the panda holds frame 17 for the whole time it is in the air, including after a double jump", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.jump();
   [100, 250, 400, 580].forEach((time) => {
     run.advance(time - run.view().time);
@@ -155,7 +155,7 @@ test("the running cycle resumes from the time-based formula the moment the panda
 });
 
 test("pausing mid-jump shows the time-based frame, not the air pose", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.jump();
   run.advance(300);
   expect(run.view().pandaFrame).toBe(17);
@@ -164,7 +164,7 @@ test("pausing mid-jump shows the time-based frame, not the air pose", () => {
 });
 
 test("a panda that dies in the air shows the time-based frame, not the air pose", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2000);
   run.jump();
   run.advance(1037);
@@ -173,7 +173,7 @@ test("a panda that dies in the air shows the time-based frame, not the air pose"
 });
 
 test("the resume countdown after a mid-jump pause shows the time-based frame, not the air pose", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.jump();
   run.advance(300);
   run.pause();

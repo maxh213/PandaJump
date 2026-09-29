@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { advanceTo, oneBox, openGame, press, sample } from "./probe.ts";
+import { advanceTo, oneBox, openGame, press, sample, startRun } from "./probe.ts";
 
 test.describe("Rule: While the panda is in the air it shows the still pose", () => {
   test("A floor jump holds frame 17 at every moment in the air", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await press(page, "Space");
     for (const time of [100, 300, 580, 900]) {
       await advanceTo(page, time);
@@ -15,6 +16,7 @@ test.describe("Rule: While the panda is in the air it shows the still pose", () 
 
   test("A double jump keeps holding frame 17", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await press(page, "Space");
     await advanceTo(page, 580);
     await press(page, "Space");
@@ -30,6 +32,7 @@ test.describe("Rule: While the panda is in the air it shows the still pose", () 
 test.describe("Rule: On the floor the panda keeps its running cycle", () => {
   test("The frame cycles through 17 to 22 while the panda runs", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const frames = (await advanceTo(page, 400)).map((entry) => entry.panda.frame);
     expect(new Set(frames).size).toBeGreaterThan(1);
     expect(Math.min(...frames)).toBe(17);
@@ -38,6 +41,7 @@ test.describe("Rule: On the floor the panda keeps its running cycle", () => {
 
   test("The running cycle picks up from game time the moment the panda lands", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await press(page, "Space");
     await advanceTo(page, 1300);
     const landed = await sample(page);
@@ -49,6 +53,7 @@ test.describe("Rule: On the floor the panda keeps its running cycle", () => {
 test.describe("Rule: Pause and game over look as they always did", () => {
   test("Pausing mid-jump shows the frame game time gives", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await press(page, "Space");
     await advanceTo(page, 300);
     await press(page, "KeyP");
@@ -59,6 +64,7 @@ test.describe("Rule: Pause and game over look as they always did", () => {
 
   test("Resuming mid-jump shows the frame game time gives during the countdown", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await press(page, "Space");
     await advanceTo(page, 300);
     await press(page, "KeyP");
@@ -71,6 +77,7 @@ test.describe("Rule: Pause and game over look as they always did", () => {
 
   test("A panda that hits a box in the air shows the frame game time gives", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await advanceTo(page, 2000);
     await press(page, "Space");
     await advanceTo(page, 3037);

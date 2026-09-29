@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { advance, oneBox, openGame, untilGameOver } from "./probe.ts";
+import { advance, oneBox, openGame, startRun, untilGameOver } from "./probe.ts";
 
 const HIT_TINT = 0xff6666;
 
@@ -7,6 +7,7 @@ test.describe("Rule: With reduced motion the flash stays invisible for the whole
   test("The flash never shows at the instant of death or at any later step", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await openGame(page, oneBox);
+    await startRun(page);
     const { after } = await untilGameOver(page);
     expect(after.gameOver).toBe(true);
     expect(after.deathFlash.alpha).toBe(0);
@@ -22,6 +23,7 @@ test.describe("Rule: Everything else about death is unchanged with reduced motio
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await openGame(page, oneBox);
+    await startRun(page);
     const { after } = await untilGameOver(page);
     expect(after.viewDeathFlash).toBeGreaterThan(0);
     expect(after.boxes.length).toBeGreaterThan(0);
@@ -36,6 +38,7 @@ test.describe("Rule: Without the preference the flash is exactly as before", () 
   test("The flash still snaps to 0.6 at death when no reduced motion is asked for", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await openGame(page, oneBox);
+    await startRun(page);
     const { after } = await untilGameOver(page);
     expect(after.deathFlash.alpha).toBeCloseTo(0.6, 1);
   });
