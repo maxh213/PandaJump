@@ -89,6 +89,44 @@ test.describe("Rule: Pressing P or Escape while paused starts the same 3, 2, 1 c
   });
 });
 
+test.describe("Rule: Pressing P or Escape during the countdown pauses the run again", () => {
+  for (const key of KEYS) {
+    test(`The key returns a run in its countdown to the Paused screen: ${key}`, async ({ page }) => {
+      await openGame(page, standardRandom());
+      await pauseAt(page, 1000, "p");
+      await press(page, "p");
+      await advance(page, 600);
+      expect((await sample(page)).countdownText).toMatchObject({ text: "2", visible: true });
+      await press(page, key);
+      const paused = await sample(page);
+      expect(paused.pauseTitle).toMatchObject({ text: "Paused", x: 200, y: 190, visible: true });
+      expect(paused.pausePrompt.visible).toBe(true);
+      expect(paused.countdownText.visible).toBe(false);
+      await advance(page, 2000);
+      expect(await sample(page)).toEqual(paused);
+    });
+  }
+
+  test("Space after pausing again starts a fresh countdown without a jump", async ({ page }) => {
+    await openGame(page, standardRandom());
+    await pauseAt(page, 1000, "p");
+    await press(page, "p");
+    await advance(page, 600);
+    await press(page, "p");
+    await pressSpace(page);
+    const resumed = await sample(page);
+    expect(resumed.countdownText).toMatchObject({ text: "3", visible: true });
+    expect(resumed.panda.bottom).toBe(426);
+    await advance(page, 1500);
+    const after = await sample(page);
+    expect(after.countdownText.visible).toBe(false);
+    expect(after.time).toBe(1000);
+    expect(after.panda.bottom).toBe(426);
+    await advanceTo(page, 1500);
+    expect((await sample(page)).boxes).toHaveLength(1);
+  });
+});
+
 test.describe("Rule: Pressing P or Escape on the game-over screen does nothing", () => {
   for (const key of KEYS) {
     test(`The key neither restarts the run nor shows the pause texts: ${key}`, async ({ page }) => {

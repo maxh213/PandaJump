@@ -710,6 +710,21 @@ test("pauseOrResume resumes a paused run without making the panda jump", () => {
   expect(run.view()).toMatchObject({ paused: false, pandaBottom: 426 });
 });
 
+test("pauseOrResume during the countdown cancels it and shows Paused again", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(1000);
+  run.pauseOrResume();
+  run.pauseOrResume();
+  run.advance(600);
+  expect(run.view().countdown).toBe(2);
+  run.pauseOrResume();
+  expect(run.view()).toMatchObject({ paused: true, countdown: null });
+  run.advance(2000);
+  expect(run.view()).toMatchObject({ paused: true, countdown: null, time: 1000, pandaBottom: 426 });
+  run.pauseOrResume();
+  expect(run.view()).toMatchObject({ paused: false, countdown: 3 });
+});
+
 test("pauseOrResume is ignored while the game-over screen is shown", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(2880);

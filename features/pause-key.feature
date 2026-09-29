@@ -72,6 +72,43 @@ Feature: A player can pause and resume a run on purpose with the P or Escape key
       And the page reads "3" centred in white 40px at (200, 190)
       And the panda is still on the floor
 
+  Rule: Pressing P or Escape during the countdown pauses the run again
+
+    Scenario Outline: The key returns a run in its countdown to the Paused screen
+      When 1000 ms pass
+      And I press P
+      And I press P
+      And 600 ms pass
+      Then the page reads "2" centred in white 40px at (200, 190)
+      When I press <key>
+      Then the page reads "Paused" centred in white 40px at (200, 190)
+      And the page reads "Tap or press Space to continue" centred in white 20px at (200, 320)
+      And the page shows no countdown digit
+      When 2000 ms pass
+      Then the game time is still 1000 ms
+      And the panda still stands on the floor
+      And no box is on screen
+
+      Examples:
+        | key    |
+        | P      |
+        | Escape |
+
+    Scenario: Space after pausing again starts a fresh countdown without a jump
+      When 1000 ms pass
+      And I press P
+      And I press P
+      And 600 ms pass
+      And I press P
+      And I press Space
+      Then the page reads "3" centred in white 40px at (200, 190)
+      And the panda is still on the floor
+      When 1500 ms pass
+      Then the page shows no countdown digit
+      And the game time is still 1000 ms
+      When the game time reaches 1500 ms
+      Then the first column has spawned
+
   Rule: Pressing P or Escape on the game-over screen does nothing
 
     Scenario Outline: The key neither restarts the run nor shows the pause texts

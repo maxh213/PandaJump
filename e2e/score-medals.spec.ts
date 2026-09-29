@@ -6,6 +6,7 @@ import {
   oneBox,
   openGame,
   play,
+  press,
   sample,
   standardJumps,
   startRun,
@@ -194,8 +195,8 @@ test.describe("Rule: The game-over medal has a coloured disc beside its name", (
     await openGame(page, oneBox);
     await startRun(page);
     await playThroughColumn(page, 10);
-    await page.keyboard.press("p");
-    await page.keyboard.press("p");
+    await press(page, "p");
+    await press(page, "p");
     const counting = await sample(page);
     expect(counting.countdownText.visible).toBe(true);
     expect(counting.gameOverMedalBadge.visible).toBe(false);

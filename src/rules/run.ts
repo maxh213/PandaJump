@@ -398,7 +398,7 @@ const pausedState = (state: State): State =>
     ? state
     : { ...state, paused: true, resumeElapsed: null, bufferedAt: null };
 
-const togglePause = (state: State): State => (state.paused ? resume(state) : pausedState(state));
+const togglePause = (state: State): State => (state.paused && state.resumeElapsed === null ? resume(state) : pausedState(state));
 
 export const createRun = (random: Random, cloudRandom: Random, store: BestStore): Run => {
   const randoms: Randoms = { columns: random, clouds: cloudRandom };
