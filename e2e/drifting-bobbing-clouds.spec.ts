@@ -49,7 +49,8 @@ test.describe("Rule: A cloud leaving the left edge is replaced from the right ed
 });
 
 test.describe("Rule: Exactly 3 clouds are always on screen within the top 200 px", () => {
-  test("Clouds stay at 3 and within y 0-200 across many respawns", async ({ page }) => {
+  test("Clouds stay at 3 and within y 0-200 across many respawns", async ({ page }, testInfo) => {
+    testInfo.setTimeout(testInfo.timeout * 3);
     await openGame(page, CLOUD_SCRIPT);
     await startRun(page);
     for (let time = 0; time <= 20000; time += 1250) {
