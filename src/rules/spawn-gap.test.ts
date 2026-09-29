@@ -4,6 +4,12 @@ import type { Run } from "./index.ts";
 
 const noStore = { load: () => 0, save: () => undefined };
 
+const createStartedRun = (...args: Parameters<typeof createRun>): Run => {
+  const run = createRun(...args);
+  run.jump();
+  return run;
+};
+
 const ONE_BOX = [0.25, 0.5, 0];
 const TWO_BOXES = [0.75, 0.5, 0];
 const DOUBLE_COLUMN = [0.75, 0, 0.6];
@@ -70,7 +76,7 @@ const newPilot = (run: Run, capped: number) => {
 };
 
 const fly = (capped: number, cappedPattern: number[], columnsToClear: number) => {
-  const run = createRun(
+  const run = createStartedRun(
     columnRandom((column) => (column <= LAST_ONE_BOX_COLUMN ? ONE_BOX : cappedPattern)),
     columnRandom(() => ONE_BOX),
     noStore,
