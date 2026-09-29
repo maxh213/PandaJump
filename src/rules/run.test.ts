@@ -126,6 +126,26 @@ test("pausing mid-jump shows the time-based frame, not the air pose", () => {
   expect(run.view()).toMatchObject({ time: 300, pandaFrame: 21 });
 });
 
+test("a panda that dies in the air shows the time-based frame, not the air pose", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2000);
+  run.jump();
+  run.advance(1037);
+  expect(run.view()).toMatchObject({ gameOver: true, time: 3037, pandaFrame: 20 });
+  expect(run.view().pandaBottom).toBeLessThan(426);
+});
+
+test("the resume countdown after a mid-jump pause shows the time-based frame, not the air pose", () => {
+  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.jump();
+  run.advance(300);
+  run.pause();
+  run.jump();
+  run.advance(100);
+  expect(run.view()).toMatchObject({ countdown: 3, time: 300, pandaFrame: 21 });
+  expect(run.view().pandaBottom).toBeLessThan(426);
+});
+
 test("a jump peaks 168 px up at 580 ms", () => {
   const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
   run.jump();

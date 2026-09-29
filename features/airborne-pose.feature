@@ -39,3 +39,14 @@ Feature: Panda Jump on Phaser 4, slice: the airborne pose
       When I press Space at 0 ms
       And I press P at 300 ms
       Then the panda's frame is 21, the frame game time 300 ms gives
+
+    Scenario: Resuming mid-jump shows the frame game time gives during the countdown
+      When I press Space at 0 ms
+      And I press P at 300 ms
+      And I press P again
+      Then the panda's frame is 21 while the resume countdown shows
+
+    Scenario: A panda that hits a box in the air shows the frame game time gives
+      When I press Space at 2000 ms
+      And the panda hits a box in the air at 3037 ms
+      Then the panda's frame is 20, the frame game time 3037 ms gives

@@ -56,4 +56,27 @@ test.describe("Rule: Pause and game over look as they always did", () => {
     expect(paused.time).toBe(300);
     expect(paused.panda.frame).toBe(21);
   });
+
+  test("Resuming mid-jump shows the frame game time gives during the countdown", async ({ page }) => {
+    await openGame(page, oneBox);
+    await press(page, "Space");
+    await advanceTo(page, 300);
+    await press(page, "KeyP");
+    await press(page, "KeyP");
+    const counting = await sample(page);
+    expect(counting.countdownText.visible).toBe(true);
+    expect(counting.panda.bottom).toBeLessThan(426);
+    expect(counting.panda.frame).toBe(21);
+  });
+
+  test("A panda that hits a box in the air shows the frame game time gives", async ({ page }) => {
+    await openGame(page, oneBox);
+    await advanceTo(page, 2000);
+    await press(page, "Space");
+    await advanceTo(page, 3037);
+    const dead = await sample(page);
+    expect(dead.time).toBe(3037);
+    expect(dead.panda.bottom).toBeLessThan(426);
+    expect(dead.panda.frame).toBe(20);
+  });
 });
