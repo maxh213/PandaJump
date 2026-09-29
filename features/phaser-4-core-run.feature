@@ -24,7 +24,7 @@ Feature: Panda Jump on Phaser 4, slice 1: run, jump, die, restart
       And the heading reads "Panda Jump"
       And a 400 by 490 canvas is shown inside "#game_div"
       And the page reads "Check it out on Github" with "Github" linking to "https://github.com/maxh213/PandaJump"
-      And the page reads "Controls: Click, tap, Space, Up Arrow or a controller button to jump (double jump too). P, Escape or Start pauses."
+      And the page reads "Controls: Click, tap, Space, Up Arrow or controller A to jump (double jump too). P, Escape or Start pauses and resumes."
 
     Scenario: The page declares its language for accessibility and search tools
       Then the page's <html> element has lang="en"
