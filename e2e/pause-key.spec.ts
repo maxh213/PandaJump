@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, oneBox, openGame, play, press, pressSpace, sample, standardRandom, startRun, untilGameOver } from "./probe.ts";
+import { advance, advanceTo, oneBox, openGame, play, press, pressSpace, sample, settle, standardRandom, startRun, untilGameOver } from "./probe.ts";
 
 const KEYS = ["p", "Escape"] as const;
 
@@ -49,8 +49,11 @@ test.describe("Rule: Holding P or Escape after it paused the run does not resume
       await startRun(page);
       await advanceTo(page, 1000);
       await page.keyboard.down(key);
+      await settle(page);
       await Promise.all([1, 2, 3].map(() => page.keyboard.down(key)));
+      await settle(page);
       await page.keyboard.up(key);
+      await settle(page);
       await advance(page, 2000);
       const held = await sample(page);
       expect(held.pauseTitle).toMatchObject({ text: "Paused", visible: true });
