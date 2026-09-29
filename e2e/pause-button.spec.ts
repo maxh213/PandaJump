@@ -77,6 +77,55 @@ test.describe('Rule: Tapping "II" pauses the run and shows the pause texts, with
   });
 });
 
+const tapCanvas = async (page: Page, x: number, y: number): Promise<void> => {
+  await page.locator("#game_div canvas").click({ position: { x, y } });
+  await settle(page);
+};
+
+test.describe("Rule: The button's tap area is at least 48 by 48 canvas pixels and reaches into the top-right corner", () => {
+  const corners: { x: number; y: number }[] = [
+    { x: 396, y: 4 },
+    { x: 356, y: 44 },
+  ];
+  for (const { x, y } of corners) {
+    test(`Tapping (${String(x)}, ${String(y)}) pauses the run without a jump`, async ({ page }) => {
+      await openGame(page, standardRandom());
+      await advanceTo(page, 1000);
+      const before = await sample(page);
+      await tapCanvas(page, x, y);
+      const after = await sample(page);
+      expect(after.pauseTitle).toMatchObject({ text: "Paused", visible: true });
+      expect(after.panda.bottom).toBe(before.panda.bottom);
+    });
+  }
+
+  test("Tapping elsewhere on the canvas still jumps and does not pause", async ({ page }) => {
+    await openGame(page, standardRandom());
+    await advanceTo(page, 1000);
+    await tapCanvas(page, 200, 300);
+    await advance(page, 100);
+    const after = await sample(page);
+    expect(after.pauseTitle.visible).toBe(false);
+    expect(after.panda.bottom).toBeLessThan(426);
+  });
+
+  test("The corner area is an ordinary canvas tap while paused and on the game-over screen", async ({ page }) => {
+    await openGame(page, oneBox);
+    await pauseWithButton(page, 1000);
+    await tapCanvas(page, 396, 4);
+    const resumed = await sample(page);
+    expect(resumed.pauseTitle.visible).toBe(false);
+    expect(resumed.countdownText).toMatchObject({ text: "3", visible: true });
+    await advance(page, 1500);
+    await untilGameOver(page);
+    await advance(page, 500);
+    await tapCanvas(page, 396, 4);
+    const restarted = await sample(page);
+    expect(restarted.restarts).toBe(1);
+    expect(restarted.pauseTitle.visible).toBe(false);
+  });
+});
+
 test.describe('Rule: The button is hidden while paused, on the game-over screen, and until a new run is live', () => {
   test("The button disappears the moment the run pauses", async ({ page }) => {
     await openGame(page, standardRandom());

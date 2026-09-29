@@ -31,5 +31,10 @@ Use a phone, or a desktop browser with dev tools set to a mobile viewport.
 9. Tap the top-right corner, where "II" sits during a run. **Expected:** the run starts like any
    other first tap: the ready prompt disappears, the panda stays on the floor, the game is not
    paused, and the "II" button appears in the top-right corner.
-10. Run `npx playwright test`. **Expected:** every scenario in `features/pause-button.feature`, and
+10. Start a run and tap the top-right corner of the canvas just beside the "II", for example above
+   it or to its left and below it, within about a thumb's width. **Expected:** the run pauses and
+   the panda does not jump. Then tap the middle of the canvas on a live run. **Expected:** the
+   panda jumps and the run does not pause. While paused, and on the game-over screen once restart
+   is allowed, tapping that same corner resumes or restarts like any other tap and never pauses.
+11. Run `npx playwright test`. **Expected:** every scenario in `features/pause-button.feature`, and
    the rest of the Playwright suite, has a passing test.

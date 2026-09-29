@@ -55,6 +55,9 @@ const DAY_HILL_COLOR = MEADOW.hills;
 const STAR_RADIUS = 2;
 const STAR_COLOR = 0xffffff;
 const CENTER_X = CANVAS_WIDTH / 2;
+const PAUSE_BUTTON_RIGHT_MARGIN = 20;
+const PAUSE_BUTTON_TOP_MARGIN = 20;
+const PAUSE_BUTTON_TAP_SIZE = 48;
 const SPEED_UP_Y = 120;
 const DOUBLE_JUMP_HINT_Y = 150;
 const TOP_SCORES_HEADING_Y = 166;
@@ -440,10 +443,14 @@ export class RunScene extends Phaser.Scene {
       "16px",
     ).setName("pausePrompt");
     this.pauseButton = this.add
-      .text(CANVAS_WIDTH - 20, 20, "II", { fontFamily: "Arial", fontSize: "24px", color: "#ffffff", ...OUTLINE })
+      .text(CANVAS_WIDTH - PAUSE_BUTTON_RIGHT_MARGIN, PAUSE_BUTTON_TOP_MARGIN, "II", { fontFamily: "Arial", fontSize: "24px", color: "#ffffff", ...OUTLINE })
       .setOrigin(1, 0)
-      .setName("pauseButton")
-      .setInteractive();
+      .setName("pauseButton");
+    const reachLeft = this.pauseButton.width + PAUSE_BUTTON_RIGHT_MARGIN - PAUSE_BUTTON_TAP_SIZE;
+    this.pauseButton.setInteractive(
+      new Phaser.Geom.Rectangle(reachLeft, -PAUSE_BUTTON_TOP_MARGIN, PAUSE_BUTTON_TAP_SIZE, PAUSE_BUTTON_TAP_SIZE),
+      (area: Phaser.Geom.Rectangle, x: number, y: number) => area.contains(x, y),
+    );
   }
 
   private addFloorStrip(y: number, texture: string): Phaser.GameObjects.TileSprite {

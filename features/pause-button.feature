@@ -39,6 +39,36 @@ Feature: A player can pause a run with an on-screen "II" button
       And the panda still stands on the floor
       And the floor has scrolled no further than it had at 1000 ms
 
+  Rule: The button's tap area is at least 48 by 48 canvas pixels and reaches into the top-right corner
+
+    Scenario Outline: Tapping beside the glyph but inside the corner area pauses the run without a jump
+      When 1000 ms pass
+      And I tap the canvas at (<x>, <y>)
+      Then the page reads "Paused" centred in white 40px at (200, 190)
+      And the panda's height just after the tap is the same as it was just before it
+
+      Examples:
+        | x   | y  |
+        | 396 | 4  |
+        | 356 | 44 |
+
+    Scenario: Tapping elsewhere on the canvas still jumps and does not pause
+      When 1000 ms pass
+      And I tap the canvas at (200, 300)
+      Then the panda jumps
+      And the page does not read "Paused"
+
+    Scenario: The corner area is an ordinary canvas tap while paused and on the game-over screen
+      When 1000 ms pass
+      And I tap "II"
+      And I tap the canvas at (396, 4)
+      Then the page reads "3" centred in white 40px at (200, 190)
+      When I do not jump
+      Then the panda touches the column and the game over screen shows
+      When 500 ms pass
+      And I tap the canvas at (396, 4)
+      Then the run restarts and the page does not read "Paused"
+
   Rule: The button is hidden while paused, on the game-over screen, and until a new run is live
 
     Scenario: The button disappears the moment the run pauses

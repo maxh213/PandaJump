@@ -81,3 +81,4 @@ add a line merge cleanly instead of conflicting.
 - The ready screen's "Your best runs" list now includes the stored best when a run was closed after beating it but before the panda died
 - A second open tab or installed copy of the game can no longer lower the stored best score: saving keeps the larger of the new best and the value already stored
 - The whole view shakes by up to 6px for 200ms when the panda hits a column, decaying to still, and never for players who ask for reduced motion
+- The on-screen "II" pause button has a 48 by 48 canvas-pixel tap area reaching into the top-right corner, so a thumb that misses the glyph still pauses instead of jumping
