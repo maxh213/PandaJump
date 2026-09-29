@@ -69,3 +69,4 @@ add a line merge cleanly instead of conflicting.
 - A row of distant rounded hills scrolls behind the columns at a quarter of the floor's speed, darker than the sky and changing colour with it at scores 20 and 40
 - P or Escape during the 3-2-1 resume countdown puts the run back on the Paused screen, the same as the on-screen pause button
 - The panda stretches tall for 120 ms as it jumps off the floor and squashes wide for 120 ms as it lands, easing back to normal
+- A new deploy's service worker no longer reloads the page in the middle of a run: the one-time reload to hand over control only happens while the page is still on the start screen, and the next visit opens the new build

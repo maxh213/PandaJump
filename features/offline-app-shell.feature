@@ -48,6 +48,14 @@ Feature: Panda Jump caches its app shell so the installed PWA opens offline
       And fetching the changed file now returns its new contents
       And only the new build's cache remains; the previous build's cache is gone
 
+    Scenario: A new deploy never reloads the page in the middle of a run
+      Given I open the Panda Jump page and the service worker has taken control
+      And I press Space to start the run and 1000 ms of game time pass
+      When a build output file's contents change and "npm run build" runs again
+      And the page triggers a service worker update and the new service worker takes control
+      Then the page does not reload and a value set on the page before the update is still there
+      And the run's view reports ready false and gameOver false and its time is still 1000 ms
+
   Rule: The unbuilt dev server never registers a service worker
 
     Scenario: Running npm run dev does not install an offline cache

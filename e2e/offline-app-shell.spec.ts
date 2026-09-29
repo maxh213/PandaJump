@@ -151,6 +151,51 @@ test.describe("Rule: The built site works offline via a service worker", () => {
       execSync(`node scripts/generate-sw.mjs ${OUT_DIR}`, { stdio: "ignore" });
     }
   });
+
+  test("A new deploy's service worker does not reload the page in the middle of a run", async ({ page }) => {
+    test.setTimeout(30_000);
+    await openOffline(page, oneBox);
+    await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+    await page.evaluate(installProbe);
+    await startRun(page);
+    await advanceTo(page, 1000);
+    await page.evaluate(() => {
+      Object.assign(window, { survivedUpdate: true });
+      Object.assign(window, {
+        controllerChanged: new Promise<void>((resolve) => {
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            resolve();
+          });
+        }),
+      });
+    });
+
+    const manifestPath = join(outDir, "manifest.json");
+    const originalManifest = readFileSync(manifestPath, "utf8");
+    try {
+      writeFileSync(manifestPath, `${originalManifest} `);
+      execSync(`node scripts/generate-sw.mjs ${OUT_DIR}`, { stdio: "ignore" });
+
+      await page.evaluate(async () => {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.update();
+        await (window as unknown as { controllerChanged: Promise<void> }).controllerChanged;
+      });
+      await page.waitForTimeout(1500);
+
+      const state = await page.evaluate(() => ({
+        survived: (window as unknown as { survivedUpdate?: boolean }).survivedUpdate,
+        view: window.pandaJump?.run.view(),
+      }));
+      expect(state.survived).toBe(true);
+      expect(state.view?.ready).toBe(false);
+      expect(state.view?.gameOver).toBe(false);
+      expect(state.view?.time).toBe(1000);
+    } finally {
+      writeFileSync(manifestPath, originalManifest);
+      execSync(`node scripts/generate-sw.mjs ${OUT_DIR}`, { stdio: "ignore" });
+    }
+  });
 });
 
 test.describe("Rule: The unbuilt dev server never registers a service worker", () => {

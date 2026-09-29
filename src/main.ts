@@ -50,7 +50,7 @@ const registerServiceWorker = (): void => {
   const hadController = Boolean(navigator.serviceWorker.controller);
   let reloadedForUpdate = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!hadController || reloadedForUpdate) return;
+    if (!hadController || reloadedForUpdate || !run.view().ready) return;
     reloadedForUpdate = true;
     window.location.reload();
   });
