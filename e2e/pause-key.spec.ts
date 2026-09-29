@@ -93,6 +93,7 @@ test.describe("Rule: Pressing P or Escape during the countdown pauses the run ag
   for (const key of KEYS) {
     test(`The key returns a run in its countdown to the Paused screen: ${key}`, async ({ page }) => {
       await openGame(page, standardRandom());
+      await startRun(page);
       await pauseAt(page, 1000, "p");
       await press(page, "p");
       await advance(page, 600);
@@ -109,6 +110,7 @@ test.describe("Rule: Pressing P or Escape during the countdown pauses the run ag
 
   test("Space after pausing again starts a fresh countdown without a jump", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pauseAt(page, 1000, "p");
     await press(page, "p");
     await advance(page, 600);

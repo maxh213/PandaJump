@@ -711,7 +711,7 @@ test("pauseOrResume resumes a paused run without making the panda jump", () => {
 });
 
 test("pauseOrResume during the countdown cancels it and shows Paused again", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   run.pauseOrResume();
   run.pauseOrResume();
