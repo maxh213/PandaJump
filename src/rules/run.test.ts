@@ -1119,7 +1119,7 @@ test("a buffered jump is discarded when the panda dies before landing", () => {
 });
 
 test("the panda shadow shrinks from 1 towards 0.5 as the panda rises and stays at 0.5 from 168 px up", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   expect(run.view().pandaShadow).toEqual({ x: 112.5, y: 426, scale: 1 });
   run.jump();
   run.advance(290);

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { advanceTo, oneBox, openGame, pixelRows, press, pressSpace, sample, untilGameOver } from "./probe.ts";
+import { advanceTo, oneBox, openGame, pixelRows, press, pressSpace, sample, startRun, untilGameOver } from "./probe.ts";
 
 test.describe("Rule: The shadow sits on the ground under the panda and shrinks with height", () => {
   test("A soft black ellipse is centred on the floor and full size while the panda stands", async ({ page }) => {
@@ -20,6 +20,7 @@ test.describe("Rule: The shadow sits on the ground under the panda and shrinks w
 
   test("It shrinks while the panda is in the air and grows back on landing", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await pressSpace(page);
     await advanceTo(page, 290);
     const rising = await sample(page);
@@ -57,6 +58,7 @@ test.describe("Rule: The shadow is drawn above the floor and below the panda", (
 test.describe("Rule: The shadow stays visible in every state", () => {
   test("It is still shown while paused", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await pressSpace(page);
     await advanceTo(page, 290);
     await press(page, "KeyP");
@@ -67,6 +69,7 @@ test.describe("Rule: The shadow stays visible in every state", () => {
 
   test("It is still shown at game over", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const { after } = await untilGameOver(page);
     expect(after.gameOver).toBe(true);
     expect(after.pandaShadow).toMatchObject({ x: 112.5, y: 426, visible: true });
