@@ -47,9 +47,15 @@ const STAR_DEPTH = -2;
 const HILLS_DEPTH = -0.5;
 const HILLS_TOP = 300;
 const HILLS_HEIGHT = GRASS_SURFACE_Y - HILLS_TOP;
-const HILL_SHAPES: readonly (readonly [number, number, number])[] = [
-  [45, 45, 50],
-  [125, 45, HILLS_HEIGHT],
+const HILLS_RIDGE: readonly (readonly [number, number])[] = [
+  [0, 70],
+  [22, 38],
+  [40, 52],
+  [68, 12],
+  [96, 46],
+  [112, 34],
+  [138, 60],
+  [160, 70],
 ];
 const DAY_HILL_COLOR = MEADOW.hills;
 const STAR_RADIUS = 2;
@@ -242,11 +248,8 @@ export class RunScene extends Phaser.Scene {
 
   private makeHillTexture(color: string): void {
     const graphics = this.add.graphics().fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
-    HILL_SHAPES.forEach(([x, radiusX, radiusY]) => {
-      [x, x - HILLS_REPEAT_WIDTH].forEach((left) => {
-        graphics.fillEllipse(left, HILLS_HEIGHT, radiusX * 2, radiusY * 2);
-      });
-    });
+    const ridge = HILLS_RIDGE.map(([x, y]) => new Phaser.Math.Vector2(x, y));
+    graphics.fillPoints([new Phaser.Math.Vector2(0, HILLS_HEIGHT), ...ridge, new Phaser.Math.Vector2(HILLS_REPEAT_WIDTH, HILLS_HEIGHT)], true);
     graphics.generateTexture(hillKey(color), HILLS_REPEAT_WIDTH, HILLS_HEIGHT).destroy();
   }
 
