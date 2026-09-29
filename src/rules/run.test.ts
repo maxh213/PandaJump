@@ -51,6 +51,12 @@ const createStartedRun = (...args: Parameters<typeof createRun>): Run => {
   return run;
 };
 
+const startingClouds = [
+  { x: 0, y: 53, texture: "cloud_02.png" },
+  { x: 150, y: 100, texture: "cloud_05.png" },
+  { x: 300, y: 53, texture: "cloud_02.png" },
+];
+
 test("a run starts ready, with the panda on the floor, score 0 and no boxes", () => {
   expect(createRun(oneBoxEach(), oneBoxEach(), noStore).view()).toEqual({
     ready: true,
