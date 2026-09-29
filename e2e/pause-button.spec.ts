@@ -90,6 +90,7 @@ test.describe("Rule: The button's tap area is at least 48 by 48 canvas pixels an
   for (const { x, y } of corners) {
     test(`Tapping (${String(x)}, ${String(y)}) pauses the run without a jump`, async ({ page }) => {
       await openGame(page, standardRandom());
+      await startRun(page);
       await advanceTo(page, 1000);
       const before = await sample(page);
       await tapCanvas(page, x, y);
@@ -101,6 +102,7 @@ test.describe("Rule: The button's tap area is at least 48 by 48 canvas pixels an
 
   test("Tapping elsewhere on the canvas still jumps and does not pause", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await advanceTo(page, 1000);
     await tapCanvas(page, 200, 300);
     await advance(page, 100);
@@ -111,6 +113,7 @@ test.describe("Rule: The button's tap area is at least 48 by 48 canvas pixels an
 
   test("The corner area is an ordinary canvas tap while paused and on the game-over screen", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await pauseWithButton(page, 1000);
     await tapCanvas(page, 396, 4);
     const resumed = await sample(page);
