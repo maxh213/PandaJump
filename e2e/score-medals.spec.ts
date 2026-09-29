@@ -126,11 +126,11 @@ test.describe("Rule: The goal line only shows on a game-over screen", () => {
     await openGame(page, oneBox);
     await startRun(page);
     expect((await sample(page)).gameOverMedal.visible).toBe(false);
-    await page.keyboard.press("p");
+    await press(page, "p");
     const paused = await sample(page);
     expect(paused.pauseTitle.visible).toBe(true);
     expect(paused.gameOverMedal.visible).toBe(false);
-    await page.keyboard.press("p");
+    await press(page, "p");
     const { after: diedAt } = await untilGameOver(page);
     expectGoal(diedAt);
     const restart = await untilRestart(page);
