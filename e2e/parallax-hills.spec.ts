@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, columnClearTime, oneBox, openGame, play, press, pressSpace, sample, spawnTimeOf, untilGameOver, untilRestart } from "./probe.ts";
+import { advance, advanceTo, columnClearTime, oneBox, openGame, play, press, pressSpace, sample, spawnTimeOf, startRun, untilGameOver, untilRestart } from "./probe.ts";
 import type { Sample } from "./probe.ts";
 
 const EXTRA_COLUMNS = 3;
@@ -19,6 +19,7 @@ const jumpTimesFor = (from: number, to: number): number[] =>
 
 const playThroughColumn = async (page: Page, column: number): Promise<void> => {
   await openGame(page, rampedRandom(column));
+  await startRun(page);
   await play(page, jumpTimesFor(1, column), columnClearTime(column) + CLEAR_BUFFER);
 };
 
@@ -40,6 +41,7 @@ const hillsOf = (state: Sample) => ({ view: state.viewHills, drawn: state.hills 
 test.describe("Rule: The hills sit in front of the sky and behind everything else", () => {
   test("The hills are visible at the start of a run, in front of clouds and stars and behind boxes, panda and shadow", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await advanceTo(page, 1600);
     const state = await sample(page);
     expect(state.hills.visible).toBe(true);
@@ -67,6 +69,7 @@ test.describe("Rule: The hills sit in front of the sky and behind everything els
 
   test("No part of the hills is drawn above y 300", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const { hills } = await sample(page);
     expect(hills.y).toBeGreaterThanOrEqual(300);
     expect(hills.y + hills.height).toBe(392);
@@ -76,6 +79,7 @@ test.describe("Rule: The hills sit in front of the sky and behind everything els
 test.describe("Rule: The hills scroll at a quarter of the floor's speed", () => {
   test("Below a score of 20 the hills move a quarter as far as the floor", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const start = await sample(page);
     expectQuarterSpeed(await advance(page, 1000), start);
     expect((await sample(page)).viewHills.scroll).toBeCloseTo(50);
@@ -93,6 +97,7 @@ test.describe("Rule: The hills scroll at a quarter of the floor's speed", () => 
 test.describe("Rule: The hills stand still whenever game time stands still", () => {
   test("A paused run does not move the hills", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await advanceTo(page, 1000);
     await press(page, "p");
     const frozen = await sample(page);
@@ -102,6 +107,7 @@ test.describe("Rule: The hills stand still whenever game time stands still", () 
 
   test("The countdown's frozen time does not move the hills", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await advanceTo(page, 1000);
     await press(page, "p");
     const frozen = await sample(page);
@@ -115,6 +121,7 @@ test.describe("Rule: The hills stand still whenever game time stands still", () 
 
   test("The game-over screen does not move the hills", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const { after } = await untilGameOver(page);
     await advance(page, 1000);
     const later = await sample(page);
@@ -126,6 +133,7 @@ test.describe("Rule: The hills stand still whenever game time stands still", () 
 test.describe("Rule: The hill colour follows the sky", () => {
   test("The hills are the day colour at the start of a run", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     const state = await sample(page);
     expect(state.viewHills.color).toBe(DAY);
     expect(state.hills.key).toBe(`hills-${DAY}`);

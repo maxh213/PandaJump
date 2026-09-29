@@ -69,8 +69,7 @@ test("a run starts ready, with the panda on the floor, score 0 and no boxes", ()
     pandaBottom: 426,
     pandaFrame: 17,
     floorScroll: 0,
-    hillsScroll: 0,
-    hillColor: "#4a9ba6",
+    hillsScroll: 0, hillColor: "#4a9ba6",
     boxes: [],
     clouds: [
       { x: 0, y: 53, texture: "cloud_02.png" },
@@ -1223,7 +1222,7 @@ test("landingPuff is null right after a restart", () => {
 });
 
 test("the view scrolls the hills a quarter of the floor's distance and colours them by score", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.advance(1000);
   expect(run.view().hillsScroll).toBeCloseTo(50);
   expect(run.view().hillColor).toBe("#4a9ba6");
