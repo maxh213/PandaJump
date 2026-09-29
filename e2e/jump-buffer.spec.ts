@@ -14,12 +14,14 @@ import {
   spaceDown,
   spaceUp,
   standardRandom,
+  startRun,
   twoBoxes,
   untilGameOver,
 } from "./probe.ts";
 
 const bufferedSequence = async (page: Page, pressAt: number) => {
   await openGame(page, standardRandom());
+  await startRun(page);
   await pressSpace(page);
   await advanceTo(page, 580);
   await pressSpace(page);
@@ -72,6 +74,7 @@ test.describe("Rule: A late press made more than 100 ms before landing is droppe
 test.describe("Rule: A press while the double jump is still available is still an immediate air jump", () => {
   test("The second press in the air jumps at once and shows the puff", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await pressSpace(page);
     await advanceTo(page, 100);
     await pressSpace(page);
@@ -104,6 +107,7 @@ test.describe("Rule: A buffered press is discarded by a pause, a death or a rest
 
   test("Dying before landing drops the press", async ({ page }) => {
     await openGame(page, standardRandom({ 1: twoBoxes }));
+    await startRun(page);
     await advanceTo(page, 2600);
     await pressSpace(page);
     await advanceTo(page, 2800);
@@ -123,6 +127,7 @@ test.describe("Rule: A buffered press is discarded by a pause, a death or a rest
 test.describe("Rule: Holding Space adds no jumps from auto-repeat", () => {
   test("The held key's repeats are not buffered", async ({ page }) => {
     await openGame(page, standardRandom());
+    await startRun(page);
     await spaceDown(page);
     await advanceTo(page, 580);
     await spaceDown(page);

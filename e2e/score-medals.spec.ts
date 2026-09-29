@@ -154,6 +154,7 @@ test.describe("Rule: The game-over medal has a coloured disc beside its name", (
 
   test("The disc is hidden while paused", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await playThroughColumn(page, 10);
     await page.keyboard.press("p");
     const paused = await sample(page);
@@ -163,6 +164,7 @@ test.describe("Rule: The game-over medal has a coloured disc beside its name", (
 
   test("The disc is hidden during the resume countdown", async ({ page }) => {
     await openGame(page, oneBox);
+    await startRun(page);
     await playThroughColumn(page, 10);
     await page.keyboard.press("p");
     await page.keyboard.press("p");

@@ -1038,7 +1038,7 @@ test("a new page session with no stored best shows the hint again", () => {
 });
 
 const bufferedRun = (pressAt: number): Run => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.jump();
   run.advance(580);
   run.jump();
@@ -1086,7 +1086,7 @@ test("a buffered jump does not show the double jump puff", () => {
 });
 
 test("a press with the air jump still available is an immediate air jump and buffers nothing", () => {
-  const run = createRun(oneBoxEach(), oneBoxEach(), noStore);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   run.jump();
   run.advance(100);
   run.jump();
@@ -1104,7 +1104,7 @@ test("a buffered jump is discarded when the run is paused before landing", () =>
 });
 
 test("a buffered jump is discarded when the panda dies before landing", () => {
-  const run = createRun(twoBoxColumns(), oneBoxEach(), noStore);
+  const run = createStartedRun(twoBoxColumns(), oneBoxEach(), noStore);
   run.advance(2600);
   run.jump();
   run.advance(200);
