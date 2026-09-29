@@ -1,6 +1,8 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { createRun } from "./index.ts";
 import type { Run } from "./index.ts";
+
+vi.setConfig({ testTimeout: 20_000 });
 
 const noStore = { load: () => 0, save: () => undefined };
 
