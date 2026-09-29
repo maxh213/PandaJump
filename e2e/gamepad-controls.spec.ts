@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, heightOf, oneBox, openGame, sample, settle, standardRandom, untilGameOver } from "./probe.ts";
+import { advance, advanceTo, heightOf, oneBox, openGame, sample, settle, standardRandom, startRun, untilGameOver } from "./probe.ts";
 
 const installPad = () => {
   const pressed = new Set<number>();
@@ -29,6 +29,7 @@ const installPad = () => {
 const withPad = async (page: Page, random: number[]) => {
   await page.addInitScript(installPad);
   await openGame(page, random);
+  await startRun(page);
 };
 
 const padDown = async (page: Page, index: number) => {
