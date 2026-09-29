@@ -41,6 +41,8 @@ const doubleColumnRandom = () => {
   };
 };
 
+const naturalShape = { pandaAngle: 0, pandaScaleX: 1, pandaScaleY: 1 };
+
 const noStore = { load: () => 0, save: () => undefined };
 
 const createStartedRun = (...args: Parameters<typeof createRun>): Run => {
@@ -86,8 +88,7 @@ test("a run starts ready, with the panda on the floor, score 0 and no boxes", ()
     pandaUpsideDown: false,
     bestMarker: null,
     deathFlash: 0,
-    pandaAngle: 0,
-    pandaScaleX: 1, pandaScaleY: 1,
+    ...naturalShape,
     airPuff: null,
     doubleJumpHint: false,
     pandaShadow: { x: 112.5, y: 426, scale: 1 },
