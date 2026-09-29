@@ -1,4 +1,5 @@
-import { biomeFor } from "./biome.ts";
+import { biomeFor, starsAlphaFor } from "./biome.ts";
+import type { Biome } from "./biome.ts";
 
 export interface Star {
   readonly x: number;
@@ -21,3 +22,6 @@ const NIGHT_STARS: readonly Star[] = [
 ];
 
 export const starsFor = (score: number): readonly Star[] => (biomeFor(score).stars ? NIGHT_STARS : []);
+
+export const starsForFade = (from: Biome, to: Biome, progress: number): readonly Star[] =>
+  starsAlphaFor(from, to, progress) > 0 ? NIGHT_STARS : [];

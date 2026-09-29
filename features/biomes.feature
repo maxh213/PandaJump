@@ -16,8 +16,10 @@ Feature: Panda Jump moves the run through a new biome every 20 points
   - the sky, which is both `view().sky` and the main camera's background colour: "#71c5cf", "#f4a261", "#a9c9e0"
     and "#4a4e69" in that order;
   - the hills' colour: "#4a9ba6", "#c97b3a", "#ffffff" and "#22223b" in that order.
-  The switch is instant. Columns already on screen keep the look they spawned with, so a column is sampled two
-  columns after the switch. The random source picks 1 box and no second column for every column.
+  Crossing a threshold starts a 3000 ms scenery crossfade (features/biome-fade.feature); by two columns after the
+  switch the fade has finished and the new biome's floor, sky and hills are fully shown. Columns already on screen
+  keep the look they spawned with, so a column is sampled two columns after the switch. The random source picks
+  1 box and no second column for every column.
 
   Background:
     Given I open the Panda Jump page

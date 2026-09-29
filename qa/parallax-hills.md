@@ -9,6 +9,6 @@ Use a desktop browser with dev tools. Heights are in px from the top of the canv
 5. Keep scoring past 20. **Expected:** the floor and columns speed up and the hills speed up with them, still much slower than the floor.
 6. Press P to pause, then Space to start the countdown. **Expected:** the hills stand still while paused and during the countdown, and move again when it ends.
 7. Let the panda hit a column. **Expected:** the hills stop on the game-over screen.
-8. Reach a score of 20, 40, then 60. **Expected:** the hills change colour with the biome: brown-orange under the sunset sky, white under the pale snowfield sky, dark indigo under the dusk sky. Restart. **Expected:** the day colour is back.
+8. Reach a score of 20, 40, then 60. **Expected:** the hills crossfade over about 3 seconds with the biome: brown-orange under the sunset sky, white under the pale snowfield sky, dark indigo under the dusk sky. Restart. **Expected:** the day colour is back.
 9. Open the page with `?clock=manual`, and in the console run `window.pandaJump.run.advance(1000); window.pandaJump.run.view().hillsScroll`. **Expected:** 50 (a quarter of the 200 px the floor moves).
 10. Run `npx playwright test`. **Expected:** every scenario in `features/parallax-hills.feature` has a passing test.

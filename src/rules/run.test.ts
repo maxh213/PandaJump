@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { BIOMES, createRun } from "./index.ts";
+import { BIOMES, createRun, mixHex } from "./index.ts";
 import type { Run } from "./index.ts";
 import { spawnGapForScore, speedForScore } from "./world.ts";
 
@@ -71,15 +71,30 @@ const startingScoreView = {
   medalGoal: "Bronze medal at 10",
 };
 
+const startingSceneryView = {
+  biome: BIOMES[0],
+  sky: "#71c5cf",
+  stars: [],
+  starsAlpha: 0,
+  sceneryFrom: BIOMES[0],
+  sceneryTo: BIOMES[0],
+  sceneryFade: 1,
+  sceneryLayer: {
+    base: BIOMES[0],
+    overlay: BIOMES[0],
+    baseAlpha: 1,
+    overlayAlpha: 0,
+    overlayVisible: false,
+  },
+};
+
 test("a run starts ready, with the panda on the floor, score 0 and no boxes", () => {
   expect(createRun(oneBoxEach(), oneBoxEach(), noStore).view()).toEqual({
     ready: true,
     time: 0,
     restarts: 0,
     ...startingScoreView,
-    biome: BIOMES[0],
-    sky: "#71c5cf",
-    stars: [],
+    ...startingSceneryView,
     pandaX: 100,
     pandaBottom: 426,
     pandaFrame: 17,
@@ -561,6 +576,27 @@ const advanceToColumn = (run: Run, from: number, to: number): void => {
     run.advance(1);
   }
   expect(run.view().gameOver).toBe(false);
+};
+
+const advanceAlive = (run: Run, ms: number): void => {
+  const target = run.view().time + ms;
+  let nextColumn = Number(run.view().score) + 1;
+  while (run.view().time < target && !run.view().gameOver) {
+    nextColumn = stepAlive(run, target, nextColumn);
+  }
+  expect(run.view().gameOver).toBe(false);
+  expect(run.view().time).toBe(target);
+};
+
+const stepAlive = (run: Run, target: number, nextColumn: number): number => {
+  const jumpAt = rampedJumpAt(nextColumn);
+  if (run.view().time < jumpAt && jumpAt <= target) {
+    run.advance(jumpAt - run.view().time);
+    run.jump();
+    return nextColumn + 1;
+  }
+  run.advance(Math.min(10, target - run.view().time));
+  return nextColumn;
 };
 
 test("speedUp is visible for exactly 800ms of game time from the instant the score first reaches the ramp threshold of 20", () => {
@@ -1331,17 +1367,68 @@ test("the view scrolls the hills a quarter of the floor's distance and colours t
 test("the view names the biome for the score, sky, hills and columns included, and a restart returns to the meadow", () => {
   const run = createStartedRun(repeatingOneBox(), oneBoxEach(), noStore);
   advanceToColumn(run, 1, 19);
-  expect(run.view()).toMatchObject({ biome: BIOMES[0], sky: "#71c5cf", hillColor: "#4a9ba6", stars: [] });
+  expect(run.view()).toMatchObject({ biome: BIOMES[0], sky: "#71c5cf", hillColor: "#4a9ba6", stars: [], sceneryFade: 1 });
   advanceToColumn(run, 20, 20);
-  expect(run.view()).toMatchObject({ biome: BIOMES[1], sky: "#f4a261", hillColor: "#c97b3a" });
-  advanceToColumn(run, 21, 40);
-  expect(run.view()).toMatchObject({ biome: BIOMES[2], sky: BIOMES[2].sky, hillColor: "#ffffff", stars: [] });
-  advanceToColumn(run, 41, 60);
+  expect(run.view()).toMatchObject({
+    biome: BIOMES[1],
+    sky: "#71c5cf",
+    hillColor: "#4a9ba6",
+    sceneryFrom: BIOMES[0],
+    sceneryTo: BIOMES[1],
+    sceneryFade: 0,
+  });
+  advanceAlive(run, 1500);
+  expect(run.view().sky).toBe("#b3b498");
+  expect(run.view().hillColor).toBe(mixHex(BIOMES[0].hills, BIOMES[1].hills, 0.5));
+  expect(run.view().sceneryFade).toBe(0.5);
+  advanceAlive(run, 1500);
+  expect(run.view()).toMatchObject({ biome: BIOMES[1], sky: "#f4a261", hillColor: "#c97b3a", sceneryFade: 1 });
+  advanceToColumn(run, Number(run.view().score) + 1, 40);
+  expect(run.view()).toMatchObject({ biome: BIOMES[2], sky: BIOMES[1].sky, sceneryFade: 0 });
+  advanceAlive(run, 3000);
+  expect(run.view()).toMatchObject({ biome: BIOMES[2], sky: BIOMES[2].sky, hillColor: "#ffffff", stars: [], sceneryFade: 1 });
+  advanceToColumn(run, Number(run.view().score) + 1, 60);
   expect(run.view().biome).toBe(BIOMES[3]);
+  expect(run.view().stars).toEqual([]);
+  expect(run.view().starsAlpha).toBe(0);
+  expect(run.view().sceneryFade).toBe(0);
+  advanceAlive(run, 1500);
   expect(run.view().stars).toHaveLength(12);
+  expect(run.view().starsAlpha).toBe(0.5);
+  advanceAlive(run, 1500);
+  expect(run.view().stars).toHaveLength(12);
+  expect(run.view().starsAlpha).toBe(1);
+  expect(run.view().sceneryFade).toBe(1);
   while (!run.view().canRestart) run.advance(10);
   run.jump();
-  expect(run.view()).toMatchObject({ score: "0", biome: BIOMES[0], sky: "#71c5cf" });
+  expect(run.view()).toMatchObject({ score: "0", biome: BIOMES[0], sky: "#71c5cf", sceneryFade: 1, starsAlpha: 0 });
+});
+
+test("pausing or dying mid-biome-fade freezes the sky colour, and a restart snaps to meadow", () => {
+  const run = createStartedRun(repeatingOneBox(), oneBoxEach(), noStore);
+  advanceToColumn(run, 1, 20);
+  advanceAlive(run, 1500);
+  const mid = run.view();
+  expect(mid.sceneryFade).toBe(0.5);
+  expect(mid.sky).toBe("#b3b498");
+  run.pause();
+  run.advance(2000);
+  expect(run.view().sky).toBe(mid.sky);
+  expect(run.view().sceneryFade).toBe(0.5);
+  run.pauseOrResume();
+  run.advance(1500);
+  expect(run.view().sceneryFade).toBe(0.5);
+  while (!run.view().gameOver) run.advance(10);
+  const died = run.view();
+  expect(died.sceneryFade).toBeLessThan(1);
+  const skyAtDeath = died.sky;
+  const fadeAtDeath = died.sceneryFade;
+  run.advance(500);
+  expect(run.view().sky).toBe(skyAtDeath);
+  expect(run.view().sceneryFade).toBe(fadeAtDeath);
+  while (!run.view().canRestart) run.advance(10);
+  run.jump();
+  expect(run.view()).toMatchObject({ score: "0", biome: BIOMES[0], sky: "#71c5cf", sceneryFade: 1, stars: [] });
 });
 
 const scaleOf = (run: Run) => [run.view().pandaScaleX, run.view().pandaScaleY];

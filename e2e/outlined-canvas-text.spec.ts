@@ -78,8 +78,8 @@ test.describe("Rule: Every text is still outlined after a death", () => {
   });
 });
 
-test.describe("Rule: The gold callout is outlined while the sunset sky shows", () => {
-  test("The \"Faster!\" callout is gold and outlined on the sunset sky", async ({ page }) => {
+test.describe("Rule: The gold callout is outlined while the desert fade starts", () => {
+  test("The \"Faster!\" callout is gold and outlined when the score reaches 20", async ({ page }) => {
     test.setTimeout(60_000);
     const random = Array.from({ length: RAMP_COLUMN + EXTRA_COLUMNS }, () => oneBox).flat();
     await openGame(page, random);
@@ -87,8 +87,7 @@ test.describe("Rule: The gold callout is outlined while the sunset sky shows", (
     const jumps = Array.from({ length: RAMP_COLUMN }, (_, index) => 1500 * (index + 1) + JUMP_OFFSET);
     await play(page, jumps, 1500 * RAMP_COLUMN + 1820 + CLEAR_BUFFER);
     const state = await sample(page);
-    expect(state.sky).toBe("#f4a261");
-    expect(state.cameraSky).toBe("#f4a261");
+    expect(state.score.text).toBe("20");
     expect(state.speedUp.visible).toBe(true);
     expect(state.speedUp.color).toBe("#ffd700");
     const callout = (await outlines(page)).find((entry) => entry.name === "speedUp");

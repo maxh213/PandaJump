@@ -1,23 +1,16 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { columnClearTime, oneBox, openGame, play, sample, spawnTimeOf, startRun, untilRestart } from "./probe.ts";
+import { advanceAlive, oneBox, openGame, playToScore, sample, startRun, untilRestart } from "./probe.ts";
 import type { Sample } from "./probe.ts";
 
 const EXTRA_COLUMNS = 3;
-const JUMP_OFFSET = 788;
-const CLEAR_BUFFER = 20;
 
 const rampedRandom = (column: number): number[] => Array.from({ length: column + EXTRA_COLUMNS }, () => oneBox).flat();
-
-const jumpTimesFor = (from: number, to: number): number[] =>
-  Array.from({ length: to - from + 1 }, (_, index) => spawnTimeOf(from + index) + JUMP_OFFSET);
-
-const scoreReadAt = (column: number): number => columnClearTime(column) + CLEAR_BUFFER;
 
 const playThroughColumn = async (page: Page, column: number): Promise<void> => {
   await openGame(page, rampedRandom(column));
   await startRun(page);
-  await play(page, jumpTimesFor(1, column), scoreReadAt(column));
+  await playToScore(page, column);
 };
 
 const expectSky = (state: Sample, sky: string): void => {
@@ -41,13 +34,17 @@ test.describe("Rule: The sky is day-blue below a score of 20", () => {
   });
 });
 
-test.describe("Rule: The sky turns sunset-orange the instant the score reaches 20, and stays there below 40", () => {
-  test("The sky turns sunset the moment the score reaches 20", async ({ page }) => {
+test.describe("Rule: The sky turns sunset-orange over 3000 ms once the score reaches 20, and stays there below 40", () => {
+  test("The sky crossfades to sunset once the score reaches 20", async ({ page }) => {
     test.setTimeout(60_000);
     await playThroughColumn(page, 20);
-    const state = await sample(page);
-    expect(state.score.text).toBe("20");
-    expectSky(state, "#f4a261");
+    const start = await sample(page);
+    expect(start.score.text).toBe("20");
+    expectSky(start, "#71c5cf");
+    await advanceAlive(page, 1500);
+    expectSky(await sample(page), "#b3b498");
+    await advanceAlive(page, 1500);
+    expectSky(await sample(page), "#f4a261");
   });
 
   test("The sky is still sunset just before the snowfield threshold", async ({ page }) => {
@@ -59,17 +56,19 @@ test.describe("Rule: The sky turns sunset-orange the instant the score reaches 2
   });
 });
 
-test.describe("Rule: The sky turns pale snowfield-blue the instant the score reaches 40", () => {
-  test("The sky turns pale blue the moment the score reaches 40", async ({ page }) => {
+test.describe("Rule: The sky turns pale snowfield-blue over 3000 ms once the score reaches 40", () => {
+  test("The sky crossfades to pale blue once the score reaches 40", async ({ page }) => {
     test.setTimeout(120_000);
     await playThroughColumn(page, 40);
-    const state = await sample(page);
-    expect(state.score.text).toBe("40");
-    expectSky(state, "#a9c9e0");
+    const start = await sample(page);
+    expect(start.score.text).toBe("40");
+    expectSky(start, "#f4a261");
+    await advanceAlive(page, 3000);
+    expectSky(await sample(page), "#a9c9e0");
   });
 });
 
-test.describe("Rule: The sky turns dusk-grey the instant the score reaches 60", () => {
+test.describe("Rule: The sky turns dusk-grey over 3000 ms once the score reaches 60", () => {
   test("The sky is still pale blue just before the industrial threshold", async ({ page }) => {
     test.setTimeout(240_000);
     await playThroughColumn(page, 59);
@@ -78,12 +77,14 @@ test.describe("Rule: The sky turns dusk-grey the instant the score reaches 60", 
     expectSky(state, "#a9c9e0");
   });
 
-  test("The sky turns dusk-grey the moment the score reaches 60", async ({ page }) => {
+  test("The sky crossfades to dusk-grey once the score reaches 60", async ({ page }) => {
     test.setTimeout(240_000);
     await playThroughColumn(page, 60);
-    const state = await sample(page);
-    expect(state.score.text).toBe("60");
-    expectSky(state, "#4a4e69");
+    const start = await sample(page);
+    expect(start.score.text).toBe("60");
+    expectSky(start, "#a9c9e0");
+    await advanceAlive(page, 3000);
+    expectSky(await sample(page), "#4a4e69");
   });
 });
 
@@ -92,7 +93,8 @@ test.describe("Rule: A new run always starts back at day, even after a snowfield
     test.setTimeout(120_000);
     await openGame(page, rampedRandom(40));
     await startRun(page);
-    await play(page, jumpTimesFor(1, 40), scoreReadAt(40));
+    await playToScore(page, 40);
+    await advanceAlive(page, 3000);
     expectSky(await sample(page), "#a9c9e0");
     const restart = await untilRestart(page);
     expect(restart.after.score.text).toBe("0");

@@ -1,11 +1,9 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { advance, advanceTo, columnClearTime, oneBox, openGame, pixelRows, play, press, pressSpace, sample, spawnTimeOf, startRun, untilGameOver, untilRestart } from "./probe.ts";
+import { advance, advanceAlive, advanceTo, oneBox, openGame, pixelRows, playToScore, press, pressSpace, sample, startRun, untilGameOver, untilRestart } from "./probe.ts";
 import type { Sample } from "./probe.ts";
 
 const EXTRA_COLUMNS = 3;
-const JUMP_OFFSET = 788;
-const CLEAR_BUFFER = 20;
 const HILLS_REPEAT = 160;
 const FLOOR_REPEAT = 64;
 const DAY = "#4a9ba6";
@@ -15,13 +13,10 @@ const INDUSTRIAL = "#22223b";
 
 const rampedRandom = (column: number): number[] => Array.from({ length: column + EXTRA_COLUMNS }, () => oneBox).flat();
 
-const jumpTimesFor = (from: number, to: number): number[] =>
-  Array.from({ length: to - from + 1 }, (_, index) => spawnTimeOf(from + index) + JUMP_OFFSET);
-
 const playThroughColumn = async (page: Page, column: number): Promise<void> => {
   await openGame(page, rampedRandom(column));
   await startRun(page);
-  await play(page, jumpTimesFor(1, column), columnClearTime(column) + CLEAR_BUFFER);
+  await playToScore(page, column);
 };
 
 const wrapped = (delta: number, repeat: number): number => ((delta % repeat) + repeat) % repeat;
@@ -61,6 +56,7 @@ test.describe("Rule: The hills sit in front of the sky and behind everything els
   test("The hills are drawn in front of the stars at dusk", async ({ page }) => {
     test.setTimeout(240_000);
     await playThroughColumn(page, 60);
+    await advanceAlive(page, 3000);
     const state = await sample(page);
     expect(state.stars.length).toBeGreaterThan(0);
     state.stars.forEach((star) => {
@@ -90,7 +86,7 @@ test.describe("Rule: The hills scroll at a quarter of the floor's speed", () => 
     test.setTimeout(60_000);
     await playThroughColumn(page, 20);
     const start = await sample(page);
-    expect(start.score.text).toBe("20");
+    expect(Number(start.score.text)).toBeGreaterThanOrEqual(20);
     expectQuarterSpeed(await advance(page, 300), start);
   });
 });
@@ -143,6 +139,7 @@ test.describe("Rule: The hill colour follows the sky", () => {
   test("The hills turn sunset-coloured at score 20", async ({ page }) => {
     test.setTimeout(60_000);
     await playThroughColumn(page, 20);
+    await advanceAlive(page, 3000);
     const state = await sample(page);
     expect(state.sky).toBe("#f4a261");
     expect(state.viewHills.color).toBe(SUNSET);
@@ -152,6 +149,7 @@ test.describe("Rule: The hill colour follows the sky", () => {
   test("The hills turn white at score 40", async ({ page }) => {
     test.setTimeout(120_000);
     await playThroughColumn(page, 40);
+    await advanceAlive(page, 3000);
     const state = await sample(page);
     expect(state.sky).toBe("#a9c9e0");
     expect(state.viewHills.color).toBe(SNOW);
@@ -161,6 +159,7 @@ test.describe("Rule: The hill colour follows the sky", () => {
   test("The same score always gives the same hill colour, and a restart returns to the day colour", async ({ page }) => {
     test.setTimeout(120_000);
     await playThroughColumn(page, 40);
+    await advanceAlive(page, 3000);
     expect((await sample(page)).hills.key).toBe(`hills-${SNOW}`);
     const restart = await untilRestart(page);
     expect(restart.after.score.text).toBe("0");
@@ -213,12 +212,14 @@ test.describe("Rule: The bottom of the hills meets the top of the ground", () =>
   test("The hills meet the ground under the sunset sky", async ({ page }) => {
     test.setTimeout(60_000);
     await playThroughColumn(page, 20);
+    await advanceAlive(page, 3000);
     await expectJoinAtEveryScroll(page, SUNSET);
   });
 
   test("The hills meet the ground under the industrial sky", async ({ page }) => {
     test.setTimeout(240_000);
     await playThroughColumn(page, 60);
+    await advanceAlive(page, 3000);
     await expectJoinAtEveryScroll(page, INDUSTRIAL);
   });
 });

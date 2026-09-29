@@ -24,10 +24,9 @@ Feature: Panda Jump outlines every piece of canvas text in black
       When the panda hits a column
       Then every one of the texts is outlined
 
-  Rule: The gold callout is outlined while the sunset sky shows
+  Rule: The gold callout is outlined while the desert fade starts
 
-    Scenario: The "Faster!" callout is gold and outlined on the sunset sky
+    Scenario: The "Faster!" callout is gold and outlined when the score reaches 20
       Given I play the ramped schedule through column 20
-      Then the sky is "#f4a261"
-      And the callout is visible
+      Then the callout is visible
       And the callout is gold (#ffd700) and outlined

@@ -3,7 +3,7 @@
 Use a desktop browser with dev tools.
 
 1. Run `npm ci` then `npm run dev` and open the URL it prints. **Expected:** the console shows no errors, and the score and "Best: 0" text have a black outline against the blue sky.
-2. Play until your score reaches 20. **Expected:** the sky turns orange and the gold "Faster!" text appears with a clear black outline, easy to read on the orange.
+2. Play until your score reaches 20. **Expected:** the gold "Faster!" text appears with a clear black outline while the sky is still fading from meadow to desert.
 3. Keep playing to 40. **Expected:** the sky turns dark blue and the score and best text are still crisp with their black outline.
 4. Touch a column. **Expected:** the game-over screen text (title, medal, score, best, runs, share and copy lines, and the restart prompt) all have a black outline; the colours, sizes and positions are the same as before.
 5. Press P to pause. **Expected:** "Paused" and its prompt have a black outline.

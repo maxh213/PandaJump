@@ -11,7 +11,9 @@ Feature: Panda Jump scrolls a row of distant hills behind the columns at a quart
   ramp's speed-ups, and they stand still whenever game time stands still.
   "The hill colour" is one solid colour per biome, chosen as features/biomes.feature describes: "#4a9ba6" under the
   day sky (#71c5cf), "#c97b3a" under the sunset sky (#f4a261), "#ffffff" under the pale snowfield sky (#a9c9e0)
-  and "#22223b" under the industrial dusk sky (#4a4e69).
+  and "#22223b" under the industrial dusk sky (#4a4e69). Crossing a threshold starts the 3000 ms crossfade in
+  features/biome-fade.feature: on the threshold step the hills are still the previous colour, and after 3000 ms
+  they are the new biome's colour.
   "The ramped schedule" is as defined in features/sky-by-score.feature.
 
   Background:
@@ -67,11 +69,13 @@ Feature: Panda Jump scrolls a row of distant hills behind the columns at a quart
 
     Scenario: The hills turn sunset-coloured at score 20
       Given I play the ramped schedule through column 20
+      And 3000 ms of game time pass so the desert fade has finished
       Then the sky is "#f4a261"
       And the hill colour is "#c97b3a"
 
     Scenario: The hills turn white at score 40
       Given I play the ramped schedule through column 40
+      And 3000 ms of game time pass so the snowfield fade has finished
       Then the sky is "#a9c9e0"
       And the hill colour is "#ffffff"
 
@@ -91,8 +95,10 @@ Feature: Panda Jump scrolls a row of distant hills behind the columns at a quart
 
     Scenario: The hills meet the ground under the sunset sky
       Given I play the ramped schedule through column 20
+      And 3000 ms of game time pass so the desert fade has finished
       Then no pixel in the rows around y 424 is the sky colour, at the same scroll offsets
 
     Scenario: The hills meet the ground under the industrial sky
       Given I play the ramped schedule through column 60
+      And 3000 ms of game time pass so the industrial fade has finished
       Then no pixel in the rows around y 424 is the sky colour, at the same scroll offsets

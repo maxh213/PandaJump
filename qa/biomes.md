@@ -3,9 +3,9 @@
 Use a desktop browser with dev tools.
 
 1. Run `npm ci` then `npm run dev` and open the URL it prints. **Expected:** the console shows no errors and the familiar meadow shows: day-blue sky, teal hills, a grass-topped rocky floor and brown dirt columns.
-2. Play to a score of 20. **Expected:** the instant the score reaches 20 the sky turns warm orange, the hills sandy brown and the floor sand. Columns that spawn from then on are sand-coloured; columns already on screen finish crossing as they were.
-3. Play to a score of 40. **Expected:** a snowfield: pale blue sky, white hills, a snowy floor and ice columns.
-4. Play to a score of 60. **Expected:** an industrial biome: grey dusk sky with stars, dark hills, a rocky floor with a metal top edge and metal columns.
+2. Play to a score of 20. **Expected:** over about 3 seconds the sky warms to orange, the hills turn sandy brown and the floor becomes sand. Columns that spawn from then on are sand-coloured; columns already on screen finish crossing as they were.
+3. Play to a score of 40. **Expected:** over about 3 seconds a snowfield fades in: pale blue sky, white hills, a snowy floor and ice columns.
+4. Play to a score of 60. **Expected:** over about 3 seconds an industrial biome fades in: grey dusk sky with stars, dark hills, a rocky floor with a metal top edge and metal columns.
 5. Keep playing to 80. **Expected:** the meadow returns and the sequence repeats.
 6. Read the score and best text in every biome. **Expected:** both stay white with their black outline and easy to read.
 7. Die in any biome other than the meadow, then tap to play again. **Expected:** the new run starts in the meadow from the first frame.

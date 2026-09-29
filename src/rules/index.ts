@@ -10,5 +10,5 @@ export type { Medal } from "./medal.ts";
 export { shareTextFor } from "./medal.ts";
 export { CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, TILE_SIZE } from "./world.ts";
 export { HILLS_REPEAT_WIDTH } from "./hills.ts";
-export { BIOMES, MEADOW } from "./biome.ts";
+export { BIOMES, MEADOW, mixHex } from "./biome.ts";
 export type { Biome } from "./biome.ts";

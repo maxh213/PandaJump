@@ -87,3 +87,4 @@ add a line merge cleanly instead of conflicting.
 - The game-over score line adds (2nd best) to (5th best) once restart is allowed when a run placed 2nd to 5th among the player's best runs and did not set a new best
 - The start screen keeps the panda running in place while the clouds drift and bob and the floor and hills scroll, until the first tap; the run then continues from those positions
 - The page extends under the iPhone status bar and notch when installed, with the canvas padded below the safe area so the score and pause button are no longer covered
+- Scenery crossfades over 3 seconds of game time when the run enters a new biome: sky colour lerps, hills and ground strips stack with rising alpha, and stars fade in or out with the industrial biome

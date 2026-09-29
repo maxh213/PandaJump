@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { BIOMES, biomeFor } from "./biome.ts";
+import { BIOME_FADE_MS, BIOMES, biomeFadeProgress, biomeFor, mixHex, starsAlphaFor } from "./biome.ts";
 
 const [meadow, desert, snowfield, industrial] = BIOMES;
 
@@ -47,4 +47,26 @@ test("each biome changes the floor, the columns, the sky and the hills", () => {
 
 test("only the industrial biome shows stars", () => {
   expect(BIOMES.filter((biome) => biome.stars)).toEqual([industrial]);
+});
+
+test("mixHex lerps each channel and biomeFadeProgress clamps over BIOME_FADE_MS", () => {
+  expect(BIOME_FADE_MS).toBe(3000);
+  expect(mixHex("#71c5cf", "#f4a261", 0)).toBe("#71c5cf");
+  expect(mixHex("#71c5cf", "#f4a261", 1)).toBe("#f4a261");
+  expect(mixHex("#71c5cf", "#f4a261", 0.5)).toBe("#b3b498");
+  expect(biomeFadeProgress(null)).toBe(1);
+  expect(biomeFadeProgress(0)).toBe(0);
+  expect(biomeFadeProgress(1500)).toBe(0.5);
+  expect(biomeFadeProgress(3000)).toBe(1);
+  expect(biomeFadeProgress(4000)).toBe(1);
+});
+
+test("starsAlphaFor fades in entering industrial and out leaving it", () => {
+  expect(starsAlphaFor(meadow, desert, 0.5)).toBe(0);
+  expect(starsAlphaFor(snowfield, industrial, 0)).toBe(0);
+  expect(starsAlphaFor(snowfield, industrial, 0.5)).toBe(0.5);
+  expect(starsAlphaFor(snowfield, industrial, 1)).toBe(1);
+  expect(starsAlphaFor(industrial, meadow, 0)).toBe(1);
+  expect(starsAlphaFor(industrial, meadow, 0.5)).toBe(0.5);
+  expect(starsAlphaFor(industrial, meadow, 1)).toBe(0);
 });

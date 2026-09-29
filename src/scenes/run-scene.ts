@@ -131,8 +131,11 @@ export class RunScene extends Phaser.Scene {
   private clouds!: Phaser.GameObjects.Group;
   private stars!: Phaser.GameObjects.Group;
   private hills!: Phaser.GameObjects.TileSprite;
+  private hillsFade!: Phaser.GameObjects.TileSprite;
   private rock!: Phaser.GameObjects.TileSprite;
+  private rockFade!: Phaser.GameObjects.TileSprite;
   private grass!: Phaser.GameObjects.TileSprite;
+  private grassFade!: Phaser.GameObjects.TileSprite;
   private score!: Phaser.GameObjects.Text;
   private best!: Phaser.GameObjects.Text;
   private speedUp!: Phaser.GameObjects.Text;
@@ -185,7 +188,9 @@ export class RunScene extends Phaser.Scene {
     this.createPandaAndEffects();
     this.boxes = this.add.group({ classType: Phaser.GameObjects.Image, defaultKey: "dirt_06.png", name: "boxes" });
     this.rock = this.addFloorStrip(FLOOR_Y, "rock_06.png").setName("rock");
+    this.rockFade = this.addFloorStrip(FLOOR_Y, "rock_06.png").setName("rockFade").setAlpha(0);
     this.grass = this.addFloorStrip(GRASS_Y, "top_grass_01.png").setName("grass");
+    this.grassFade = this.addFloorStrip(GRASS_Y, "top_grass_01.png").setName("grassFade").setAlpha(0);
     this.score = this.add
       .text(20, 20, "0", { fontFamily: "Arial", fontSize: "30px", color: "#ffffff", ...OUTLINE })
       .setName("score");
@@ -245,6 +250,12 @@ export class RunScene extends Phaser.Scene {
       .setOrigin(0, 0)
       .setDepth(HILLS_DEPTH)
       .setName("hills");
+    this.hillsFade = this.add
+      .tileSprite(0, HILLS_TOP, CANVAS_WIDTH, HILLS_HEIGHT, hillKey(DAY_HILL_COLOR))
+      .setOrigin(0, 0)
+      .setDepth(HILLS_DEPTH + 0.01)
+      .setName("hillsFade")
+      .setAlpha(0);
   }
 
   private makeHillTexture(color: string): void {
@@ -498,6 +509,31 @@ export class RunScene extends Phaser.Scene {
     recolour[String(this.score.style.color !== colour) as "true" | "false"]();
   }
 
+  private drawScenery(view: ReturnType<Run["view"]>): void {
+    const layer = view.sceneryLayer;
+    const base = layer.base;
+    this.hills.setTexture(hillKey(base.hills)).setTilePosition(view.hillsScroll, 0).setAlpha(layer.baseAlpha);
+    this.hillsFade
+      .setTexture(hillKey(layer.overlay.hills))
+      .setTilePosition(view.hillsScroll, 0)
+      .setAlpha(layer.overlayAlpha)
+      .setVisible(layer.overlayVisible);
+    this.rock.setTexture(base.floor).setAlpha(layer.baseAlpha).tilePositionX = view.floorScroll;
+    this.rockFade
+      .setTexture(layer.overlay.floor)
+      .setAlpha(layer.overlayAlpha)
+      .setVisible(layer.overlayVisible).tilePositionX = view.floorScroll;
+    this.grass
+      .setTexture(base.top)
+      .setY(TOP_STRIP_Y[base.top])
+      .setAlpha(layer.baseAlpha).tilePositionX = view.floorScroll;
+    this.grassFade
+      .setTexture(layer.overlay.top)
+      .setY(TOP_STRIP_Y[layer.overlay.top])
+      .setAlpha(layer.overlayAlpha)
+      .setVisible(layer.overlayVisible).tilePositionX = view.floorScroll;
+  }
+
   private draw(): void {
     const view = this.run.view();
     this.cameras.main.setBackgroundColor(view.sky);
@@ -505,9 +541,7 @@ export class RunScene extends Phaser.Scene {
     this.pandaShadow.setPosition(view.pandaShadow.x, view.pandaShadow.y).setScale(view.pandaShadow.scale);
     this.drawAirPuff(view.airPuff);
     this.drawLandingPuff(view.landingPuff);
-    this.hills.setTexture(hillKey(view.hillColor)).setTilePosition(view.hillsScroll, 0);
-    this.rock.setTexture(view.biome.floor).tilePositionX = view.floorScroll;
-    this.grass.setTexture(view.biome.top).setY(TOP_STRIP_Y[view.biome.top]).tilePositionX = view.floorScroll;
+    this.drawScenery(view);
     this.drawScore(view);
     const titles: Record<"true" | "false", string> = { true: PAGE_TITLE, false: `${view.score} - ${PAGE_TITLE}` };
     document.title = titles[String(view.score === "0") as "true" | "false"];
@@ -532,7 +566,7 @@ export class RunScene extends Phaser.Scene {
       this.showBox(box);
     });
     this.refreshGroup(this.stars, view.stars, (star) => {
-      this.showStar(star);
+      this.showStar(star, view.starsAlpha);
     });
     this.refreshGroup(this.clouds, view.clouds, (cloud) => {
       this.showCloud(cloud);
@@ -651,15 +685,16 @@ export class RunScene extends Phaser.Scene {
     TINT_ACTIONS[String(box.hit) as "true" | "false"](image);
   }
 
-  private showStar(star: Star): void {
+  private showStar(star: Star, alpha: number): void {
     const dot = this.stars.get(star.x, star.y) as Phaser.GameObjects.Arc;
     dot
       .setRadius(STAR_RADIUS)
       .setFillStyle(STAR_COLOR)
       .setPosition(star.x, star.y)
       .setDepth(STAR_DEPTH)
+      .setAlpha(alpha)
       .setActive(true)
-      .setVisible(true)
+      .setVisible(alpha > 0)
       .setName("star");
   }
 

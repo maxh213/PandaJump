@@ -54,14 +54,21 @@ export interface Sample {
     scaleX: number;
     scaleY: number;
   };
-  hills: { y: number; height: number; depth: number; scroll: number; key: string; visible: boolean };
+  hills: { y: number; height: number; depth: number; scroll: number; key: string; visible: boolean; alpha: number };
+  hillsFade: { key: string; alpha: number; visible: boolean; scroll: number };
   viewHills: { scroll: number; color: string };
   floorScroll: number;
-  rock: { y: number; scroll: number; key: string };
-  grass: { y: number; scroll: number; key: string };
+  rock: { y: number; scroll: number; key: string; alpha: number };
+  rockFade: { key: string; alpha: number; visible: boolean; scroll: number };
+  grass: { y: number; scroll: number; key: string; alpha: number };
+  grassFade: { key: string; alpha: number; visible: boolean; scroll: number; y: number };
   boxes: { x: number; y: number; width: number; key: string; depth: number; tint: number }[];
   clouds: { x: number; y: number; depth: number; key: string }[];
-  stars: { x: number; y: number; depth: number; radius: number; color: number }[];
+  stars: { x: number; y: number; depth: number; radius: number; color: number; alpha: number }[];
+  starsAlpha: number;
+  sceneryFade: number;
+  sceneryFrom: string;
+  sceneryTo: string;
   deathFlash: { x: number; y: number; width: number; height: number; alpha: number; color: string; depth: number };
   viewClouds: View["clouds"];
   viewDeathFlash: View["deathFlash"];
@@ -151,6 +158,7 @@ interface GameTileSprite {
   depth: number;
   tilePositionX: number;
   texture: { key: string };
+  alpha: number;
 }
 
 interface GameEllipse {
@@ -187,6 +195,7 @@ interface GameNode {
   tint: number;
   radius: number;
   fillColor: number;
+  alpha: number;
 }
 
 interface GameScene {
@@ -251,8 +260,11 @@ export const installProbe = () => {
     const score = named("score") as GameText;
     const best = named("best") as GameText;
     const rock = named("rock") as GameTileSprite;
+    const rockFade = named("rockFade") as GameTileSprite;
     const grass = named("grass") as GameTileSprite;
+    const grassFade = named("grassFade") as GameTileSprite;
     const hills = named("hills") as GameTileSprite;
+    const hillsFade = named("hillsFade") as GameTileSprite;
     const deathFlash = named("deathFlash") as GameRectangle;
     const airPuff = named("airPuff") as GameGraphics;
     const badge = named("gameOverMedalBadge") as GameGraphics;
@@ -314,11 +326,31 @@ export const installProbe = () => {
         scroll: hills.tilePositionX,
         key: hills.texture.key,
         visible: hills.visible,
+        alpha: hills.alpha,
+      },
+      hillsFade: {
+        key: hillsFade.texture.key,
+        alpha: hillsFade.alpha,
+        visible: hillsFade.visible,
+        scroll: hillsFade.tilePositionX,
       },
       viewHills: { scroll: view.hillsScroll, color: view.hillColor },
       floorScroll: view.floorScroll,
-      rock: { y: rock.y, scroll: rock.tilePositionX, key: rock.texture.key },
-      grass: { y: grass.y, scroll: grass.tilePositionX, key: grass.texture.key },
+      rock: { y: rock.y, scroll: rock.tilePositionX, key: rock.texture.key, alpha: rock.alpha },
+      rockFade: {
+        key: rockFade.texture.key,
+        alpha: rockFade.alpha,
+        visible: rockFade.visible,
+        scroll: rockFade.tilePositionX,
+      },
+      grass: { y: grass.y, scroll: grass.tilePositionX, key: grass.texture.key, alpha: grass.alpha },
+      grassFade: {
+        key: grassFade.texture.key,
+        alpha: grassFade.alpha,
+        visible: grassFade.visible,
+        scroll: grassFade.tilePositionX,
+        y: grassFade.y,
+      },
       boxes: scene.children.list
         .filter((child) => child.visible && child.type === "Image" && child.name === "box")
         .map((child) => ({
@@ -334,7 +366,18 @@ export const installProbe = () => {
         .map((child) => ({ x: child.x, y: child.y, depth: child.depth, key: child.texture.key })),
       stars: scene.children.list
         .filter((child) => child.visible && child.name === "star")
-        .map((child) => ({ x: child.x, y: child.y, depth: child.depth, radius: child.radius, color: child.fillColor })),
+        .map((child) => ({
+          x: child.x,
+          y: child.y,
+          depth: child.depth,
+          radius: child.radius,
+          color: child.fillColor,
+          alpha: child.alpha,
+        })),
+      starsAlpha: view.starsAlpha,
+      sceneryFade: view.sceneryFade,
+      sceneryFrom: view.sceneryFrom.name,
+      sceneryTo: view.sceneryTo.name,
       deathFlash: {
         x: deathFlash.x,
         y: deathFlash.y,
@@ -435,6 +478,26 @@ export const advanceTo = async (page: Page, time: number): Promise<Sample[]> => 
   return advance(page, time - now.time);
 };
 
+export const advanceAlive = async (page: Page, ms: number, jumpOffset = 788): Promise<void> => {
+  const start = await sample(page);
+  const target = start.time + ms;
+  let nextColumn = Number(start.score.text) + 1;
+  while ((await sample(page)).time < target) {
+    const now = await sample(page);
+    if (now.gameOver) throw new Error("the run ended while advancing through a fade");
+    const jumpAt = spawnTimeOf(nextColumn) + jumpOffset;
+    if (now.time < jumpAt && jumpAt <= target) {
+      await advance(page, jumpAt - now.time);
+      await pressSpace(page);
+      nextColumn += 1;
+    } else {
+      await advance(page, Math.min(16, target - now.time));
+    }
+  }
+  const end = await sample(page);
+  if (end.time !== target) throw new Error(`expected time ${String(target)}, got ${String(end.time)}`);
+};
+
 export const untilGameOver = (page: Page, limit = 30_000): Promise<{ before: Sample; after: Sample }> =>
   page.evaluate((duration) => window.probe.untilGameOver(duration), limit);
 
@@ -489,6 +552,15 @@ export const play = async (page: Page, jumps: number[], until: number, key = "Sp
   return samples;
 };
 
+export const playToScore = async (page: Page, column: number, jumpOffset = 788): Promise<Sample> => {
+  await play(
+    page,
+    Array.from({ length: column }, (_, index) => spawnTimeOf(index + 1) + jumpOffset),
+    columnClearTime(column),
+  );
+  return sample(page);
+};
+
 export const pixelRows = async (page: Page, rows: number[]): Promise<number[][][]> => {
   await settle(page);
   const shot = await page.locator("#game_div canvas").screenshot();
@@ -529,7 +601,7 @@ export const twoBoxesAndSecond = [0.75, 0, 0];
 export const standardRandom = (exceptions: Record<number, number[]> = {}) =>
   Array.from({ length: 40 }, (_, index) => exceptions[index + 1] ?? oneBox).flat();
 
-const SCHEDULED_COLUMNS = 80;
+const SCHEDULED_COLUMNS = 100;
 const COLUMN_TRAVEL_PX = 364;
 
 const pxPerMsAt = (score: number): number => (score < 20 ? 0.2 : Math.min(0.2 + (Math.floor((score - 20) / 10) + 1) * 0.02, 0.3));

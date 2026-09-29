@@ -15,6 +15,8 @@ export interface Biome {
 
 const BIOME_SCORES = 20;
 
+export const BIOME_FADE_MS = 3000;
+
 export const MEADOW: Biome = {
   name: "meadow",
   sky: "#71c5cf",
@@ -35,3 +37,20 @@ export const BIOMES: readonly [Biome, Biome, Biome, Biome] = [
 type BiomeIndex = 0 | 1 | 2 | 3;
 
 export const biomeFor = (score: number): Biome => BIOMES[(Math.floor(score / BIOME_SCORES) % 4) as BiomeIndex];
+
+const hexChannel = (hex: string, index: number): number => parseInt(hex.slice(1 + index * 2, 3 + index * 2), 16);
+
+const mixChannel = (from: number, to: number, t: number): number => Math.round(from + (to - from) * t);
+
+export const mixHex = (from: string, to: string, t: number): string => {
+  const progress = Math.min(1, Math.max(0, t));
+  return `#${[0, 1, 2]
+    .map((index) => mixChannel(hexChannel(from, index), hexChannel(to, index), progress).toString(16).padStart(2, "0"))
+    .join("")}`;
+};
+
+export const biomeFadeProgress = (elapsed: number | null): number =>
+  Math.min(1, Math.max(0, (elapsed ?? BIOME_FADE_MS) / BIOME_FADE_MS));
+
+export const starsAlphaFor = (from: Biome, to: Biome, progress: number): number =>
+  Number(from.stars) * (1 - progress) + Number(to.stars) * progress;

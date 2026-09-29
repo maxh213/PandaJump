@@ -11,14 +11,14 @@ import {
 import type { Box, Column, Random } from "./columns.ts";
 import { cloudsOf, initialClouds, moveClouds } from "./clouds.ts";
 import type { Cloud, CloudState } from "./clouds.ts";
-import { biomeFor } from "./biome.ts";
+import { BIOME_FADE_MS, biomeFadeProgress, biomeFor, mixHex, starsAlphaFor } from "./biome.ts";
 import type { Biome } from "./biome.ts";
 import { hillsScrollFor } from "./hills.ts";
 import { medalFor, medalGoalFor } from "./medal.ts";
 import type { Medal } from "./medal.ts";
 import { fall, jump, standingPanda } from "./panda.ts";
 import type { Panda } from "./panda.ts";
-import { starsFor } from "./stars.ts";
+import { starsForFade } from "./stars.ts";
 import type { Star } from "./stars.ts";
 import { insertScore } from "./top-scores.ts";
 import type { TopScoresStore } from "./top-scores.ts";
@@ -44,6 +44,17 @@ interface View {
   readonly biome: Biome;
   readonly sky: string;
   readonly stars: readonly Star[];
+  readonly starsAlpha: number;
+  readonly sceneryFrom: Biome;
+  readonly sceneryTo: Biome;
+  readonly sceneryFade: number;
+  readonly sceneryLayer: {
+    readonly base: Biome;
+    readonly overlay: Biome;
+    readonly baseAlpha: number;
+    readonly overlayAlpha: number;
+    readonly overlayVisible: boolean;
+  };
   readonly pandaX: number;
   readonly pandaBottom: number;
   readonly pandaFrame: number;
@@ -111,6 +122,8 @@ interface State {
   readonly bufferedAt: number | null;
   readonly landingStart: number | null;
   readonly jumpStart: number | null;
+  readonly fadeFrom: Biome | null;
+  readonly fadeStart: number | null;
 }
 
 interface Squash {
@@ -183,6 +196,8 @@ const freshState = ({ restarts, best, topScores, hintPending }: Carried, randoms
   bufferedAt: null,
   landingStart: null,
   jumpStart: null,
+  fadeFrom: null,
+  fadeStart: null,
 });
 
 const distanceAt = (state: State, time: number): number =>
@@ -213,6 +228,16 @@ const nextSpeedUpStart = (state: State, ramp: Ramp, time: number): number | null
 const nextLandingStart = (state: State, panda: Panda, time: number): number | null =>
   state.panda.height > 0 && panda.height === 0 ? time : state.landingStart;
 
+const fadeDone = (state: State, time: number): boolean =>
+  state.fadeStart !== null && time - state.fadeStart >= BIOME_FADE_MS;
+
+const nextFade = (state: State, score: number, time: number): Pick<State, "fadeFrom" | "fadeStart"> =>
+  biomeFor(score) === biomeFor(state.score)
+    ? fadeDone(state, time)
+      ? { fadeFrom: null, fadeStart: null }
+      : { fadeFrom: state.fadeFrom, fadeStart: state.fadeStart }
+    : { fadeFrom: biomeFor(state.score), fadeStart: time };
+
 const moveOn = (state: State, ms: number, randoms: Randoms): State => {
   const time = state.time + ms;
   const distance = distanceAt(state, time);
@@ -236,6 +261,7 @@ const moveOn = (state: State, ms: number, randoms: Randoms): State => {
     speedUpStart: nextSpeedUpStart(state, ramp, time),
     columns: moveColumns(state.columns, distance),
     clouds: moveClouds(state.clouds, time + state.idle, randoms.clouds),
+    ...nextFade(state, score, time),
   };
 };
 
@@ -421,16 +447,47 @@ const scoreViewOf = (state: State) => ({
   bestMarker: liveBestMarker(state),
 });
 
-const sceneryViewOf = (state: State) => ({
-  biome: biomeFor(state.score),
-  sky: biomeFor(state.score).sky,
-  stars: starsFor(state.score),
-  floorScroll: currentDistance(state) % TILE_SIZE,
-  hillsScroll: hillsScrollFor(currentDistance(state)),
-  hillColor: biomeFor(state.score).hills,
-  boxes: boxesOf(state.columns, currentDistance(state), state.hitColumn),
-  clouds: cloudsOf(state.clouds, clockOf(state)),
-});
+const fadeElapsed = (state: State): number | null =>
+  state.fadeStart === null ? null : state.time - state.fadeStart;
+
+const sceneryPairOf = (state: State) => {
+  const to = biomeFor(state.score);
+  return {
+    from: state.fadeFrom ?? to,
+    to,
+    progress: biomeFadeProgress(fadeElapsed(state)),
+  };
+};
+
+const sceneryLayerOf = (from: Biome, to: Biome, progress: number) => {
+  const fading = Number(progress < 1);
+  return {
+    base: fading === 0 ? to : from,
+    overlay: to,
+    baseAlpha: 1 - fading * progress,
+    overlayAlpha: fading * progress,
+    overlayVisible: Boolean(fading),
+  };
+};
+
+const sceneryViewOf = (state: State) => {
+  const { from, to, progress } = sceneryPairOf(state);
+  return {
+    biome: to,
+    sky: mixHex(from.sky, to.sky, progress),
+    stars: starsForFade(from, to, progress),
+    starsAlpha: starsAlphaFor(from, to, progress),
+    sceneryFrom: from,
+    sceneryTo: to,
+    sceneryFade: progress,
+    sceneryLayer: sceneryLayerOf(from, to, progress),
+    floorScroll: currentDistance(state) % TILE_SIZE,
+    hillsScroll: hillsScrollFor(currentDistance(state)),
+    hillColor: mixHex(from.hills, to.hills, progress),
+    boxes: boxesOf(state.columns, currentDistance(state), state.hitColumn),
+    clouds: cloudsOf(state.clouds, clockOf(state)),
+  };
+};
 
 const pandaViewOf = (state: State) => ({
   pandaX: PANDA_X,
