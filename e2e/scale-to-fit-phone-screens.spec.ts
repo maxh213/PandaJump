@@ -135,6 +135,44 @@ test.describe("Rule: The canvas scales to fit the viewport", () => {
   });
 });
 
+test.describe("Rule: The canvas stays clear of the device's safe area", () => {
+  test.describe("A notch or status bar inset at the top pushes the canvas below it", () => {
+    test.use({ viewport: { width: 390, height: 844 } });
+
+    test("A notch or status bar inset at the top pushes the canvas below it", async ({ page }) => {
+      await page.addInitScript(() => {
+        document.addEventListener("DOMContentLoaded", () => {
+          const style = document.createElement("style");
+          style.textContent = "body { padding-top: 47px; }";
+          document.head.append(style);
+          window.dispatchEvent(new Event("resize"));
+        });
+      });
+      await page.goto("./");
+      const box = await settledCanvasBox(page);
+      expect(box.y).toBeGreaterThanOrEqual(47);
+      expect(box.y + box.height).toBeLessThanOrEqual(844);
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBe(0);
+    });
+  });
+
+  test.describe("The viewport meta tag lets the page extend under the status bar", () => {
+    test("The viewport meta tag lets the page extend under the status bar", async ({ page }) => {
+      await page.goto("./");
+      const viewportMeta = await page.evaluate(
+        () => document.querySelector('meta[name="viewport"]')?.getAttribute("content") ?? "",
+      );
+      expect(viewportMeta).toContain("viewport-fit=cover");
+      expect(viewportMeta).toContain("user-scalable=no");
+      expect(viewportMeta).toContain("maximum-scale=1");
+    });
+  });
+});
+
 test.describe("Rule: Touch input on the game does not move the page", () => {
   test.describe("The canvas opts out of the browser's default touch scrolling and zooming", () => {
     test.use({ viewport: { width: 375, height: 667 }, hasTouch: true });

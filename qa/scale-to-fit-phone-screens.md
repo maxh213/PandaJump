@@ -9,4 +9,6 @@ Use a desktop browser with dev tools' device toolbar, and a real phone or touch 
 4. On the narrow phone emulation (or a real phone), tap the canvas. **Expected:** the panda jumps, exactly as a click does on desktop; the page does not scroll or pinch-zoom.
 5. On the narrow phone emulation, try to drag or pinch on the canvas. **Expected:** the page does not pan or zoom; only the game responds.
 6. View page source. **Expected:** `<head>` has a `viewport` meta tag with `width=device-width` and disables user scaling.
-7. Run `npx playwright test`. **Expected:** every scenario in `features/scale-to-fit-phone-screens.feature`, and every scenario in `features/phaser-4-core-run.feature`, has a passing test.
+7. On an iPhone with a notch, add the game to the home screen and open it from there. **Expected:** the score at the top-left and the "II" pause button at the top-right sit below the status bar and notch, not under them, and the whole canvas is visible without scrolling.
+8. View page source. **Expected:** the `viewport` meta tag also contains `viewport-fit=cover`, and the `apple-mobile-web-app-status-bar-style` meta tag is still `black-translucent`.
+9. Run `npx playwright test`. **Expected:** every scenario in `features/scale-to-fit-phone-screens.feature`, and every scenario in `features/phaser-4-core-run.feature`, has a passing test.

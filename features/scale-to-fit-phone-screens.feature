@@ -47,6 +47,19 @@ Feature: Panda Jump scales to fit phone screens
       And the browser viewport is resized to 1024 by 768 px
       Then the canvas is 400 by 490 px
 
+  Rule: The canvas stays clear of the device's safe area
+
+    Scenario: A notch or status bar inset at the top pushes the canvas below it
+      Given the device reports a 47 px safe area at the top of the screen
+      And the browser viewport is 390 by 844 px
+      Then the canvas starts at least 47 px from the top of the page
+      And the canvas is fully visible without scrolling
+      And the page has no horizontal scrollbar
+
+    Scenario: The viewport meta tag lets the page extend under the status bar
+      Then the viewport meta tag asks for viewport-fit cover
+      And the viewport meta tag still disables user scaling
+
   Rule: Touch input on the game does not move the page
 
     Scenario: The canvas opts out of the browser's default touch scrolling and zooming

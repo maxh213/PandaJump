@@ -43,9 +43,17 @@ const topScoresStore: TopScoresStore = { load: loadTopScores, save: saveTopScore
 
 const bestStore: BestStore = { load: loadBest, save: saveBest, topScores: topScoresStore };
 
+const bodyInsets = () => {
+  const style = getComputedStyle(document.body);
+  return {
+    horizontal: parseFloat(style.paddingLeft) + parseFloat(style.paddingRight),
+    vertical: parseFloat(style.paddingTop) + parseFloat(style.paddingBottom),
+  };
+};
+
 const fillsWithoutText = (gameDiv: HTMLElement): boolean => {
   const chromeHeight = document.documentElement.scrollHeight - gameDiv.getBoundingClientRect().height;
-  const containerWidth = gameDiv.parentElement?.clientWidth ?? window.innerWidth;
+  const containerWidth = document.body.clientWidth - bodyInsets().horizontal;
   return containerWidth >= CANVAS_WIDTH && window.innerHeight - chromeHeight >= CANVAS_HEIGHT;
 };
 
@@ -56,7 +64,11 @@ const fitGameContainer = (): void => {
   gameDiv.style.width = "";
   if (fillsWithoutText(gameDiv)) return;
   document.body.classList.add("fill-window");
-  const width = Math.min(window.innerWidth, (window.innerHeight * CANVAS_WIDTH) / CANVAS_HEIGHT);
+  const insets = bodyInsets();
+  const width = Math.min(
+    window.innerWidth - insets.horizontal,
+    ((window.innerHeight - insets.vertical) * CANVAS_WIDTH) / CANVAS_HEIGHT,
+  );
   gameDiv.style.width = `${width.toFixed(3)}px`;
 };
 
