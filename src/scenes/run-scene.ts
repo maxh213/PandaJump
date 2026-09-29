@@ -688,7 +688,7 @@ export class RunScene extends Phaser.Scene {
   }
 
   private drawImpactBurst(burst: { x: number; y: number; progress: number } | null): void {
-    this.impactBurst.clear().setVisible(false);
+    this.impactBurst.clear().setData("outer", 0).setVisible(false);
     [burst].filter(hasValue).forEach((spark) => {
       this.paintImpactBurst(spark);
     });
@@ -700,7 +700,7 @@ export class RunScene extends Phaser.Scene {
     burstRays(outer).forEach(([x1, y1, x2, y2]) => {
       this.impactBurst.lineBetween(x1, y1, x2, y2);
     });
-    this.impactBurst.setPosition(spark.x, spark.y).setAlpha(1 - spark.progress).setVisible(true);
+    this.impactBurst.setData("outer", outer).setPosition(spark.x, spark.y).setAlpha(1 - spark.progress).setVisible(true);
   }
 
   private readonly vibrateOnDeath = (gameOver: boolean): void => {

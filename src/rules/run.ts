@@ -312,10 +312,12 @@ const knockbackProgress = (deathElapsed: number): number => {
 const pandaXAt = (knockbackEndX: number, deathElapsed: number): number =>
   PANDA_X + (knockbackEndX - PANDA_X) * knockbackProgress(deathElapsed);
 
+const CORNER_CLIP = 12;
+
 const impactPoint = (column: Column, distance: number, height: number): { x: number; y: number } => {
   const left = columnX(column, distance);
   const columnTop = column.boxes * TILE_SIZE;
-  const corner = height > columnTop - TILE_SIZE;
+  const corner = height >= columnTop - CORNER_CLIP;
   return { x: left, y: FLOOR_Y - (corner ? columnTop : height) };
 };
 

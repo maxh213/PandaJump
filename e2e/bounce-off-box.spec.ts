@@ -99,12 +99,18 @@ test.describe("Rule: An impact burst and squash mark the hit, and respect reduce
     expect(diedAt.viewImpactBurst).not.toBeNull();
     expect(diedAt.panda.scaleX).toBeCloseTo(1.25, 1);
     expect(diedAt.panda.scaleY).toBeCloseTo(1.25, 1);
+    expect(diedAt.impactBurst.bounds.width).toBeGreaterThanOrEqual(28);
+    expect(diedAt.impactBurst.bounds.height).toBeGreaterThanOrEqual(28);
     const columnLeft = hitColumnLeft(diedAt);
     const startAlpha = diedAt.impactBurst.alpha;
+    const hitWidth = diedAt.impactBurst.bounds.width;
+    const hitHeight = diedAt.impactBurst.bounds.height;
     await advance(page, 100);
     const mid = await sample(page);
     expect(mid.impactBurst.visible).toBe(true);
     expect(mid.impactBurst.alpha).toBeLessThan(startAlpha);
+    expect(mid.impactBurst.bounds.width).toBeCloseTo(hitWidth, 0);
+    expect(mid.impactBurst.bounds.height).toBeCloseTo(hitHeight, 0);
     expect(mid.panda.scaleX).toBeCloseTo(1.25, 1);
     await advance(page, 150);
     expect((await sample(page)).viewImpactBurst).toBeNull();

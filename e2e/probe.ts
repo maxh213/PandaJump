@@ -105,7 +105,7 @@ export interface Sample {
   viewAirPuff: View["airPuff"];
   landingPuff: { x: number; y: number; alpha: number; visible: boolean };
   viewLandingPuff: View["landingPuff"];
-  impactBurst: { x: number; y: number; alpha: number; visible: boolean };
+  impactBurst: { x: number; y: number; alpha: number; visible: boolean; bounds: Bounds };
   viewImpactBurst: View["impactBurst"];
   sky: string;
   cameraSky: string;
@@ -184,6 +184,7 @@ interface GameGraphics {
   visible: boolean;
   depth: number;
   commandBuffer: number[];
+  getData: (key: string) => number;
 }
 
 interface GameNode {
@@ -277,6 +278,7 @@ export const installProbe = () => {
     const orderOf = (name: string) => scene.children.list.indexOf(named(name) as object as (typeof scene.children.list)[number]);
     const landingPuff = named("landingPuff") as GameGraphics;
     const impactBurst = named("impactBurst") as GameGraphics;
+    const burstOuter = impactBurst.getData("outer") || 0;
     const bounds = panda.getBounds();
     return {
       time: view.time,
@@ -426,7 +428,19 @@ export const installProbe = () => {
       viewAirPuff: view.airPuff,
       landingPuff: { x: landingPuff.x, y: landingPuff.y, alpha: landingPuff.alpha, visible: landingPuff.visible },
       viewLandingPuff: view.landingPuff,
-      impactBurst: { x: impactBurst.x, y: impactBurst.y, alpha: impactBurst.alpha, visible: impactBurst.visible },
+      impactBurst: {
+        x: impactBurst.x,
+        y: impactBurst.y,
+        alpha: impactBurst.alpha,
+        visible: impactBurst.visible,
+        bounds: {
+          x: impactBurst.x - burstOuter,
+          y: impactBurst.y - burstOuter,
+          width: burstOuter * 2,
+          height: burstOuter * 2,
+          bottom: impactBurst.y + burstOuter,
+        },
+      },
       viewImpactBurst: view.impactBurst,
       sky: view.sky,
       cameraSky: `#${scene.cameras.main.backgroundColor.color.toString(16).padStart(6, "0")}`,

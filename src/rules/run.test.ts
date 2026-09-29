@@ -992,6 +992,17 @@ test("a corner hit on a two-box column knocks the panda left clear and lands it 
   expect(run.view().pandaBottom).toBe(426);
 });
 
+test("a mid-air side hit on a one-box column puts the impact burst at the panda height", () => {
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  run.advance(2850);
+  run.jump();
+  const diedAt = untilDead(run);
+  expect(diedAt.pandaBottom).toBeLessThan(426);
+  expect(diedAt.pandaBottom).toBeGreaterThan(362);
+  expect(diedAt.impactBurst?.y).toBe(diedAt.pandaBottom);
+  expect(diedAt.impactBurst?.x).toBe(hitColumnLeft(diedAt));
+});
+
 test("impactBurst appears on the hit step and is gone after 250ms", () => {
   const run = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
   expect(untilDead(run).impactBurst).toMatchObject({ progress: 0 });
