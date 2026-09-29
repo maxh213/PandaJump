@@ -19,6 +19,8 @@ import type { Panda } from "./panda.ts";
 import { skyFor } from "./sky.ts";
 import { starsFor } from "./stars.ts";
 import type { Star } from "./stars.ts";
+import { insertScore } from "./top-scores.ts";
+import type { TopScoresStore } from "./top-scores.ts";
 import { FLOOR_Y, PANDA_X, TILE_SIZE, spawnGapForScore, speedForScore } from "./world.ts";
 
 interface View {
@@ -29,6 +31,7 @@ interface View {
   readonly gameOverScore: string;
   readonly scoreScale: number;
   readonly best: string;
+  readonly topScores: readonly number[];
   readonly newBest: boolean;
   readonly overtookBest: boolean;
   readonly speedUp: boolean;
@@ -82,6 +85,7 @@ interface State {
   readonly score: number;
   readonly scorePopStart: number | null;
   readonly best: number;
+  readonly topScores: readonly number[];
   readonly startingBest: number;
   readonly calloutStart: number | null;
   readonly speedUpStart: number | null;
@@ -111,6 +115,7 @@ const FIRST_RUN_FRAME = 17;
 const RUN_FRAMES = 6;
 const FRAMES_PER_MS = 15 / 1000;
 const NO_COLUMNS: readonly Column[] = [];
+const NO_SCORES: readonly number[] = [];
 const RESTART_FREEZE_MS = 500;
 const CALLOUT_DURATION_MS = 600;
 const SCORE_POP_PEAK = 1.3;
@@ -132,9 +137,9 @@ const STRETCH: Squash = { x: 0.8, y: 1.2 };
 const SQUASH: Squash = { x: 1.2, y: 0.8 };
 const PANDA_CENTER_X = PANDA_X + 12.5;
 
-type Carried = Pick<State, "restarts" | "best" | "hintPending">;
+type Carried = Pick<State, "restarts" | "best" | "topScores" | "hintPending">;
 
-const freshState = ({ restarts, best, hintPending }: Carried, randoms: Randoms): State => ({
+const freshState = ({ restarts, best, topScores, hintPending }: Carried, randoms: Randoms): State => ({
   ready: false,
   time: 0,
   rampTime: 0,
@@ -143,6 +148,7 @@ const freshState = ({ restarts, best, hintPending }: Carried, randoms: Randoms):
   score: 0,
   scorePopStart: null,
   best,
+  topScores,
   startingBest: best,
   calloutStart: null,
   speedUpStart: null,
@@ -353,6 +359,8 @@ const gameOverScoreOf = (state: State): string =>
     ? String(state.score)
     : String(Math.floor((state.score * state.deathElapsed) / RESTART_FREEZE_MS));
 
+const topScoresOf = (state: State): readonly number[] => (state.ready ? state.topScores : NO_SCORES);
+
 const viewOf = (state: State): View => ({
   ready: state.ready,
   time: state.time,
@@ -361,6 +369,7 @@ const viewOf = (state: State): View => ({
   gameOverScore: gameOverScoreOf(state),
   scoreScale: scoreScaleOf(state),
   best: String(state.best),
+  topScores: topScoresOf(state),
   newBest: state.calloutStart !== null && state.time - state.calloutStart < CALLOUT_DURATION_MS,
   overtookBest: state.calloutStart !== null,
   speedUp: isSpeedUp(state),
@@ -421,7 +430,13 @@ const act = (state: State, randoms: Randoms): State => {
   if (state.deathElapsed === null) {
     return jumpLive(state);
   }
-  return canRestart(state) ? freshState({ restarts: state.restarts + 1, best: state.best, hintPending: state.hintPending }, randoms) : state;
+  const carried: Carried = {
+    restarts: state.restarts + 1,
+    best: state.best,
+    topScores: state.topScores,
+    hintPending: state.hintPending,
+  };
+  return canRestart(state) ? freshState(carried, randoms) : state;
 };
 
 const isFrozen = (state: State): boolean => state.ready || (state.paused && state.resumeElapsed === null);
@@ -433,11 +448,24 @@ const pausedState = (state: State): State =>
 
 const togglePause = (state: State): State => (state.paused && state.resumeElapsed === null ? resume(state) : pausedState(state));
 
+const noTopScores: TopScoresStore = { load: () => NO_SCORES, save: () => undefined };
+
+const recordFinishedRun = (before: State, after: State, store: TopScoresStore): State => {
+  if (before.deathElapsed !== null || after.deathElapsed === null) return after;
+  const topScores = insertScore(after.topScores, after.score);
+  store.save(topScores);
+  return { ...after, topScores };
+};
+
 export const createRun = (random: Random, cloudRandom: Random, store: BestStore): Run => {
+  const topScoresStore = store.topScores ?? noTopScores;
   const randoms: Randoms = { columns: random, clouds: cloudRandom };
   const loadedBest = store.load();
   let state: State = {
-    ...freshState({ restarts: 0, best: loadedBest, hintPending: loadedBest === 0 }, randoms),
+    ...freshState(
+      { restarts: 0, best: loadedBest, topScores: topScoresStore.load(), hintPending: loadedBest === 0 },
+      randoms,
+    ),
     ready: true,
   };
   return {
@@ -456,7 +484,7 @@ export const createRun = (random: Random, cloudRandom: Random, store: BestStore)
       if (next.best !== state.best) {
         store.save(next.best);
       }
-      state = next;
+      state = recordFinishedRun(state, next, topScoresStore);
     },
     view: () => viewOf(state),
   };

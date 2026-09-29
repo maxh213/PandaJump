@@ -51,6 +51,10 @@ const STAR_COLOR = 0xffffff;
 const CENTER_X = CANVAS_WIDTH / 2;
 const SPEED_UP_Y = 120;
 const DOUBLE_JUMP_HINT_Y = 150;
+const TOP_SCORES_HEADING_Y = 166;
+const TOP_SCORES_FIRST_Y = 196;
+const TOP_SCORES_LINE_HEIGHT = 20;
+const TOP_SCORES_LINES = 5;
 const GAME_OVER_Y = 190;
 const GAME_OVER_MEDAL_Y = 226;
 const GAME_OVER_SCORE_Y = 252;
@@ -135,6 +139,8 @@ export class RunScene extends Phaser.Scene {
   private wasGameOver = false;
   private copied = false;
   private readyPrompt!: Phaser.GameObjects.Text;
+  private topScoresHeading!: Phaser.GameObjects.Text;
+  private topScoreLines!: Phaser.GameObjects.Text[];
 
   constructor(run: Run, timeScale: number, reducedMotion: boolean) {
     super("run");
@@ -190,8 +196,28 @@ export class RunScene extends Phaser.Scene {
     this.doubleJumpHint = this.hintText();
     this.countdownText = this.centeredText(GAME_OVER_Y, "", "40px").setName("countdownText");
     this.readyPrompt = this.centeredText(GAME_OVER_PROMPT_Y, "Tap or press Space to start", "20px").setName("readyPrompt");
+    this.createTopScoresTexts();
     this.wireInput();
     this.draw();
+  }
+
+  private createTopScoresTexts(): void {
+    this.topScoresHeading = this.centeredText(TOP_SCORES_HEADING_Y, "Your best runs", "20px").setName("topScoresHeading");
+    this.topScoreLines = Array.from({ length: TOP_SCORES_LINES }, (_, index) =>
+      this.centeredText(TOP_SCORES_FIRST_Y + index * TOP_SCORES_LINE_HEIGHT, "", "16px").setName(`topScoreLine${String(index)}`),
+    );
+  }
+
+  private drawReady(view: ReturnType<Run["view"]>): void {
+    this.readyPrompt.setVisible(view.ready);
+    this.drawTopScores(view.topScores);
+  }
+
+  private drawTopScores(scores: readonly number[]): void {
+    this.topScoresHeading.setVisible(scores.length > 0);
+    this.topScoreLines.forEach((line, index) => {
+      line.setVisible(index < scores.length).setText(`${String(index + 1)}. ${String(scores[index])}`);
+    });
   }
 
   private createHills(): void {
@@ -479,7 +505,7 @@ export class RunScene extends Phaser.Scene {
     const countdownKey = String(view.countdown) as "3" | "2" | "1" | "null";
     this.countdownText.setVisible(view.countdown !== null).setText(COUNTDOWN_LABELS[countdownKey]);
     this.vibrateOnDeath(view.gameOver);
-    this.readyPrompt.setVisible(view.ready);
+    this.drawReady(view);
     this.refreshGroup(this.boxes, view.boxes, (box) => {
       this.showBox(box);
     });

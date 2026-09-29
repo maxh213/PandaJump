@@ -1,9 +1,10 @@
 import { readOptions } from "./options/index.ts";
-import { CANVAS_HEIGHT, CANVAS_WIDTH, createRun } from "./rules/index.ts";
-import type { BestStore } from "./rules/index.ts";
+import { CANVAS_HEIGHT, CANVAS_WIDTH, createRun, parseTopScores, seedTopScores } from "./rules/index.ts";
+import type { BestStore, TopScoresStore } from "./rules/index.ts";
 import { startGame } from "./scenes/index.ts";
 
 const BEST_KEY = "pandaJump.best";
+const TOP_SCORES_KEY = "pandaJump.topScores";
 
 const loadBest = (): number => {
   try {
@@ -22,7 +23,25 @@ const saveBest = (best: number): void => {
   }
 };
 
-const bestStore: BestStore = { load: loadBest, save: saveBest };
+const loadTopScores = (): readonly number[] => {
+  try {
+    return parseTopScores(localStorage.getItem(TOP_SCORES_KEY)) ?? seedTopScores(loadBest());
+  } catch {
+    return seedTopScores(loadBest());
+  }
+};
+
+const saveTopScores = (scores: readonly number[]): void => {
+  try {
+    localStorage.setItem(TOP_SCORES_KEY, JSON.stringify(scores));
+  } catch {
+    return;
+  }
+};
+
+const topScoresStore: TopScoresStore = { load: loadTopScores, save: saveTopScores };
+
+const bestStore: BestStore = { load: loadBest, save: saveBest, topScores: topScoresStore };
 
 const fitGameContainer = (): void => {
   const gameDiv = document.getElementById("game_div");

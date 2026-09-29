@@ -74,3 +74,4 @@ add a line merge cleanly instead of conflicting.
 - The live top-left score turns bronze, silver, gold or platinum the moment the run reaches 10, 20, 30 or 40, and is white again after a restart
 - The distant hills now sit flush on the top of the grass, with no strip of sky between them, in all three skies
 - Holding P or Escape after it paused the run no longer resumes it through keyboard auto-repeat; only a fresh press resumes
+- The ready screen lists the player's five best final scores under "Your best runs", kept in localStorage under pandaJump.topScores

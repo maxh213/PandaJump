@@ -66,6 +66,7 @@ test("a run starts ready, with the panda on the floor, score 0 and no boxes", ()
     gameOverScore: "0",
     scoreScale: 1,
     best: "0",
+    topScores: [],
     newBest: false,
     overtookBest: false,
     speedUp: false,
@@ -1321,4 +1322,51 @@ test("the shape holds while paused", () => {
   run.pause();
   run.advance(500);
   expect(scaleOf(run)[1]).toBeCloseTo(1.1);
+});
+
+const recordingTopScores = (loaded: readonly number[]) => {
+  const saves: (readonly number[])[] = [];
+  return { saves, store: { load: () => 0, save: () => undefined, topScores: { load: () => loaded, save: (scores: readonly number[]) => saves.push(scores) } } };
+};
+
+test("the ready view lists the stored top scores, and the list is gone once the run starts", () => {
+  const { store } = recordingTopScores([7, 4]);
+  const run = createRun(oneBoxEach(), oneBoxEach(), store);
+  expect(run.view().topScores).toEqual([7, 4]);
+  run.jump();
+  expect(run.view().topScores).toEqual([]);
+});
+
+test("a run that ends above 0 is inserted into the top scores and saved once", () => {
+  const { saves, store } = recordingTopScores([7, 1]);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), store);
+  run.advance(2700);
+  run.jump();
+  run.advance(3000);
+  expect(run.view()).toMatchObject({ gameOver: true, score: "1", topScores: [] });
+  expect(saves).toEqual([[7, 1, 1]]);
+  run.advance(600);
+  expect(saves).toHaveLength(1);
+});
+
+test("a run that ends on 0 saves nothing new to the top scores", () => {
+  const { saves, store } = recordingTopScores([]);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), store);
+  run.advance(5000);
+  expect(run.view()).toMatchObject({ gameOver: true, score: "0" });
+  expect(saves).toEqual([[]]);
+});
+
+test("restarting keeps the top scores so later runs add to them", () => {
+  const { saves, store } = recordingTopScores([]);
+  const run = createStartedRun(oneBoxEach(), oneBoxEach(), store);
+  run.advance(2700);
+  run.jump();
+  run.advance(3000);
+  run.advance(600);
+  run.jump();
+  run.advance(2700);
+  run.jump();
+  run.advance(3000);
+  expect(saves).toEqual([[1], [1, 1]]);
 });

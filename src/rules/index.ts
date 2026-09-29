@@ -1,6 +1,8 @@
 export { createRun } from "./run.ts";
 export type { Run } from "./run.ts";
 export type { BestStore } from "./best.ts";
+export { parseTopScores, seedTopScores } from "./top-scores.ts";
+export type { TopScoresStore } from "./top-scores.ts";
 export type { Box } from "./columns.ts";
 export type { Cloud } from "./clouds.ts";
 export type { Star } from "./stars.ts";
