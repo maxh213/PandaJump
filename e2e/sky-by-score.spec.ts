@@ -50,7 +50,7 @@ test.describe("Rule: The sky turns sunset-orange the instant the score reaches 2
     expectSky(state, "#f4a261");
   });
 
-  test("The sky is still sunset just before the night threshold", async ({ page }) => {
+  test("The sky is still sunset just before the snowfield threshold", async ({ page }) => {
     test.setTimeout(120_000);
     await playThroughColumn(page, 39);
     const state = await sample(page);
@@ -59,23 +59,41 @@ test.describe("Rule: The sky turns sunset-orange the instant the score reaches 2
   });
 });
 
-test.describe("Rule: The sky turns night-blue the instant the score reaches 40", () => {
-  test("The sky turns night the moment the score reaches 40", async ({ page }) => {
+test.describe("Rule: The sky turns pale snowfield-blue the instant the score reaches 40", () => {
+  test("The sky turns pale blue the moment the score reaches 40", async ({ page }) => {
     test.setTimeout(120_000);
     await playThroughColumn(page, 40);
     const state = await sample(page);
     expect(state.score.text).toBe("40");
-    expectSky(state, "#2b2d42");
+    expectSky(state, "#a9c9e0");
   });
 });
 
-test.describe("Rule: A new run always starts back at day, even after a night-time death", () => {
+test.describe("Rule: The sky turns dusk-grey the instant the score reaches 60", () => {
+  test("The sky is still pale blue just before the industrial threshold", async ({ page }) => {
+    test.setTimeout(240_000);
+    await playThroughColumn(page, 59);
+    const state = await sample(page);
+    expect(state.score.text).toBe("59");
+    expectSky(state, "#a9c9e0");
+  });
+
+  test("The sky turns dusk-grey the moment the score reaches 60", async ({ page }) => {
+    test.setTimeout(240_000);
+    await playThroughColumn(page, 60);
+    const state = await sample(page);
+    expect(state.score.text).toBe("60");
+    expectSky(state, "#4a4e69");
+  });
+});
+
+test.describe("Rule: A new run always starts back at day, even after a snowfield death", () => {
   test("The sky resets to day after a restart following a death at score 40 or more", async ({ page }) => {
     test.setTimeout(120_000);
     await openGame(page, rampedRandom(40));
     await startRun(page);
     await play(page, jumpTimesFor(1, 40), scoreReadAt(40));
-    expectSky(await sample(page), "#2b2d42");
+    expectSky(await sample(page), "#a9c9e0");
     const restart = await untilRestart(page);
     expect(restart.after.score.text).toBe("0");
     expectSky(restart.after, "#71c5cf");

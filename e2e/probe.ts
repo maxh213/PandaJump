@@ -97,6 +97,7 @@ export interface Sample {
   viewLandingPuff: View["landingPuff"];
   sky: string;
   cameraSky: string;
+  biome: string;
 }
 
 interface Bounds {
@@ -375,6 +376,7 @@ export const installProbe = () => {
       viewLandingPuff: view.landingPuff,
       sky: view.sky,
       cameraSky: `#${scene.cameras.main.backgroundColor.color.toString(16).padStart(6, "0")}`,
+      biome: view.biome.name,
     };
   };
   const advance = (ms: number): Sample[] => {

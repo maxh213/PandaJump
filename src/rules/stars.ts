@@ -1,9 +1,9 @@
+import { biomeFor } from "./biome.ts";
+
 export interface Star {
   readonly x: number;
   readonly y: number;
 }
-
-const NIGHT_SCORE = 40;
 
 const NIGHT_STARS: readonly Star[] = [
   { x: 24, y: 90 },
@@ -20,4 +20,4 @@ const NIGHT_STARS: readonly Star[] = [
   { x: 47, y: 186 },
 ];
 
-export const starsFor = (score: number): readonly Star[] => (score >= NIGHT_SCORE ? NIGHT_STARS : []);
+export const starsFor = (score: number): readonly Star[] => (biomeFor(score).stars ? NIGHT_STARS : []);

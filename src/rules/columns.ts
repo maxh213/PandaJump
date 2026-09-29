@@ -1,8 +1,8 @@
+import { biomeFor } from "./biome.ts";
+import type { BoxTexture } from "./biome.ts";
 import { CANVAS_WIDTH, FLOOR_Y, PANDA_X, TILE_SIZE } from "./world.ts";
 
 export type Random = () => number;
-
-type BoxTexture = "dirt_06.png" | "ice_06.png" | "metal_06.png" | "sand_06.png" | "snow_06.png";
 
 export interface Column {
   readonly spawnDistance: number;
@@ -25,31 +25,18 @@ const FEET_FORGIVENESS = 4;
 const SECOND_COLUMN_SCORE = 10;
 const MARKER_GAP = 8;
 
-const DEFAULT_TEXTURE: BoxTexture = "dirt_06.png";
-
-const TEXTURE_THRESHOLDS: readonly (readonly [number, BoxTexture])[] = [
-  [0, DEFAULT_TEXTURE],
-  [0.2, "ice_06.png"],
-  [0.4, "metal_06.png"],
-  [0.6, "sand_06.png"],
-  [0.8, "snow_06.png"],
-];
-
 const columnX = (column: Column, distance: number): number =>
   CANVAS_WIDTH + column.offset - (distance - column.spawnDistance);
 
-const drawTexture = (random: Random): BoxTexture => {
-  const value = random();
-  return TEXTURE_THRESHOLDS.reduce<BoxTexture>(
-    (texture, [threshold, candidate]) => (value >= threshold ? candidate : texture),
-    DEFAULT_TEXTURE,
-  );
+const skipTextureDraw = (random: Random): void => {
+  random();
 };
 
 export const spawnColumns = (distance: number, score: number, random: Random): Column[] => {
   const boxes = Math.floor(random() * 2) + 1;
   const second = Math.floor(random() * 3) === 0 && score > SECOND_COLUMN_SCORE;
-  const texture = drawTexture(random);
+  skipTextureDraw(random);
+  const texture = biomeFor(score).column;
   const front = { spawnDistance: distance, offset: 0, boxes, scoresWhenCleared: !second, texture };
   return second ? [front, { ...front, offset: TILE_SIZE, scoresWhenCleared: true }] : [front];
 };

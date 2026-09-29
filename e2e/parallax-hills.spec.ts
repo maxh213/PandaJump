@@ -10,7 +10,8 @@ const HILLS_REPEAT = 160;
 const FLOOR_REPEAT = 64;
 const DAY = "#4a9ba6";
 const SUNSET = "#c97b3a";
-const NIGHT = "#1a1b2b";
+const SNOW = "#ffffff";
+const INDUSTRIAL = "#22223b";
 
 const rampedRandom = (column: number): number[] => Array.from({ length: column + EXTRA_COLUMNS }, () => oneBox).flat();
 
@@ -57,9 +58,9 @@ test.describe("Rule: The hills sit in front of the sky and behind everything els
     expect(state.hills.depth).toBeLessThan(state.pandaShadow.depth);
   });
 
-  test("The hills are drawn in front of the stars at night", async ({ page }) => {
-    test.setTimeout(120_000);
-    await playThroughColumn(page, 40);
+  test("The hills are drawn in front of the stars at dusk", async ({ page }) => {
+    test.setTimeout(240_000);
+    await playThroughColumn(page, 60);
     const state = await sample(page);
     expect(state.stars.length).toBeGreaterThan(0);
     state.stars.forEach((star) => {
@@ -148,19 +149,19 @@ test.describe("Rule: The hill colour follows the sky", () => {
     expect(state.hills.key).toBe(`hills-${SUNSET}`);
   });
 
-  test("The hills turn night-coloured at score 40", async ({ page }) => {
+  test("The hills turn white at score 40", async ({ page }) => {
     test.setTimeout(120_000);
     await playThroughColumn(page, 40);
     const state = await sample(page);
-    expect(state.sky).toBe("#2b2d42");
-    expect(state.viewHills.color).toBe(NIGHT);
-    expect(state.hills.key).toBe(`hills-${NIGHT}`);
+    expect(state.sky).toBe("#a9c9e0");
+    expect(state.viewHills.color).toBe(SNOW);
+    expect(state.hills.key).toBe(`hills-${SNOW}`);
   });
 
   test("The same score always gives the same hill colour, and a restart returns to the day colour", async ({ page }) => {
     test.setTimeout(120_000);
     await playThroughColumn(page, 40);
-    expect((await sample(page)).hills.key).toBe(`hills-${NIGHT}`);
+    expect((await sample(page)).hills.key).toBe(`hills-${SNOW}`);
     const restart = await untilRestart(page);
     expect(restart.after.score.text).toBe("0");
     expect(restart.after.viewHills.color).toBe(DAY);
@@ -215,9 +216,9 @@ test.describe("Rule: The bottom of the hills meets the top of the ground", () =>
     await expectJoinAtEveryScroll(page, SUNSET);
   });
 
-  test("The hills meet the ground under the night sky", async ({ page }) => {
-    test.setTimeout(120_000);
-    await playThroughColumn(page, 40);
-    await expectJoinAtEveryScroll(page, NIGHT);
+  test("The hills meet the ground under the industrial sky", async ({ page }) => {
+    test.setTimeout(240_000);
+    await playThroughColumn(page, 60);
+    await expectJoinAtEveryScroll(page, INDUSTRIAL);
   });
 });

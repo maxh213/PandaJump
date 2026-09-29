@@ -77,3 +77,4 @@ add a line merge cleanly instead of conflicting.
 - The ready screen lists the player's five best final scores under "Your best runs", kept in localStorage under pandaJump.topScores
 - On small and landscape phone screens the game canvas fills the whole viewport at its 400:490 shape, with the title, controls and GitHub link below it, instead of shrinking under the page text
 - The 'II' pause button stays hidden on the ready screen, so a tap in the top-right corner of a fresh page starts the run instead of doing nothing, and appears once the run starts
+- The run moves through a new biome every 20 points (meadow, desert, snowfield, industrial, then repeating), each with its own floor, column texture, sky and hill colour; the sky change and night stars now belong to the biomes

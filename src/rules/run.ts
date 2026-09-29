@@ -11,12 +11,13 @@ import {
 import type { Box, Column, Random } from "./columns.ts";
 import { cloudsOf, initialClouds, moveClouds } from "./clouds.ts";
 import type { Cloud, CloudState } from "./clouds.ts";
-import { hillColorFor, hillsScrollFor } from "./hills.ts";
+import { biomeFor } from "./biome.ts";
+import type { Biome } from "./biome.ts";
+import { hillsScrollFor } from "./hills.ts";
 import { medalFor, medalGoalFor } from "./medal.ts";
 import type { Medal } from "./medal.ts";
 import { fall, jump, standingPanda } from "./panda.ts";
 import type { Panda } from "./panda.ts";
-import { skyFor } from "./sky.ts";
 import { starsFor } from "./stars.ts";
 import type { Star } from "./stars.ts";
 import { insertScore } from "./top-scores.ts";
@@ -37,6 +38,7 @@ interface View {
   readonly speedUp: boolean;
   readonly medal: Medal;
   readonly medalGoal: string;
+  readonly biome: Biome;
   readonly sky: string;
   readonly stars: readonly Star[];
   readonly pandaX: number;
@@ -375,14 +377,15 @@ const viewOf = (state: State): View => ({
   speedUp: isSpeedUp(state),
   medal: medalFor(state.score),
   medalGoal: medalGoalFor(medalFor(state.score)),
-  sky: skyFor(state.score),
+  biome: biomeFor(state.score),
+  sky: biomeFor(state.score).sky,
   stars: starsFor(state.score),
   pandaX: PANDA_X,
   pandaBottom: FLOOR_Y - state.panda.height,
   pandaFrame: pandaFrameOf(state),
   floorScroll: currentDistance(state) % TILE_SIZE,
   hillsScroll: hillsScrollFor(currentDistance(state)),
-  hillColor: hillColorFor(state.score),
+  hillColor: biomeFor(state.score).hills,
   boxes: boxesOf(state.columns, currentDistance(state), state.hitColumn),
   clouds: cloudsOf(state.clouds, state.time),
   gameOver: state.deathElapsed !== null,

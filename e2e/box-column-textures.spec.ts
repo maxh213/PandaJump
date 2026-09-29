@@ -5,24 +5,25 @@ import { advanceTo, columnsAt, openGame, play, pressSpace, sample, standardJumps
 const TEXTURE_SCRIPT = [0.25, 0.5, 0, 0.25, 0.5, 0.2, 0.25, 0.5, 0.4, 0.25, 0.5, 0.6, 0.25, 0.5, 0.8];
 const STACKED_SCRIPT = [0.75, 0.5, 0];
 const PAIRED_TEXTURE_SCRIPT = [0.25, 0, 0.6];
+const MEADOW_TEXTURE = "dirt_06.png";
 
-const SPAWN_TEXTURES = ["dirt_06.png", "ice_06.png", "metal_06.png", "sand_06.png", "snow_06.png"];
+const SPAWN_COLUMNS = [1, 2, 3, 4, 5];
 
 const clearColumnAt = async (page: Page, spawnTime: number) => {
   await advanceTo(page, spawnTime + 1200);
   await pressSpace(page);
 };
 
-test.describe("Rule: Box columns draw from a small set of ground textures", () => {
-  test("Five columns in a row use five different ground textures from the random source", async ({ page }) => {
+test.describe("Rule: Box columns take the texture of their biome", () => {
+  test("Five meadow columns in a row all use the meadow texture whatever the random source draws", async ({ page }) => {
     await openGame(page, TEXTURE_SCRIPT);
     await startRun(page);
-    for (const [index, texture] of SPAWN_TEXTURES.entries()) {
-      const spawnTime = 1500 * (index + 1);
+    for (const number of SPAWN_COLUMNS) {
+      const spawnTime = 1500 * number;
       await advanceTo(page, spawnTime + 100);
       const column = columnsAt(await sample(page)).find((entry) => entry.x === 380);
       expect(column?.boxes).toHaveLength(1);
-      expect(column?.boxes.every((box) => box.key === texture)).toBe(true);
+      expect(column?.boxes.every((box) => box.key === MEADOW_TEXTURE)).toBe(true);
       await clearColumnAt(page, spawnTime);
     }
   });
@@ -47,7 +48,7 @@ test.describe("Rule: Every box in one column uses the same texture as the rest o
     const columns = columnsAt(await sample(page)).filter((column) => column.x >= 100);
     expect(columns.map((column) => column.x)).toEqual([300, 364]);
     for (const column of columns) {
-      expect(column.boxes.map((box) => box.key)).toEqual(["sand_06.png"]);
+      expect(column.boxes.map((box) => box.key)).toEqual([MEADOW_TEXTURE]);
     }
   });
 });
@@ -60,14 +61,14 @@ test.describe("Rule: Box textures are deterministic under the injected random so
     await startRun(first);
     await openGame(second, TEXTURE_SCRIPT);
     await startRun(second);
-    for (const [index, texture] of SPAWN_TEXTURES.entries()) {
-      const spawnTime = 1500 * (index + 1);
+    for (const column of SPAWN_COLUMNS) {
+      const spawnTime = 1500 * column;
       await advanceTo(first, spawnTime + 100);
       await advanceTo(second, spawnTime + 100);
       const a = columnsAt(await sample(first)).find((entry) => entry.x === 380);
       const b = columnsAt(await sample(second)).find((entry) => entry.x === 380);
-      expect(a?.boxes.map((box) => box.key)).toEqual([texture]);
-      expect(b?.boxes.map((box) => box.key)).toEqual([texture]);
+      expect(a?.boxes.map((box) => box.key)).toEqual([MEADOW_TEXTURE]);
+      expect(b?.boxes.map((box) => box.key)).toEqual([MEADOW_TEXTURE]);
       await clearColumnAt(first, spawnTime);
       await clearColumnAt(second, spawnTime);
     }

@@ -24,20 +24,20 @@ const playThroughColumn = async (page: Page, column: number, box = oneBox): Prom
 
 const positions = (state: Sample): string[] => state.stars.map((star) => `${String(star.x)},${String(star.y)}`).sort();
 
-test.describe("Rule: Stars appear the instant the score reaches 40", () => {
-  test("No star is visible at a score of 39", async ({ page }) => {
-    test.setTimeout(120_000);
-    await playThroughColumn(page, 39);
+test.describe("Rule: Stars appear the instant the score reaches 60", () => {
+  test("No star is visible at a score of 59", async ({ page }) => {
+    test.setTimeout(240_000);
+    await playThroughColumn(page, 59);
     const state = await sample(page);
-    expect(state.score.text).toBe("39");
+    expect(state.score.text).toBe("59");
     expect(state.stars).toEqual([]);
   });
 
-  test("Exactly 12 stars are visible at a score of 40, all high in the sky", async ({ page }) => {
-    test.setTimeout(120_000);
-    await playThroughColumn(page, 40);
+  test("Exactly 12 stars are visible at a score of 60, all high in the sky", async ({ page }) => {
+    test.setTimeout(240_000);
+    await playThroughColumn(page, 60);
     const state = await sample(page);
-    expect(state.score.text).toBe("40");
+    expect(state.score.text).toBe("60");
     expect(state.stars).toHaveLength(STARS);
     state.stars.forEach((star) => {
       expect(star.y).toBeLessThan(200);
@@ -49,10 +49,10 @@ test.describe("Rule: Stars appear the instant the score reaches 40", () => {
 
 test.describe("Rule: The stars are the same on every run and every page load", () => {
   test("Different random values give the same star positions", async ({ page }) => {
-    test.setTimeout(120_000);
-    await playThroughColumn(page, 40);
+    test.setTimeout(240_000);
+    await playThroughColumn(page, 60);
     const first = positions(await sample(page));
-    await playThroughColumn(page, 40, [0.25, 0.5, 0.9]);
+    await playThroughColumn(page, 60, [0.25, 0.5, 0.9]);
     const second = positions(await sample(page));
     expect(first).toHaveLength(STARS);
     expect(second).toEqual(first);
@@ -60,17 +60,17 @@ test.describe("Rule: The stars are the same on every run and every page load", (
 });
 
 test.describe("Rule: The stars stay on the game-over screen and go away on restart", () => {
-  test("Stars stay visible after a death at a score of 40 or more", async ({ page }) => {
-    test.setTimeout(120_000);
-    await playThroughColumn(page, 40);
+  test("Stars stay visible after a death at a score of 60 or more", async ({ page }) => {
+    test.setTimeout(240_000);
+    await playThroughColumn(page, 60);
     const restart = await untilRestart(page);
     expect(restart.diedAt.gameOver).toBe(true);
     expect(restart.diedAt.stars).toHaveLength(STARS);
   });
 
   test("No star is visible after restarting", async ({ page }) => {
-    test.setTimeout(120_000);
-    await playThroughColumn(page, 40);
+    test.setTimeout(240_000);
+    await playThroughColumn(page, 60);
     const restart = await untilRestart(page);
     expect(restart.after.score.text).toBe("0");
     expect(restart.after.stars).toEqual([]);
@@ -79,8 +79,8 @@ test.describe("Rule: The stars stay on the game-over screen and go away on resta
 
 test.describe("Rule: Stars draw behind everything else", () => {
   test("Every star has a lower depth than the clouds, box columns and panda", async ({ page }) => {
-    test.setTimeout(120_000);
-    await playThroughColumn(page, 40);
+    test.setTimeout(240_000);
+    await playThroughColumn(page, 60);
     const state = await sample(page);
     expect(state.clouds.length).toBeGreaterThan(0);
     expect(state.boxes.length).toBeGreaterThan(0);

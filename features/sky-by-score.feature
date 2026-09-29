@@ -1,4 +1,4 @@
-Feature: Panda Jump turns the sky to sunset at score 20 and to night at score 40
+Feature: Panda Jump changes the sky with the biome at scores 20, 40 and 60
   As a player on a long run
   I want the sky to change as my score climbs
   So that a long run feels like a journey and mastery is rewarded with something to see
@@ -11,8 +11,9 @@ Feature: Panda Jump turns the sky to sunset at score 20 and to night at score 40
   20 and then closer together, as features/difficulty-ramp.feature describes; the score reads n the
   moment column n is cleared.
   "The sky" means both `window.pandaJump.run.view().sky` and the main camera's background colour,
-  which always match: "#71c5cf" (day) below a score of 20, "#f4a261" (sunset) from 20 to 39, and
-  "#2b2d42" (night) from 40 upward.
+  which always match, and which are part of the biome as features/biomes.feature describes: "#71c5cf" (day)
+  below a score of 20, "#f4a261" (sunset) from 20 to 39, "#a9c9e0" (pale snowfield blue) from 40 to 59 and
+  "#4a4e69" (industrial dusk grey) from 60 to 79, after which the sequence repeats.
 
   Background:
     Given I open the Panda Jump page
@@ -35,23 +36,35 @@ Feature: Panda Jump turns the sky to sunset at score 20 and to night at score 40
       Then the score reads "20"
       And the sky is "#f4a261"
 
-    Scenario: The sky is still sunset just before the night threshold
+    Scenario: The sky is still sunset just before the snowfield threshold
       Given I play the ramped schedule through column 39
       Then the score reads "39"
       And the sky is "#f4a261"
 
-  Rule: The sky turns night-blue the instant the score reaches 40
+  Rule: The sky turns pale snowfield-blue the instant the score reaches 40
 
-    Scenario: The sky turns night the moment the score reaches 40
+    Scenario: The sky turns pale blue the moment the score reaches 40
       Given I play the ramped schedule through column 40
       Then the score reads "40"
-      And the sky is "#2b2d42"
+      And the sky is "#a9c9e0"
 
-  Rule: A new run always starts back at day, even after a night-time death
+  Rule: The sky turns dusk-grey the instant the score reaches 60
+
+    Scenario: The sky is still pale blue just before the industrial threshold
+      Given I play the ramped schedule through column 59
+      Then the score reads "59"
+      And the sky is "#a9c9e0"
+
+    Scenario: The sky turns dusk-grey the moment the score reaches 60
+      Given I play the ramped schedule through column 60
+      Then the score reads "60"
+      And the sky is "#4a4e69"
+
+  Rule: A new run always starts back at day, even after a snowfield death
 
     Scenario: The sky resets to day after a restart following a death at score 40 or more
       Given I play the ramped schedule through column 40 and then stop jumping
-      Then the sky is "#2b2d42"
+      Then the sky is "#a9c9e0"
       When the panda touches the next column, the game freezes, and tapping to play again restarts it
       Then the score reads "0"
       And the sky is "#71c5cf"

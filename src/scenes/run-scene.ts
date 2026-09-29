@@ -9,8 +9,8 @@ import rockUrl from "../../assets/rock_06.png?no-inline";
 import grassUrl from "../../assets/top_grass_01.png?no-inline";
 import cloud02Url from "../../assets/cloud_02.png?no-inline";
 import cloud05Url from "../../assets/cloud_05.png?no-inline";
-import { CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, HILLS_REPEAT_WIDTH, TILE_SIZE } from "../rules/index.ts";
-import type { Box, Cloud, Medal, Run, Star } from "../rules/index.ts";
+import { BIOMES, MEADOW, CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, HILLS_REPEAT_WIDTH, TILE_SIZE } from "../rules/index.ts";
+import type { Biome, Box, Cloud, Medal, Run, Star } from "../rules/index.ts";
 
 const OUTLINE = { stroke: "#000000", strokeThickness: 4 };
 const HIT_COLUMN_TINT = 0xff6666;
@@ -26,6 +26,13 @@ const PAD_JUMP_BUTTON = 0;
 const PAD_PAUSE_BUTTON = 9;
 const GRASS_Y = 392;
 const GRASS_SURFACE_Y = GRASS_Y + 32;
+const SOLID_TOP_Y = GRASS_SURFACE_Y - 1;
+const TOP_STRIP_Y: Record<Biome["top"], number> = {
+  "top_grass_01.png": GRASS_Y,
+  "sand_06.png": SOLID_TOP_Y,
+  "snow_06.png": SOLID_TOP_Y,
+  "metal_06.png": SOLID_TOP_Y,
+};
 const AIR_PUFF_RADIUS = 8;
 const LANDING_PUFF_RADIUS = 5;
 const LANDING_PUFF_OFFSET = 10;
@@ -44,8 +51,7 @@ const HILL_SHAPES: readonly (readonly [number, number, number])[] = [
   [45, 45, 50],
   [125, 45, HILLS_HEIGHT],
 ];
-const DAY_HILL_COLOR = "#4a9ba6";
-const HILL_COLORS = [DAY_HILL_COLOR, "#c97b3a", "#1a1b2b"];
+const DAY_HILL_COLOR = MEADOW.hills;
 const STAR_RADIUS = 2;
 const STAR_COLOR = 0xffffff;
 const CENTER_X = CANVAS_WIDTH / 2;
@@ -221,8 +227,8 @@ export class RunScene extends Phaser.Scene {
   }
 
   private createHills(): void {
-    HILL_COLORS.forEach((color) => {
-      this.makeHillTexture(color);
+    BIOMES.forEach(({ hills }) => {
+      this.makeHillTexture(hills);
     });
     this.hills = this.add
       .tileSprite(0, HILLS_TOP, CANVAS_WIDTH, HILLS_HEIGHT, hillKey(DAY_HILL_COLOR))
@@ -484,8 +490,8 @@ export class RunScene extends Phaser.Scene {
     this.drawAirPuff(view.airPuff);
     this.drawLandingPuff(view.landingPuff);
     this.hills.setTexture(hillKey(view.hillColor)).setTilePosition(view.hillsScroll, 0);
-    this.rock.tilePositionX = view.floorScroll;
-    this.grass.tilePositionX = view.floorScroll;
+    this.rock.setTexture(view.biome.floor).tilePositionX = view.floorScroll;
+    this.grass.setTexture(view.biome.top).setY(TOP_STRIP_Y[view.biome.top]).tilePositionX = view.floorScroll;
     this.drawScore(view);
     const titles: Record<"true" | "false", string> = { true: PAGE_TITLE, false: `${view.score} - ${PAGE_TITLE}` };
     document.title = titles[String(view.score === "0") as "true" | "false"];

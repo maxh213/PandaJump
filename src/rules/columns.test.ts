@@ -40,22 +40,27 @@ test("no second column above 10 without the draw", () => {
 
 const textureCases: [number, string][] = [
   [0, "dirt_06.png"],
-  [0.2, "ice_06.png"],
-  [0.4, "metal_06.png"],
-  [0.6, "sand_06.png"],
-  [0.8, "snow_06.png"],
-  [1, "snow_06.png"],
+  [19, "dirt_06.png"],
+  [20, "sand_06.png"],
+  [40, "ice_06.png"],
+  [60, "metal_06.png"],
+  [80, "dirt_06.png"],
 ];
 
-test("a texture draw picks one of the five ground textures deterministically", () => {
-  textureCases.forEach(([value, texture]) => {
-    const [column] = spawnColumns(300, 0, sequence(0.25, 0.5, value));
+test("a column takes the texture of the biome its score is in", () => {
+  textureCases.forEach(([score, texture]) => {
+    const [column] = spawnColumns(300, score, sequence(0.25, 0.5, 0));
     expect(column?.texture).toBe(texture);
   });
 });
 
+test("the texture value each column draws no longer changes its texture", () => {
+  const [column] = spawnColumns(300, 0, sequence(0.25, 0.5, 0.9));
+  expect(column?.texture).toBe("dirt_06.png");
+});
+
 test("a second column shares the same texture as the front column it follows", () => {
-  const columns = spawnColumns(300, 11, sequence(0.75, 0, 0.6));
+  const columns = spawnColumns(300, 21, sequence(0.75, 0, 0));
   expect(columns.map((column) => column.texture)).toEqual(["sand_06.png", "sand_06.png"]);
 });
 

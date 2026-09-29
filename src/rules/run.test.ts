@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { createRun } from "./index.ts";
+import { BIOMES, createRun } from "./index.ts";
 import type { Run } from "./index.ts";
 import { spawnGapForScore, speedForScore } from "./world.ts";
 
@@ -72,6 +72,7 @@ test("a run starts ready, with the panda on the floor, score 0 and no boxes", ()
     speedUp: false,
     medal: "none",
     medalGoal: "Bronze medal at 10",
+    biome: BIOMES[0],
     sky: "#71c5cf",
     stars: [],
     pandaX: 100,
@@ -109,7 +110,7 @@ test("the first jump leaves ready without making the panda jump, and starts the 
   run.jump();
   expect(run.view()).toMatchObject({ ready: false, time: 0, pandaBottom: 426 });
   run.advance(1500);
-  expect(run.view().boxes).toEqual([{ x: 400, y: 362, texture: "ice_06.png", hit: false }]);
+  expect(run.view().boxes).toEqual([{ x: 400, y: 362, texture: "dirt_06.png", hit: false }]);
 });
 
 test("restarting from the game-over screen stays instant and does not return to ready", () => {
@@ -203,9 +204,9 @@ test("a column spawns every 1500 ms at the right edge", () => {
   run.advance(1499);
   expect(run.view().boxes).toEqual([]);
   run.advance(1);
-  expect(run.view().boxes).toEqual([{ x: 400, y: 362, texture: "ice_06.png", hit: false }]);
+  expect(run.view().boxes).toEqual([{ x: 400, y: 362, texture: "dirt_06.png", hit: false }]);
   run.advance(100);
-  expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "ice_06.png", hit: false }]);
+  expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "dirt_06.png", hit: false }]);
 });
 
 test("touching a column freezes the run and shows game over instead of restarting at once", () => {
@@ -302,7 +303,7 @@ test("the result does not depend on how time is sliced", () => {
 test("cloud spawning draws from a random cursor independent of column spawning", () => {
   const run = createStartedRun(oneBoxEach(), () => 0.5, noStore);
   run.advance(1600);
-  expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "ice_06.png", hit: false }]);
+  expect(run.view().boxes).toEqual([{ x: 380, y: 362, texture: "dirt_06.png", hit: false }]);
 });
 
 test("clearing a column scores once when its right edge passes the panda", () => {
@@ -1247,6 +1248,22 @@ test("the view scrolls the hills a quarter of the floor's distance and colours t
   run.advance(1000);
   expect(run.view().hillsScroll).toBeCloseTo(50);
   expect(run.view().hillColor).toBe("#4a9ba6");
+});
+
+test("the view names the biome for the score, sky, hills and columns included, and a restart returns to the meadow", () => {
+  const run = createStartedRun(repeatingOneBox(), oneBoxEach(), noStore);
+  advanceToColumn(run, 1, 19);
+  expect(run.view()).toMatchObject({ biome: BIOMES[0], sky: "#71c5cf", hillColor: "#4a9ba6", stars: [] });
+  advanceToColumn(run, 20, 20);
+  expect(run.view()).toMatchObject({ biome: BIOMES[1], sky: "#f4a261", hillColor: "#c97b3a" });
+  advanceToColumn(run, 21, 40);
+  expect(run.view()).toMatchObject({ biome: BIOMES[2], sky: BIOMES[2].sky, hillColor: "#ffffff", stars: [] });
+  advanceToColumn(run, 41, 60);
+  expect(run.view().biome).toBe(BIOMES[3]);
+  expect(run.view().stars).toHaveLength(12);
+  while (!run.view().canRestart) run.advance(10);
+  run.jump();
+  expect(run.view()).toMatchObject({ score: "0", biome: BIOMES[0], sky: "#71c5cf" });
 });
 
 const scaleOf = (run: Run) => [run.view().pandaScaleX, run.view().pandaScaleY];

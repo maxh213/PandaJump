@@ -9,8 +9,9 @@ Feature: Panda Jump scrolls a row of distant hills behind the columns at a quart
   star and behind every box, the panda and its shadow.
   The hills scroll left by exactly one quarter of the distance the floor scrolls, so they follow the difficulty
   ramp's speed-ups, and they stand still whenever game time stands still.
-  "The hill colour" is one solid colour per sky, always darker than that sky: "#4a9ba6" under the day sky
-  (#71c5cf), "#c97b3a" under the sunset sky (#f4a261) and "#1a1b2b" under the night sky (#2b2d42).
+  "The hill colour" is one solid colour per biome, chosen as features/biomes.feature describes: "#4a9ba6" under the
+  day sky (#71c5cf), "#c97b3a" under the sunset sky (#f4a261), "#ffffff" under the pale snowfield sky (#a9c9e0)
+  and "#22223b" under the industrial dusk sky (#4a4e69).
   "The ramped schedule" is as defined in features/sky-by-score.feature.
 
   Background:
@@ -69,10 +70,10 @@ Feature: Panda Jump scrolls a row of distant hills behind the columns at a quart
       Then the sky is "#f4a261"
       And the hill colour is "#c97b3a"
 
-    Scenario: The hills turn night-coloured at score 40
+    Scenario: The hills turn white at score 40
       Given I play the ramped schedule through column 40
-      Then the sky is "#2b2d42"
-      And the hill colour is "#1a1b2b"
+      Then the sky is "#a9c9e0"
+      And the hill colour is "#ffffff"
 
     Scenario: The same score always gives the same hill colour, and a restart returns to the day colour
       Given I play the ramped schedule through column 40
@@ -92,6 +93,6 @@ Feature: Panda Jump scrolls a row of distant hills behind the columns at a quart
       Given I play the ramped schedule through column 20
       Then no pixel in the rows around y 424 is the sky colour, at the same scroll offsets
 
-    Scenario: The hills meet the ground under the night sky
-      Given I play the ramped schedule through column 40
+    Scenario: The hills meet the ground under the industrial sky
+      Given I play the ramped schedule through column 60
       Then no pixel in the rows around y 424 is the sky colour, at the same scroll offsets
