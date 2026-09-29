@@ -23,6 +23,8 @@ const NAMES = [
   "pausePrompt",
   "bestMarker",
   "countdownText",
+  "doubleJumpHint",
+  "pauseButton",
 ];
 
 interface Outline {

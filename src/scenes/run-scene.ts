@@ -362,6 +362,7 @@ export class RunScene extends Phaser.Scene {
         fontFamily: "Arial",
         fontSize: "16px",
         color: "#ffffff",
+        ...OUTLINE,
       })
       .setOrigin(0.5)
       .setName("doubleJumpHint");
@@ -398,7 +399,7 @@ export class RunScene extends Phaser.Scene {
       "16px",
     ).setName("pausePrompt");
     this.pauseButton = this.add
-      .text(CANVAS_WIDTH - 20, 20, "II", { fontFamily: "Arial", fontSize: "24px", color: "#ffffff" })
+      .text(CANVAS_WIDTH - 20, 20, "II", { fontFamily: "Arial", fontSize: "24px", color: "#ffffff", ...OUTLINE })
       .setOrigin(1, 0)
       .setName("pauseButton")
       .setInteractive();

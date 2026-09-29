@@ -8,5 +8,6 @@ Use a desktop browser with dev tools.
 4. Touch a column. **Expected:** the game-over screen text (title, medal, score, best, runs, share and copy lines, and the restart prompt) all have a black outline; the colours, sizes and positions are the same as before.
 5. Press P to pause. **Expected:** "Paused" and its prompt have a black outline.
 6. Play until you beat your best. **Expected:** the gold "Best" marker on the column and the "New best" callout are outlined too.
-7. In the console, run `window.pandaJump.game.scene.getScene("run").children.getByName("score").style.stroke`. **Expected:** `#000000`, and `strokeThickness` reads `4`.
-8. Run `npx playwright test`. **Expected:** every scenario in `features/outlined-canvas-text.feature` has a passing test.
+7. Open the page in a fresh profile with no stored best. **Expected:** the white "Tap again in mid-air to double jump" hint and the white "II" pause button in the top right both have a black outline and are easy to read on the pale day sky.
+8. In the console, run `window.pandaJump.game.scene.getScene("run").children.getByName("score").style.stroke`. **Expected:** `#000000`, and `strokeThickness` reads `4`.
+9. Run `npx playwright test`. **Expected:** every scenario in `features/outlined-canvas-text.feature` has a passing test.

@@ -5,7 +5,7 @@ Feature: Panda Jump outlines every piece of canvas text in black
 
   Times use the same conventions as features/phaser-4-core-run.feature.
   "Outlined" means the text has a black (#000000) stroke 4 px thick and keeps its fill colour, font size, position and visibility.
-  "The texts" are the score, the best line, the "Faster!" callout, the best-column marker, the countdown,
+  "The texts" are the score, the best line, the "Faster!" callout, the best-column marker, the countdown, the double-jump hint, the pause button (the "II"),
   the game-over texts (title, medal, score, best, prompt, share, copy and runs lines) and the pause texts (title and prompt).
   "The ramped schedule" is as defined in features/difficulty-ramp.feature.
 
