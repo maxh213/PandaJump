@@ -15,5 +15,7 @@ Use a desktop browser with dev tools. Clear localStorage for the page's origin b
     Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } });
     ```
     then reload. **Expected:** the page loads with no list, and you can play, die and restart with no uncaught error from Panda Jump.
-10. Check the bottom-left "Best: N" and the `pandaJump.best` key in Local Storage while playing. **Expected:** they behave exactly as described in `qa/high-score.md`.
-11. Run `npx playwright test`. **Expected:** every scenario in `features/top-five-runs.feature` has a passing test in `e2e/top-five-runs.spec.ts`, and `features/high-score.feature` still passes.
+10. In the console, run `localStorage.setItem('pandaJump.best', '15'); localStorage.setItem('pandaJump.topScores', '[10,8]')`, then reload. **Expected:** the list reads "1. 15", "2. 10", "3. 8", and `pandaJump.topScores` in Local Storage now reads `[15,10,8]`. Set both keys to `10` and `[10,8]` and reload. **Expected:** the list is unchanged, "1. 10" and "2. 8" only.
+11. Start a run and clear a column so the score passes the "Best:" value, then reload the page before the panda dies. **Expected:** "1." in the list shows the same number as "Best:".
+12. Check the bottom-left "Best: N" and the `pandaJump.best` key in Local Storage while playing. **Expected:** they behave exactly as described in `qa/high-score.md`.
+13. Run `npx playwright test`. **Expected:** every scenario in `features/top-five-runs.feature` has a passing test in `e2e/top-five-runs.spec.ts`, and `features/high-score.feature` still passes.

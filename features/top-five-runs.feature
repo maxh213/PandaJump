@@ -44,6 +44,25 @@ Feature: Panda Jump on Phaser 4, slice: the player's five best runs on the start
       When six runs end on 2, 5, 1, 6, 3 and 4 and I reload the Panda Jump page
       Then the page reads "1. 6", "2. 5", "3. 4", "4. 3" and "5. 2" in that order
 
+    Scenario: A stored best above every listed score is merged into the list and the stored list is repaired
+      Given the stored best is 15 and the stored list is [10,8]
+      When I open the Panda Jump page
+      Then the page reads "Best: 15" in the run
+      And the page reads "1. 15", "2. 10" and "3. 8" in that order
+      And the stored list is [15,10,8]
+
+    Scenario: A stored best already at the top of the list is not listed twice
+      Given the stored best is 10 and the stored list is [10,8]
+      When I open the Panda Jump page
+      Then the page reads "1. 10" and "2. 8" and no other entry
+      And the stored list is [10,8]
+
+    Scenario: A run closed after beating the best but before the panda dies still lists that best
+      Given the stored best is 1 and the stored list is [1]
+      And I press Space to start
+      When the live score passes the best and I reload the Panda Jump page before the panda dies
+      Then the page reads "1." followed by the number after "Best:"
+
   Rule: The list only shows on the start screen
 
     Scenario: The list is gone the moment the first input starts the run

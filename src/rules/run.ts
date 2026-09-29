@@ -460,13 +460,20 @@ const recordFinishedRun = (before: State, after: State, store: TopScoresStore): 
   return { ...after, topScores };
 };
 
+const reconcileTopScores = (best: number, loaded: readonly number[], store: TopScoresStore): readonly number[] => {
+  if (best <= 0 || loaded.some((score) => score >= best)) return loaded;
+  const merged = insertScore(loaded, best);
+  store.save(merged);
+  return merged;
+};
+
 export const createRun = (random: Random, cloudRandom: Random, store: BestStore): Run => {
   const topScoresStore = store.topScores ?? noTopScores;
   const randoms: Randoms = { columns: random, clouds: cloudRandom };
   const loadedBest = store.load();
   let state: State = {
     ...freshState(
-      { restarts: 0, best: loadedBest, topScores: topScoresStore.load(), hintPending: loadedBest === 0 },
+      { restarts: 0, best: loadedBest, topScores: reconcileTopScores(loadedBest, topScoresStore.load(), topScoresStore), hintPending: loadedBest === 0 },
       randoms,
     ),
     ready: true,

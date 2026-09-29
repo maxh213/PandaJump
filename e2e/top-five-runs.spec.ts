@@ -132,6 +132,46 @@ test.describe("Rule: The start screen lists the player's best runs", () => {
   });
 });
 
+test.describe("Rule: The list keeps in step with the stored best", () => {
+  test("A stored best above every listed score is merged in and the stored list is repaired", async ({ page }) => {
+    await seedStorage(page, { "pandaJump.best": "15", [TOP_SCORES_KEY]: "[10,8]" });
+    await openGame(page, oneBox);
+    expect((await probeSample(page)).best.text).toBe("Best: 15");
+    expect(listed(await sample(page))).toEqual(["1. 15", "2. 10", "3. 8"]);
+    expect(await page.evaluate((key) => localStorage.getItem(key), TOP_SCORES_KEY)).toBe("[15,10,8]");
+  });
+
+  test("A stored best already at the top of the list is not listed twice", async ({ page }) => {
+    await seedStorage(page, { "pandaJump.best": "10", [TOP_SCORES_KEY]: "[10,8]" });
+    await openGame(page, oneBox);
+    expect(listed(await sample(page))).toEqual(["1. 10", "2. 8"]);
+    expect(await page.evaluate((key) => localStorage.getItem(key), TOP_SCORES_KEY)).toBe("[10,8]");
+  });
+
+  test("A run closed after beating the best but before the panda dies still lists that best", async ({ page }) => {
+    await openGame(page, oneBox);
+    await page.evaluate((key) => {
+      localStorage.setItem("pandaJump.best", "1");
+      localStorage.setItem(key, "[1]");
+    }, TOP_SCORES_KEY);
+    await reload(page);
+    await startRun(page);
+    const jumps = [1, 2].map((column) => spawnTimeOf(column) + 1200);
+    await play(page, jumps, (jumps.at(-1) ?? 0) + 800);
+    const live = await probeSample(page);
+    expect(live).toMatchObject({ gameOver: false, best: { text: "Best: 2" } });
+    await reload(page);
+    const entry = await sample(page);
+    expect((await probeSample(page)).best.text).toBe("Best: 2");
+    expect(listed(entry)[0]).toBe("1. 2");
+  });
+
+  test("With no stored best and no stored list nothing is listed", async ({ page }) => {
+    await openGame(page, oneBox);
+    expectNothingListed(await sample(page));
+  });
+});
+
 test.describe("Rule: The list only shows on the start screen", () => {
   test("The list and heading are gone right after the first tap or Space press", async ({ page }) => {
     await seedStorage(page, { [TOP_SCORES_KEY]: "[4,2]" });

@@ -1387,3 +1387,31 @@ test("restarting keeps the top scores so later runs add to them", () => {
   run.advance(3000);
   expect(saves).toEqual([[1], [1, 1]]);
 });
+
+const storeWithBest = (best: number, loaded: readonly number[]) => {
+  const saves: (readonly number[])[] = [];
+  return { saves, store: { load: () => best, save: () => undefined, topScores: { load: () => loaded, save: (scores: readonly number[]) => saves.push(scores) } } };
+};
+
+test("a stored best above every stored top score is merged into the list and the list is saved", () => {
+  const { saves, store } = storeWithBest(15, [10, 8]);
+  expect(createRun(oneBoxEach(), oneBoxEach(), store).view().topScores).toEqual([15, 10, 8]);
+  expect(saves).toEqual([[15, 10, 8]]);
+});
+
+test("a stored best already in the list leaves the list alone and unsaved", () => {
+  const { saves, store } = storeWithBest(10, [10, 8]);
+  expect(createRun(oneBoxEach(), oneBoxEach(), store).view().topScores).toEqual([10, 8]);
+  expect(saves).toEqual([]);
+});
+
+test("a stored best of 0 adds nothing to the list", () => {
+  const { saves, store } = storeWithBest(0, []);
+  expect(createRun(oneBoxEach(), oneBoxEach(), store).view().topScores).toEqual([]);
+  expect(saves).toEqual([]);
+});
+
+test("merging the stored best keeps the list to five entries", () => {
+  const { store } = storeWithBest(9, [5, 4, 3, 2, 1]);
+  expect(createRun(oneBoxEach(), oneBoxEach(), store).view().topScores).toEqual([9, 5, 4, 3, 2]);
+});
