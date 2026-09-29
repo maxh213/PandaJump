@@ -496,7 +496,7 @@ export class RunScene extends Phaser.Scene {
     this.drawGameOverTexts(view);
     this.pauseTitle.setVisible(view.paused);
     this.pausePrompt.setVisible(view.paused);
-    this.pauseButton.setVisible([!view.paused, !view.gameOver].every(Boolean));
+    this.pauseButton.setVisible([!view.paused, !view.gameOver, !view.ready].every(Boolean));
     this.gameOverCopy
       .setVisible([view.canRestart, !shareSupported, clipboardSupported].every(Boolean))
       .setText(COPY_LABELS[String(this.copied) as "true" | "false"]);

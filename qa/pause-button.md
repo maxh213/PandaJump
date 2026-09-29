@@ -26,5 +26,10 @@ Use a phone, or a desktop browser with dev tools set to a mobile viewport.
 7. Check that pressing P or Escape still pauses and resumes exactly as before, as in
    `qa/pause-key.md`, and that hiding and showing the tab still pauses exactly as before, as in
    `qa/pause-on-return.md`.
-8. Run `npx playwright test`. **Expected:** every scenario in `features/pause-button.feature`, and
+8. Reload the page and look at the ready screen before touching anything. **Expected:** "Tap or
+   press Space to start" shows and there is no "II" in the top-right corner.
+9. Tap the top-right corner, where "II" sits during a run. **Expected:** the run starts like any
+   other first tap: the ready prompt disappears, the panda stays on the floor, the game is not
+   paused, and the "II" button appears in the top-right corner.
+10. Run `npx playwright test`. **Expected:** every scenario in `features/pause-button.feature`, and
    the rest of the Playwright suite, has a passing test.

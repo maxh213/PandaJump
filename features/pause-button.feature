@@ -76,3 +76,25 @@ Feature: A player can pause a run with an on-screen "II" button
       Then the first column has spawned
       When I press Space at 2700 ms game time
       Then the score reads "1" at 3340 ms game time
+
+  Rule: The button is hidden on the ready screen, so a tap there starts the run like any other first tap
+
+    These scenarios open the Panda Jump page and stop there: they do not use the run start from the Background.
+
+    Scenario: The button is not shown on a fresh page load
+      Given I open the Panda Jump page without any input
+      Then the page does not read "II"
+
+    Scenario: A tap where the button sits during a live run starts the run without pausing it
+      Given I open the Panda Jump page without any input
+      When I tap the canvas at the top-right spot where "II" sits during a live run
+      Then the ready prompt is gone
+      And the panda is still on the floor
+      And the run is not paused
+      When the game time reaches 1500 ms
+      Then the first column has spawned
+
+    Scenario: The button appears the moment the first input starts the run
+      Given I open the Panda Jump page without any input
+      When I press Space
+      Then the page reads "II" in white Arial 24px with its right edge at (380, 20)

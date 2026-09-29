@@ -136,3 +136,38 @@ test.describe('Rule: Resuming a pause started with "II" works exactly like resum
     expect((await sample(page)).score.text).toBe("1");
   });
 });
+
+test.describe('Rule: The button is hidden on the ready screen, so a tap there starts the run like any other first tap', () => {
+  test("The button is not shown on a fresh page load", async ({ page }) => {
+    await openGame(page, standardRandom());
+    expect((await sample(page)).pauseButton.visible).toBe(false);
+  });
+
+  test("A tap where the button sits during a live run starts the run without pausing it", async ({ page }) => {
+    await openGame(page, standardRandom());
+    await tapPauseButton(page);
+    const started = await sample(page);
+    expect(started.readyPrompt.visible).toBe(false);
+    expect(started.panda.bottom).toBe(426);
+    expect(started.pauseTitle.visible).toBe(false);
+    await advanceTo(page, 1499);
+    expect((await sample(page)).boxes).toEqual([]);
+    await advanceTo(page, 1500);
+    expect((await sample(page)).boxes).toHaveLength(1);
+  });
+
+  test("The button appears the moment the first input starts the run", async ({ page }) => {
+    await openGame(page, standardRandom());
+    await startRun(page);
+    expect((await sample(page)).pauseButton).toMatchObject({
+      text: "II",
+      x: 380,
+      y: 20,
+      color: "#ffffff",
+      fontSize: "24px",
+      originX: 1,
+      originY: 0,
+      visible: true,
+    });
+  });
+});
