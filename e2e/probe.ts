@@ -71,6 +71,7 @@ export interface Sample {
   };
   viewPandaShadow: View["pandaShadow"];
   order: { rock: number; grass: number; panda: number };
+  depth: { rock: number; grass: number; panda: number };
   airPuff: { x: number; y: number; alpha: number; visible: boolean };
   gameOverMedalBadge: {
     x: number;
@@ -130,6 +131,7 @@ interface GameRectangle {
 
 interface GameTileSprite {
   y: number;
+  depth: number;
   tilePositionX: number;
   texture: { key: string };
 }
@@ -189,6 +191,7 @@ interface RunHandle {
 
 interface ProbeHandle {
   sample: () => Sample;
+  hideShadow: () => void;
   advance: (ms: number) => Sample[];
   untilGameOver: (limit: number) => { before: Sample; after: Sample };
   untilRestart: (limit: number) => { before: Sample; diedAt: Sample; after: Sample };
@@ -319,6 +322,7 @@ export const installProbe = () => {
       },
       viewPandaShadow: view.pandaShadow,
       order: { rock: orderOf("rock"), grass: orderOf("grass"), panda: orderOf("panda") },
+      depth: { rock: rock.depth, grass: grass.depth, panda: panda.depth },
       airPuff: { x: airPuff.x, y: airPuff.y, alpha: airPuff.alpha, visible: airPuff.visible },
       gameOverMedalBadge: {
         x: badge.x,
@@ -360,7 +364,10 @@ export const installProbe = () => {
     handle.run.jump();
     return { before, diedAt, after: sample() };
   };
-  window.probe = { sample, advance, untilGameOver, untilRestart };
+  const hideShadow = () => {
+    (named("pandaShadow") as GameEllipse).visible = false;
+  };
+  window.probe = { sample, hideShadow, advance, untilGameOver, untilRestart };
 };
 
 export const openGame = async (page: Page, random: number[]): Promise<void> => {

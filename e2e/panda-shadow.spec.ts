@@ -1,14 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { advanceTo, oneBox, openGame, press, pressSpace, sample, untilGameOver } from "./probe.ts";
-import type { Sample } from "./probe.ts";
-
-const drawnAbove = (entry: Sample) => {
-  const { pandaShadow, panda, order } = entry;
-  return {
-    aboveFloor: pandaShadow.depth > 0 || pandaShadow.order > Math.max(order.rock, order.grass),
-    belowPanda: pandaShadow.depth < panda.depth || pandaShadow.order < order.panda,
-  };
-};
+import { advanceTo, oneBox, openGame, pixelRows, press, pressSpace, sample, untilGameOver } from "./probe.ts";
 
 test.describe("Rule: The shadow sits on the ground under the panda and shrinks with height", () => {
   test("A soft black ellipse is centred on the floor and full size while the panda stands", async ({ page }) => {
@@ -46,9 +37,20 @@ test.describe("Rule: The shadow is drawn above the floor and below the panda", (
   test("Depth and display order put it between the floor strips and the panda", async ({ page }) => {
     await openGame(page, oneBox);
     const start = await sample(page);
-    expect(drawnAbove(start)).toEqual({ aboveFloor: true, belowPanda: true });
-    expect(start.pandaShadow.depth).toBeGreaterThan(0);
-    expect(start.pandaShadow.depth).toBeLessThan(start.panda.depth);
+    const floorDepth = Math.max(start.depth.rock, start.depth.grass);
+    expect(start.pandaShadow.depth).toBeGreaterThan(floorDepth);
+    expect(start.pandaShadow.depth).toBeLessThan(start.depth.panda);
+  });
+
+  test("The painted pixels under the panda are darker than the floor without the shadow", async ({ page }) => {
+    await openGame(page, oneBox);
+    const [lit] = await pixelRows(page, [428]);
+    await page.evaluate(() => {
+      window.probe.hideShadow();
+    });
+    const [bare] = await pixelRows(page, [428]);
+    const brightness = (row: number[][] | undefined) => (row?.[112] ?? []).reduce((total, value) => total + value, 0);
+    expect(brightness(lit)).toBeLessThan(brightness(bare));
   });
 });
 
