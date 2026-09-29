@@ -9,7 +9,7 @@ import rockUrl from "../../assets/rock_06.png?no-inline";
 import grassUrl from "../../assets/top_grass_01.png?no-inline";
 import cloud02Url from "../../assets/cloud_02.png?no-inline";
 import cloud05Url from "../../assets/cloud_05.png?no-inline";
-import { CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, TILE_SIZE } from "../rules/index.ts";
+import { CANVAS_HEIGHT, CANVAS_WIDTH, FLOOR_Y, HILLS_REPEAT_WIDTH, TILE_SIZE } from "../rules/index.ts";
 import type { Box, Cloud, Medal, Run, Star } from "../rules/index.ts";
 
 const OUTLINE = { stroke: "#000000", strokeThickness: 4 };
@@ -36,6 +36,15 @@ const PANDA_HALF_WIDTH = (PANDA_FRAME_WIDTH * PANDA_SCALE) / 2;
 const PANDA_HALF_HEIGHT = (PANDA_FRAME_HEIGHT * PANDA_SCALE) / 2;
 const CLOUD_DEPTH = -1;
 const STAR_DEPTH = -2;
+const HILLS_DEPTH = -0.5;
+const HILLS_TOP = 300;
+const HILLS_HEIGHT = GRASS_Y - HILLS_TOP;
+const HILL_SHAPES: readonly (readonly [number, number, number])[] = [
+  [45, 45, 50],
+  [115, 45, HILLS_HEIGHT],
+];
+const DAY_HILL_COLOR = "#4a9ba6";
+const HILL_COLORS = [DAY_HILL_COLOR, "#c97b3a", "#1a1b2b"];
 const STAR_RADIUS = 2;
 const STAR_COLOR = 0xffffff;
 const CENTER_X = CANVAS_WIDTH / 2;
@@ -80,6 +89,7 @@ const shareSupported = typeof navigator.share === "function";
 const PAGE_TITLE = "Panda Jump";
 const clipboardSupported = typeof (navigator as { clipboard?: Clipboard }).clipboard?.writeText === "function";
 const COUNTDOWN_LABELS: Record<"3" | "2" | "1" | "null", string> = { "3": "3", "2": "2", "1": "1", null: "" };
+const hillKey = (color: string): string => `hills-${color}`;
 const hasValue = <T>(value: T | null): value is T => value !== null;
 const DEATH_VIBRATION_MS = 100;
 
@@ -99,6 +109,7 @@ export class RunScene extends Phaser.Scene {
   private boxes!: Phaser.GameObjects.Group;
   private clouds!: Phaser.GameObjects.Group;
   private stars!: Phaser.GameObjects.Group;
+  private hills!: Phaser.GameObjects.TileSprite;
   private rock!: Phaser.GameObjects.TileSprite;
   private grass!: Phaser.GameObjects.TileSprite;
   private score!: Phaser.GameObjects.Text;
@@ -147,6 +158,7 @@ export class RunScene extends Phaser.Scene {
   create(): void {
     this.stars = this.add.group({ classType: Phaser.GameObjects.Arc, name: "stars" });
     this.clouds = this.add.group({ classType: Phaser.GameObjects.Image, defaultKey: "cloud_02.png", name: "clouds" });
+    this.createHills();
     this.createPandaAndEffects();
     this.boxes = this.add.group({ classType: Phaser.GameObjects.Image, defaultKey: "dirt_06.png", name: "boxes" });
     this.rock = this.addFloorStrip(FLOOR_Y, "rock_06.png").setName("rock");
@@ -179,6 +191,25 @@ export class RunScene extends Phaser.Scene {
     this.readyPrompt = this.centeredText(GAME_OVER_PROMPT_Y, "Tap or press Space to start", "20px").setName("readyPrompt");
     this.wireInput();
     this.draw();
+  }
+
+  private createHills(): void {
+    HILL_COLORS.forEach((color) => {
+      this.makeHillTexture(color);
+    });
+    this.hills = this.add
+      .tileSprite(0, HILLS_TOP, CANVAS_WIDTH, HILLS_HEIGHT, hillKey(DAY_HILL_COLOR))
+      .setOrigin(0, 0)
+      .setDepth(HILLS_DEPTH)
+      .setName("hills");
+  }
+
+  private makeHillTexture(color: string): void {
+    const graphics = this.add.graphics().fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
+    HILL_SHAPES.forEach(([x, radiusX, radiusY]) => {
+      graphics.fillEllipse(x, HILLS_HEIGHT, radiusX * 2, radiusY * 2);
+    });
+    graphics.generateTexture(hillKey(color), HILLS_REPEAT_WIDTH, HILLS_HEIGHT).destroy();
   }
 
   private createPandaAndEffects(): void {
@@ -404,6 +435,7 @@ export class RunScene extends Phaser.Scene {
     this.pandaShadow.setPosition(view.pandaShadow.x, view.pandaShadow.y).setScale(view.pandaShadow.scale);
     this.drawAirPuff(view.airPuff);
     this.drawLandingPuff(view.landingPuff);
+    this.hills.setTexture(hillKey(view.hillColor)).setTilePosition(view.hillsScroll, 0);
     this.rock.tilePositionX = view.floorScroll;
     this.grass.tilePositionX = view.floorScroll;
     this.score.setText(view.score).setScale(view.scoreScale);

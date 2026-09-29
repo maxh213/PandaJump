@@ -52,6 +52,9 @@ export interface Sample {
     depth: number;
     angle: number;
   };
+  hills: { y: number; height: number; depth: number; scroll: number; key: string; visible: boolean };
+  viewHills: { scroll: number; color: string };
+  floorScroll: number;
   rock: { y: number; scroll: number; key: string };
   grass: { y: number; scroll: number; key: string };
   boxes: { x: number; y: number; width: number; key: string; depth: number; tint: number }[];
@@ -136,6 +139,8 @@ interface GameRectangle {
 
 interface GameTileSprite {
   y: number;
+  height: number;
+  visible: boolean;
   depth: number;
   tilePositionX: number;
   texture: { key: string };
@@ -240,6 +245,7 @@ export const installProbe = () => {
     const best = named("best") as GameText;
     const rock = named("rock") as GameTileSprite;
     const grass = named("grass") as GameTileSprite;
+    const hills = named("hills") as GameTileSprite;
     const deathFlash = named("deathFlash") as GameRectangle;
     const airPuff = named("airPuff") as GameGraphics;
     const badge = named("gameOverMedalBadge") as GameGraphics;
@@ -292,6 +298,16 @@ export const installProbe = () => {
         depth: panda.depth,
         angle: panda.angle,
       },
+      hills: {
+        y: hills.y,
+        height: hills.height,
+        depth: hills.depth,
+        scroll: hills.tilePositionX,
+        key: hills.texture.key,
+        visible: hills.visible,
+      },
+      viewHills: { scroll: view.hillsScroll, color: view.hillColor },
+      floorScroll: view.floorScroll,
       rock: { y: rock.y, scroll: rock.tilePositionX, key: rock.texture.key },
       grass: { y: grass.y, scroll: grass.tilePositionX, key: grass.texture.key },
       boxes: scene.children.list

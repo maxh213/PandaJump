@@ -11,6 +11,7 @@ import {
 import type { Box, Column, Random } from "./columns.ts";
 import { cloudsOf, initialClouds, moveClouds } from "./clouds.ts";
 import type { Cloud, CloudState } from "./clouds.ts";
+import { hillColorFor, hillsScrollFor } from "./hills.ts";
 import { medalFor, medalGoalFor } from "./medal.ts";
 import type { Medal } from "./medal.ts";
 import { fall, jump, standingPanda } from "./panda.ts";
@@ -39,6 +40,8 @@ interface View {
   readonly pandaBottom: number;
   readonly pandaFrame: number;
   readonly floorScroll: number;
+  readonly hillsScroll: number;
+  readonly hillColor: string;
   readonly boxes: Box[];
   readonly clouds: Cloud[];
   readonly gameOver: boolean;
@@ -338,6 +341,8 @@ const viewOf = (state: State): View => ({
   pandaBottom: FLOOR_Y - state.panda.height,
   pandaFrame: pandaFrameOf(state),
   floorScroll: currentDistance(state) % TILE_SIZE,
+  hillsScroll: hillsScrollFor(currentDistance(state)),
+  hillColor: hillColorFor(state.score),
   boxes: boxesOf(state.columns, currentDistance(state), state.hitColumn),
   clouds: cloudsOf(state.clouds, state.time),
   gameOver: state.deathElapsed !== null,
