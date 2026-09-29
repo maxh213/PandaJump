@@ -6,6 +6,7 @@ import {
   countCleared,
   moveColumns,
   spawnColumns,
+  surfaceHeightUnder,
   touchingColumn,
 } from "./columns.ts";
 import type { Box, Column, Random } from "./columns.ts";
@@ -417,11 +418,16 @@ const pandaFrameOf = (state: State): number =>
     ? FIRST_RUN_FRAME
     : FIRST_RUN_FRAME + (Math.floor(clockOf(state) * FRAMES_PER_MS) % RUN_FRAMES);
 
-const pandaShadowOf = (state: State): View["pandaShadow"] => ({
-  x: PANDA_CENTER_X,
-  y: FLOOR_Y,
-  scale: 1 - (0.5 * Math.min(state.panda.height, SHADOW_PEAK_HEIGHT)) / SHADOW_PEAK_HEIGHT,
-});
+const pandaShadowOf = (state: State): View["pandaShadow"] => {
+  const x = PANDA_CENTER_X;
+  const surfaceHeight = surfaceHeightUnder(state.columns, currentDistance(state), x);
+  const heightAbove = Math.max(0, state.panda.height - surfaceHeight);
+  return {
+    x,
+    y: FLOOR_Y - surfaceHeight,
+    scale: 1 - (0.5 * Math.min(heightAbove, SHADOW_PEAK_HEIGHT)) / SHADOW_PEAK_HEIGHT,
+  };
+};
 
 const gameOverScoreOf = (state: State): string =>
   state.deathElapsed === null || state.deathElapsed >= RESTART_FREEZE_MS

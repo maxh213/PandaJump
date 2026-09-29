@@ -1272,6 +1272,50 @@ test("the panda shadow shrinks from 1 towards 0.5 as the panda rises and stays a
   expect(run.view().pandaShadow.scale).toBe(0.5);
 });
 
+const shadowOverColumn = (run: Run): boolean =>
+  run.view().boxes.some((box) => box.x <= 112.5 && box.x + 64 > 112.5);
+
+test("the panda shadow sits on a one-box column top while the shadow centre is over it, and on the floor before and after", () => {
+  const run = createStartedRun(standardColumns(), oneBoxEach(), noStore);
+  run.advance(2700);
+  run.jump();
+  run.advance(230);
+  expect(shadowOverColumn(run)).toBe(false);
+  expect(run.view().pandaShadow.y).toBe(426);
+  run.advance(20);
+  expect(shadowOverColumn(run)).toBe(true);
+  expect(run.view().pandaShadow.y).toBe(362);
+  while (shadowOverColumn(run)) run.advance(10);
+  expect(run.view().pandaShadow.y).toBe(426);
+  expect(run.view().gameOver).toBe(false);
+});
+
+test("the panda shadow sits on a two-box column top at y 298 while over it", () => {
+  const run = createStartedRun(twoBoxColumns(), oneBoxEach(), noStore);
+  run.advance(2400);
+  run.jump();
+  run.advance(540);
+  expect(shadowOverColumn(run)).toBe(true);
+  expect(run.view().pandaShadow.y).toBe(298);
+  expect(run.view().gameOver).toBe(false);
+});
+
+test("shadow scale 20 px above a one-box column top matches 20 px above the floor", () => {
+  const floor = createStartedRun(oneBoxEach(), oneBoxEach(), noStore);
+  floor.jump();
+  while (Math.abs(426 - floor.view().pandaBottom - 20) > 0.5) floor.advance(1);
+  const floorScale = floor.view().pandaShadow.scale;
+
+  const over = createStartedRun(standardColumns(), oneBoxEach(), noStore);
+  over.advance(2770);
+  over.jump();
+  while (!(shadowOverColumn(over) && Math.abs(426 - over.view().pandaBottom - 84) <= 0.5)) {
+    over.advance(1);
+  }
+  expect(over.view().pandaShadow.y).toBe(362);
+  expect(over.view().pandaShadow.scale).toBeCloseTo(floorScale, 2);
+});
+
 const runDiedAtScore = (columns: number): Run => {
   const run = createStartedRun(standardColumns(), standardColumns(), noStore);
   for (let column = 1; column <= columns; column += 1) {

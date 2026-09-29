@@ -73,6 +73,14 @@ export const boxesOf = (columns: readonly Column[], distance: number, hitColumn:
     })),
   );
 
+export const surfaceHeightUnder = (columns: readonly Column[], distance: number, x: number): number => {
+  const under = columns.find((column) => {
+    const left = columnX(column, distance);
+    return x >= left && x < left + TILE_SIZE;
+  });
+  return under === undefined ? 0 : under.boxes * TILE_SIZE;
+};
+
 export interface Progress {
   readonly score: number;
   readonly best: number;

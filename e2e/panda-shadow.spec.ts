@@ -1,5 +1,21 @@
 import { expect, test } from "@playwright/test";
-import { advanceTo, oneBox, openGame, pixelRows, press, pressSpace, sample, startRun, untilGameOver } from "./probe.ts";
+import {
+  advanceTo,
+  oneBox,
+  openGame,
+  pixelRows,
+  press,
+  pressSpace,
+  sample,
+  startRun,
+  twoBoxes,
+  untilGameOver,
+} from "./probe.ts";
+
+const shadowOverColumn = (boxes: { x: number }[]) => boxes.some((box) => box.x <= 112.5 && box.x + 64 > 112.5);
+
+const brightnessAt = (row: number[][] | undefined, x: number) =>
+  (row?.[x] ?? []).reduce((total, value) => total + value, 0);
 
 test.describe("Rule: The shadow sits on the ground under the panda and shrinks with height", () => {
   test("A soft black ellipse is centred on the floor and full size while the panda stands", async ({ page }) => {
@@ -34,6 +50,62 @@ test.describe("Rule: The shadow sits on the ground under the panda and shrinks w
   });
 });
 
+test.describe("Rule: The shadow is cast onto the box column under the panda", () => {
+  test("Jumping over a one-box column puts the shadow on the box top, then back on the floor", async ({ page }) => {
+    await openGame(page, oneBox);
+    await startRun(page);
+    await advanceTo(page, 2700);
+    await pressSpace(page);
+    await advanceTo(page, 2930);
+    const before = await sample(page);
+    expect(shadowOverColumn(before.boxes)).toBe(false);
+    expect(before.pandaShadow.y).toBe(426);
+    await advanceTo(page, 2950);
+    const over = await sample(page);
+    expect(shadowOverColumn(over.boxes)).toBe(true);
+    expect(over.pandaShadow.y).toBe(362);
+    expect(over.viewPandaShadow.y).toBe(362);
+    await advanceTo(page, 3280);
+    const after = await sample(page);
+    expect(shadowOverColumn(after.boxes)).toBe(false);
+    expect(after.pandaShadow.y).toBe(426);
+    expect(after.gameOver).toBe(false);
+  });
+
+  test("Jumping over a two-box column puts the shadow at y 298", async ({ page }) => {
+    await openGame(page, twoBoxes);
+    await startRun(page);
+    await advanceTo(page, 2400);
+    await pressSpace(page);
+    await advanceTo(page, 2940);
+    const over = await sample(page);
+    expect(shadowOverColumn(over.boxes)).toBe(true);
+    expect(over.pandaShadow.y).toBe(298);
+    expect(over.viewPandaShadow.y).toBe(298);
+    expect(over.gameOver).toBe(false);
+  });
+
+  test("The painted top of the box darkens under the shadow, and the floor under the panda does not", async ({
+    page,
+  }) => {
+    await openGame(page, oneBox);
+    await startRun(page);
+    await advanceTo(page, 2700);
+    await pressSpace(page);
+    await advanceTo(page, 3000);
+    const state = await sample(page);
+    expect(shadowOverColumn(state.boxes)).toBe(true);
+    expect(state.pandaShadow.y).toBe(362);
+    const [topLit, floorLit] = await pixelRows(page, [362, 428]);
+    await page.evaluate(() => {
+      window.probe.hideShadow();
+    });
+    const [topBare, floorBare] = await pixelRows(page, [362, 428]);
+    expect(brightnessAt(topLit, 112)).toBeLessThan(brightnessAt(topBare, 112));
+    expect(brightnessAt(floorLit, 112)).toBe(brightnessAt(floorBare, 112));
+  });
+});
+
 test.describe("Rule: The shadow is drawn above the floor and below the panda", () => {
   test("Depth and display order put it between the floor strips and the panda", async ({ page }) => {
     await openGame(page, oneBox);
@@ -50,8 +122,7 @@ test.describe("Rule: The shadow is drawn above the floor and below the panda", (
       window.probe.hideShadow();
     });
     const [bare] = await pixelRows(page, [428]);
-    const brightness = (row: number[][] | undefined) => (row?.[112] ?? []).reduce((total, value) => total + value, 0);
-    expect(brightness(lit)).toBeLessThan(brightness(bare));
+    expect(brightnessAt(lit, 112)).toBeLessThan(brightnessAt(bare, 112));
   });
 });
 

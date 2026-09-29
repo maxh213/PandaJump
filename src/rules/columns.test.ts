@@ -6,6 +6,7 @@ import {
   hitsPanda,
   moveColumns,
   spawnColumns,
+  surfaceHeightUnder,
   touchingColumn,
 } from "./columns.ts";
 import type { Column } from "./columns.ts";
@@ -94,6 +95,15 @@ test("boxes stack up from the floor at the column's position", () => {
     { x: 380, y: 298, texture: "dirt_06.png", hit: false },
     { x: 444, y: 362, texture: "ice_06.png", hit: false },
   ]);
+});
+
+test("surfaceHeightUnder is the column top under x, or 0 on the floor", () => {
+  expect(surfaceHeightUnder([oneBox], 320, 379)).toBe(0);
+  expect(surfaceHeightUnder([oneBox], 320, 380)).toBe(64);
+  expect(surfaceHeightUnder([oneBox], 320, 443)).toBe(64);
+  expect(surfaceHeightUnder([oneBox], 320, 444)).toBe(0);
+  expect(surfaceHeightUnder([twoBoxes], 320, 400)).toBe(128);
+  expect(surfaceHeightUnder([twoBoxes, { ...oneBox, offset: 64 }], 320, 444)).toBe(64);
 });
 
 test("a column touching the panda is the one returned as the touching column", () => {
