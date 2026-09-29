@@ -8,6 +8,7 @@ export const startGame = (run: Run, timeScale: number, reducedMotion: boolean): 
     type: Phaser.AUTO,
     backgroundColor: "#71c5cf",
     pixelArt: true,
+    input: { gamepad: true },
     scene: new RunScene(run, timeScale, reducedMotion),
     scale: {
       mode: Phaser.Scale.FIT,

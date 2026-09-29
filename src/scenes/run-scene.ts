@@ -22,6 +22,8 @@ const TINT_ACTIONS: Record<"true" | "false", (image: Phaser.GameObjects.Image) =
     image.clearTint();
   },
 };
+const PAD_JUMP_BUTTON = 0;
+const PAD_PAUSE_BUTTON = 9;
 const GRASS_Y = 392;
 const AIR_PUFF_RADIUS = 8;
 const LANDING_PUFF_RADIUS = 5;
@@ -205,6 +207,11 @@ export class RunScene extends Phaser.Scene {
         this.listenForJumpKeys(keyboard);
         this.listenForPauseKeys(keyboard);
       });
+    [this.input.gamepad]
+      .filter((gamepad) => gamepad !== null)
+      .forEach((gamepad) => {
+        gamepad.on("down", this.handlePadButton);
+      });
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
     window.addEventListener("blur", this.handleWindowBlur);
     document.addEventListener("pointerdown", this.jumpOffCanvas);
@@ -230,6 +237,15 @@ export class RunScene extends Phaser.Scene {
 
   private readonly pauseOrResume = (): void => {
     this.run.pauseOrResume();
+  };
+
+  private readonly handlePadButton = (_pad: Phaser.Input.Gamepad.Gamepad, button: Phaser.Input.Gamepad.Button): void => {
+    [button.index]
+      .filter((index) => index === PAD_JUMP_BUTTON)
+      .forEach(this.jump);
+    [button.index]
+      .filter((index) => index === PAD_PAUSE_BUTTON)
+      .forEach(this.pauseOrResume);
   };
 
   private readonly handleVisibilityChange = (): void => {

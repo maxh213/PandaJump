@@ -5,7 +5,7 @@ A simple box jumping game (flappy bird spin off) made in TypeScript with Phaser 
 
 Play it at https://maxh213.github.io/PandaJump/.
 
-Controls: Click, tap or press Space or the Up Arrow key to jump (you can double jump). Press P or Escape to pause and resume. A fresh page load waits on a "Tap or press Space to start" screen; the first tap, click, Space or Up Arrow press starts the run without jumping, and every press after that jumps as normal.
+Controls: Click, tap, Space, Up Arrow or a controller button to jump (double jump too). P, Escape or Start pauses. A fresh page load waits on a "Tap or press Space to start" screen; the first tap, click, Space or Up Arrow press starts the run without jumping, and every press after that jumps as normal.
 
 Development
 -----------
