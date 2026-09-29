@@ -441,7 +441,7 @@ export class RunScene extends Phaser.Scene {
     this.hills.setTexture(hillKey(view.hillColor)).setTilePosition(view.hillsScroll, 0);
     this.rock.tilePositionX = view.floorScroll;
     this.grass.tilePositionX = view.floorScroll;
-    this.score.setText(view.score).setScale(view.scoreScale);
+    this.score.setText(view.score).setScale(view.scoreScale).setColor(MEDAL_COLORS[view.medal]);
     const titles: Record<"true" | "false", string> = { true: PAGE_TITLE, false: `${view.score} - ${PAGE_TITLE}` };
     document.title = titles[String(view.score === "0") as "true" | "false"];
     this.best.setText(`Best: ${view.best}`).setColor(BEST_COLORS[String(view.newBest) as "true" | "false"]);

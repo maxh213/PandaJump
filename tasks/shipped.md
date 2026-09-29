@@ -71,3 +71,4 @@ add a line merge cleanly instead of conflicting.
 - The panda stretches tall for 120 ms as it jumps off the floor and squashes wide for 120 ms as it lands, easing back to normal
 - A new deploy's service worker no longer reloads the page in the middle of a run: the one-time reload to hand over control only happens while the page is still on the start screen, and the next visit opens the new build
 - The panda's hitbox sits 3 px inside its drawn frame on each side and forgives its bottom 4 px, so a 1 px graze of a column no longer ends the run
+- The live top-left score turns bronze, silver, gold or platinum the moment the run reaches 10, 20, 30 or 40, and is white again after a restart
