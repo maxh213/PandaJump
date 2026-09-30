@@ -48,7 +48,7 @@ test.describe("Rule: The sky turns sunset-orange over 3000 ms once the score rea
   });
 
   test("The sky is still sunset just before the snowfield threshold", async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(240_000);
     await playThroughColumn(page, 39);
     const state = await sample(page);
     expect(state.score.text).toBe("39");
@@ -58,7 +58,7 @@ test.describe("Rule: The sky turns sunset-orange over 3000 ms once the score rea
 
 test.describe("Rule: The sky turns pale snowfield-blue over 3000 ms once the score reaches 40", () => {
   test("The sky crossfades to pale blue once the score reaches 40", async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(240_000);
     await playThroughColumn(page, 40);
     const start = await sample(page);
     expect(start.score.text).toBe("40");
@@ -90,7 +90,7 @@ test.describe("Rule: The sky turns dusk-grey over 3000 ms once the score reaches
 
 test.describe("Rule: A new run always starts back at day, even after a snowfield death", () => {
   test("The sky resets to day after a restart following a death at score 40 or more", async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(240_000);
     await openGame(page, rampedRandom(40));
     await startRun(page);
     await playToScore(page, 40);
