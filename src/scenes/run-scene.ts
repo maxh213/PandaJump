@@ -525,12 +525,6 @@ export class RunScene extends Phaser.Scene {
       .setAngle(view.pandaAngle);
   }
 
-  private drawScenery(view: ReturnType<Run["view"]>): void {
-    this.hills.setTexture(hillKey(view.hillColor)).setTilePosition(view.hillsScroll, 0);
-    this.rock.setTexture(view.biome.floor).tilePositionX = view.floorScroll;
-    this.grass.setTexture(view.biome.top).setY(TOP_STRIP_Y[view.biome.top]).tilePositionX = view.floorScroll;
-  }
-
   private drawScore(view: ReturnType<Run["view"]>): void {
     this.score.setText(view.score).setScale(view.scoreScale);
     const colour = MEDAL_COLORS[view.medal];
